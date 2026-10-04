@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>正畸 3D 咨询</title>
+<style>
+:root{
+  --bg:#f2f6f9; --panel:#ffffff; --ink:#1c2a39; --sub:#5d6d7e; --line:#dce5ed;
+  --pri:#16879b; --pri-d:#0f6f80; --pri-l:#e4f3f6; --warn:#e5484d; --ok:#1f9d6b;
+  --shadow:0 8px 28px rgba(28,58,88,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:14px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 2px 12px rgba(28,58,88,.05);z-index:20}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;white-space:nowrap;color:var(--pri-d)}
+.brand i{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#1aa3b8,#127386);color:#fff;font-style:normal;font-size:20px}
+nav.tabs{display:flex;gap:8px;flex:1;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:120px;min-height:56px;padding:6px 14px;border-radius:14px;border:1.5px solid var(--line);background:#f6f9fb;color:var(--sub);
+  font-size:17px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;font-family:inherit}
+.tab b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#e3ebf1;color:var(--sub);font-size:14px}
+.tab.active{background:var(--pri);border-color:var(--pri);color:#fff;box-shadow:0 6px 16px rgba(22,135,155,.28)}
+.tab.active b{background:#fff;color:var(--pri)}
+.tab.done b{background:#c9ebe0;color:var(--ok)}
+main{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+#stage{position:relative;flex:1;min-height:0;background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#eef4f8 55%,#e2ebf1 100%);overflow:hidden}
+#stage canvas{position:absolute;inset:0;display:block;touch-action:none}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:3}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:13px;
+  color:var(--ink);box-shadow:0 3px 10px rgba(28,58,88,.12);will-change:transform}
+.lbl::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:rgba(255,255,255,.95);border-bottom:0}
+.lbl.num{font-weight:600}
+.lbl.num em{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--pri);color:#fff;font-size:12px;margin-right:6px}
+.lbl.warn{background:#fff1f1;border-color:#ffc9c9;color:#b4262b;font-weight:600}
+.lbl.warn::after{border-top-color:#fff1f1}
+.lbl.pt{padding:2px 7px;font-weight:700;font-size:12px;background:#1c2a39;color:#fff;border:none}
+.lbl.pt::after{border-top-color:#1c2a39}
+.lbl.big{font-size:15px;font-weight:700;padding:6px 12px}
+.lbl.green{background:#ecfbf3;border-color:#b6ebcf;color:#11734a}
+.lbl.green::after{border-top-color:#ecfbf3}
+.lbl.blue{background:#eef5ff;border-color:#c5dbff;color:#1f5fbf}
+.lbl.blue::after{border-top-color:#eef5ff}
+.lbl.purple{background:#f6efff;border-color:#dcc8fb;color:#6d35c8}
+.lbl.purple::after{border-top-color:#f6efff}
+.tab-ui{position:absolute;inset:0;pointer-events:none;display:none;z-index:4}
+.tab-ui.show{display:block}
+.panel{position:absolute;pointer-events:auto;background:rgba(255,255,255,.93);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px}
+.panel h3{margin:0 0 10px;font-size:17px}
+.panel h4{margin:12px 0 8px;font-size:14px;color:var(--sub);font-weight:600}
+.panel p{margin:6px 0;font-size:14px;color:var(--sub);line-height:1.55}
+.btn{min-height:48px;padding:10px 16px;font-size:16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;font-family:inherit;
+  font-weight:600;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.on{background:var(--pri-l);border-color:var(--pri);color:var(--pri-d)}
+.btn.sm{min-height:40px;padding:6px 12px;font-size:14px}
+.seg{display:flex;background:#eef3f7;border-radius:14px;padding:4px;gap:4px}
+.seg .btn{border:none;background:transparent;flex:1}
+.seg .btn.on{background:#fff;color:var(--pri-d);box-shadow:0 2px 8px rgba(28,58,88,.12)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:8px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:6px 4px;font-size:15px;cursor:pointer}
+.toggle .sw{width:52px;height:30px;border-radius:15px;background:#cfd9e2;position:relative;transition:.2s;flex:none}
+.toggle .sw::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s}
+.toggle.on .sw{background:var(--pri)}
+.toggle.on .sw::after{left:25px}
+.prob{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:12px;border:1.5px solid transparent;cursor:pointer;min-height:56px}
+.prob:hover,.prob.on{background:#fff4f4;border-color:#ffd0d0}
+.prob .dot{flex:none;width:12px;height:12px;margin-top:5px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 0 rgba(229,72,77,.6);animation:pulse 1.6s infinite}
+.prob b{display:block;font-size:15px}
+.prob span{font-size:13px;color:var(--sub)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.55)}70%{box-shadow:0 0 0 9px rgba(229,72,77,0)}100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+.metric{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;gap:10px}
+.metric b{font-size:18px}
+.metric small{color:var(--sub)}
+.tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600}
+.tag.red{background:#ffecec;color:#c22f34}.tag.green{background:#e6f8ef;color:#137a4f}.tag.blue{background:#e8f1ff;color:#2560bf}
+#info{position:absolute;z-index:8;pointer-events:none;min-width:200px;max-width:300px;background:#fff;border-radius:14px;box-shadow:0 12px 34px rgba(28,58,88,.2);
+  border:1px solid var(--line);padding:12px 14px;opacity:0;transform:translateY(6px);transition:opacity .15s,transform .15s}
+#info.show{opacity:1;transform:none}
+#info .t{font-weight:700;font-size:16px}
+#info .t.warn{color:#c22f34}
+#info .s{font-size:12px;color:var(--sub);margin-top:2px}
+#info .d{font-size:14px;color:#33465a;margin-top:6px;line-height:1.5}
+#info .rows{margin-top:6px}
+#info .rows div{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-top:1px solid #eef2f5}
+#info .rows div span:last-child{font-weight:700;color:var(--ink)}
+#nextBtn{position:absolute;right:18px;bottom:18px;z-index:9;min-height:60px;padding:12px 24px;font-size:18px;border-radius:16px;box-shadow:0 10px 24px rgba(22,135,155,.35)}
+#bottom{display:none;background:#fff;border-top:1px solid var(--line);padding:8px 14px 10px;overflow:auto;max-height:42%}
+#bottom.show{display:block}
+table.cmp{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+table.cmp th,table.cmp td{padding:7px 10px;text-align:center;border-bottom:1px solid #edf2f6}
+table.cmp th{font-size:15px;background:#f6f9fb;position:sticky;top:0}
+table.cmp td:first-child,table.cmp th:first-child{text-align:left;color:var(--sub);font-weight:600;width:110px}
+table.cmp .sel{background:#effaf8}
+table.cmp th.sel{background:#d8f1ee;color:var(--pri-d)}
+.star{color:#f5a524;letter-spacing:1px}.star i{color:#d7dee5;font-style:normal}
+.colhead{position:absolute;top:10px;pointer-events:auto;text-align:center;padding:10px 12px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:16px;
+  box-shadow:var(--shadow);transform:translateX(-50%);min-width:230px}
+.colhead b{font-size:17px;display:block}
+.colhead span{font-size:13px;color:var(--sub)}
+.colhead .row{justify-content:center;margin-top:8px}
+.colhead.chosen{border-color:var(--pri);box-shadow:0 0 0 3px rgba(22,135,155,.2),var(--shadow)}
+.coldiv{position:absolute;top:0;bottom:0;width:1px;background:linear-gradient(transparent,#c9d6e0 15%,#c9d6e0 85%,transparent)}
+.timeline{left:18px;right:230px;bottom:18px;display:flex;align-items:center;gap:14px;padding:12px 18px}
+.timeline .play{width:60px;height:60px;border-radius:50%;flex:none;font-size:22px;padding:0}
+.tl-main{flex:1;min-width:0}
+.tl-top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--sub);margin-bottom:4px;gap:8px}
+.tl-top b{font-size:20px;color:var(--ink)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--pri) var(--p,0%),#dbe5ec var(--p,0%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:32px;height:32px;margin-top:-11px;border-radius:50%;background:#fff;border:3px solid var(--pri);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-track{height:10px;border-radius:5px;background:#dbe5ec}
+input[type=range]::-moz-range-progress{height:10px;border-radius:5px;background:var(--pri)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid var(--pri)}
+.ticks{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);padding:0 6px}
+.legend{height:12px;border-radius:6px;background:linear-gradient(90deg,#3b82f6,#22c55e,#facc15,#ef4444);margin:6px 0 2px}
+.legend-l{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
+.steps{left:50%;transform:translateX(-50%);bottom:96px;display:flex;gap:6px;padding:8px;flex-wrap:nowrap}
+.steps div{padding:8px 12px;border-radius:12px;font-size:14px;color:var(--sub);background:#f3f7fa;white-space:nowrap;transition:.25s}
+.steps div.on{background:var(--pri);color:#fff;font-weight:600}
+.preset{text-align:left;justify-content:flex-start;padding:12px 14px;min-height:64px;width:100%;flex-direction:column;align-items:flex-start;gap:2px}
+.preset small{font-weight:400;font-size:12.5px;color:var(--sub)}
+.preset.on small{color:var(--pri-d)}
+footer{text-align:center;font-size:12px;color:#7a8a99;padding:5px 8px;background:#fff;border-top:1px solid var(--line)}
+#loading{position:fixed;inset:0;background:#f2f6f9;display:grid;place-items:center;z-index:100;font-size:17px;color:var(--sub);transition:opacity .4s}
+#loading .sp{width:48px;height:48px;border-radius:50%;border:4px solid #d6e3ea;border-top-color:var(--pri);animation:spin 1s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#modal{position:fixed;inset:0;background:rgba(20,40,60,.35);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50;padding:16px}
+#modal.show{display:grid}
+.card{background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(20,40,60,.3);width:min(620px,100%);max-height:92vh;overflow:auto;padding:26px 28px}
+.card h2{margin:0 0 4px;font-size:24px}
+.card .subt{color:var(--sub);font-size:14px;margin-bottom:16px}
+.field{margin:12px 0}
+.field label{display:block;font-size:14px;color:var(--sub);margin-bottom:6px;font-weight:600}
+.field input,.field textarea{width:100%;font-size:17px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;color:var(--ink);background:#fbfdfe;-webkit-user-select:text;user-select:text}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(22,135,155,.15)}
+.money{display:flex;align-items:center;gap:10px}
+.money span{color:var(--sub)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:900px){.tab{min-width:96px;font-size:15px}.brand span{display:none}.timeline{right:18px;bottom:90px}}
+@media print{header,footer,#stage,#bottom,.card .row{display:none!important}#modal{position:static;background:none;display:block}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="loading"><div><div class="sp"></div>正在生成 3D 牙列模型…</div></div>
+<div id="app">
+  <header>
+    <div class="brand"><i>齿</i><span>正畸 3D 咨询</span></div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-i="0"><b>1</b>我的问题</button>
+      <button class="tab" data-i="1"><b>2</b>方案对比</button>
+      <button class="tab" data-i="2"><b>3</b>矫治过程</button>
+      <button class="tab" data-i="3"><b>4</b>原理</button>
+      <button class="tab" data-i="4"><b>5</b>面型预测</button>
+    </nav>
+  </header>
+  <main>
+    <div id="stage">
+      <div id="labels"></div>
+
+      <!-- TAB 1 -->
+      <div class="tab-ui show" data-tab="0">
+        <div class="panel" style="left:16px;top:16px;width:300px">
+          <h3>检查发现的问题</h3>
+          <div class="col" id="probList"></div>
+          <h4>显示</h4>
+          <div class="toggle on" id="tgGum"><span>牙龈</span><i class="sw"></i></div>
+          <div class="toggle on" id="tgBone"><span>颌骨</span><i class="sw"></i></div>
+        </div>
+        <div class="panel" style="left:50%;top:16px;transform:translateX(-50%);padding:6px">
+          <div class="seg" id="segView">
+            <button class="btn on" data-v="dental">牙性视图</button>
+            <button class="btn" data-v="skeletal">骨性视图（ANB 角）</button>
+          </div>
+        </div>
+        <div class="panel" id="cephPanel" style="right:16px;top:16px;width:290px;display:none">
+          <h3>头影测量（侧位）</h3>
+          <div class="metric"><span>SNA 角<br><small>上颌相对颅底位置 · 正常 82°±3°</small></span><b id="mSNA">82°</b></div>
+          <div class="metric"><span>SNB 角<br><small>下颌相对颅底位置 · 正常 80°±3°</small></span><b id="mSNB">76°</b></div>
+          <div class="metric"><span>ANB 角<br><small>上下颌骨矢状关系 · 正常 2°±2°</small></span><b id="mANB" style="color:var(--warn)">6°</b></div>
+          <p style="margin-top:12px"><span class="tag red">骨性 II 类</span> 上颌位置基本正常，下颌相对后缩，是侧貌偏凸、覆盖大的主要原因之一。</p>
+          <p>牙性因素：上前牙唇倾，下前牙代偿性唇倾。</p>
+        </div>
+      </div>
+
+      <!-- TAB 2 -->
+      <div class="tab-ui" data-tab="1" id="ui1"></div>
+
+      <!-- TAB 3 -->
+      <div class="tab-ui" data-tab="2">
+        <div class="panel" style="left:16px;top:16px;width:290px">
+          <h3 id="phaseTitle">阶段一：排齐整平</h3>
+          <p id="phaseDesc">解除拥挤、纠正扭转，为后续内收创造条件。</p>
+          <div class="metric"><span>移动最多的牙</span><b id="maxMove">—</b></div>
+          <div class="metric"><span>已完成</span><b id="pctDone">0%</b></div>
+        </div>
+        <div class="panel" style="right:16px;top:16px;width:250px">
+          <h3>显示选项</h3>
+          <div class="toggle" id="tgHeat"><span>移动热力图</span><i class="sw"></i></div>
+          <div id="legendBox" style="display:none"><div class="legend"></div><div class="legend-l"><span>0</span><span>2mm</span><span>≥4mm</span></div></div>
+          <div class="toggle" id="tgGhost"><span>初始位置幽灵</span><i class="sw"></i></div>
+          <div class="toggle" id="tgShell"><span>透明牙套</span><i class="sw"></i></div>
+          <div class="toggle on" id="tgGum3"><span>牙龈</span><i class="sw"></i></div>
+          <p style="font-size:12.5px">提示：悬停或点按任意牙齿，查看 FDI 编号与累计移动量。</p>
+        </div>
+        <div class="panel timeline">
+          <button class="btn pri play" id="playBtn">▶</button>
+          <div class="tl-main">
+            <div class="tl-top"><span>第 <b id="stageNum">0</b> / 24 副牙套</span><span id="weekTxt">治疗开始</span></div>
+            <input type="range" id="stageSlider" min="0" max="24" step="0.01" value="0">
+            <div class="ticks"><span>0 初始</span><span>6</span><span>12</span><span>18</span><span>24 完成</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4 -->
+      <div class="tab-ui" data-tab="3">
+        <div class="panel" style="left:16px;top:16px;width:290px">
+          <h3>牙齿为什么会移动？</h3>
+          <div class="col">
+            <button class="btn" id="btnExplode">⇕ 分层弹开</button>
+            <button class="btn pri" id="btnForce">▶ 受力演示</button>
+          </div>
+          <h4>结构层次（点按高亮）</h4>
+          <div class="col" id="layerList"></div>
+        </div>
+        <div class="panel" style="right:16px;top:16px;width:270px" id="forcePanel">
+          <h3>骨改建原理</h3>
+          <p>牙套对牙齿施加持续<b>轻力</b>，牙周膜一侧受压、一侧受牵拉。</p>
+          <p><span class="tag red">压力侧</span> 破骨细胞吸收牙槽骨，为牙根让路。</p>
+          <p><span class="tag green">张力侧</span> 成骨细胞沉积新骨，填补空隙。</p>
+          <p>每副牙套约移动 <b>0.15–0.25mm</b>，循序渐进，牙根与骨组织得以健康改建。</p>
+        </div>
+        <div class="panel steps" id="steps" style="display:none">
+          <div>① 牙套施加轻力</div><div>② 牙周膜受压 / 受拉</div><div>③ 压力侧骨吸收</div><div>④ 张力侧骨沉积 → 牙齿移动</div>
+        </div>
+      </div>
+
+      <!-- TAB 5 -->
+      <div class="tab-ui" data-tab="4">
+        <div class="panel" style="left:16px;top:16px;width:300px">
+          <h3>选择预设方案</h3>
+          <div class="col" id="presetList"></div>
+          <h4>显示方式</h4>
+          <div class="seg" id="segFace">
+            <button class="btn on" data-v="overlay">轮廓叠加</button>
+            <button class="btn" data-v="side">前后并排</button>
+          </div>
+          <div id="morphBox">
+            <h4>治疗前 ⟷ 治疗后</h4>
+            <input type="range" id="morphSlider" min="0" max="1" step="0.01" value="1">
+          </div>
+        </div>
+        <div class="panel" style="right:16px;top:16px;width:290px">
+          <h3>Ricketts E 线分析</h3>
+          <p style="margin-top:0">E 线：鼻尖至软组织颏前点连线。正值表示唇位于线前方。</p>
+          <div class="metric"><span>上唇 – E 线</span><span><small>前 </small><b id="ulB">—</b> → <b id="ulA" style="color:var(--ok)">—</b></span></div>
+          <div class="metric"><span>下唇 – E 线</span><span><small>前 </small><b id="llB">—</b> → <b id="llA" style="color:var(--ok)">—</b></span></div>
+          <div class="metric"><span>颏部前移</span><b id="chinA">0 mm</b></div>
+          <p style="margin-top:10px"><span class="tag red">红线</span> 治疗前轮廓 &nbsp;<span class="tag green">绿线</span> 预测轮廓 &nbsp;<span class="tag blue">蓝线</span> E 线</p>
+          <p id="presetDesc"></p>
+        </div>
+      </div>
+
+      <div id="info"><div class="t"></div><div class="s"></div><div class="d"></div><div class="rows"></div></div>
+      <button class="btn pri" id="nextBtn">下一页：方案对比 →</button>
+    </div>
+    <div id="bottom">
+      <table class="cmp" id="cmpTable"></table>
+    </div>
+  </main>
+  <footer>仅供沟通参考，具体方案以医生诊断为准</footer>
+</div>
+
+<div id="modal">
+  <div class="card">
+    <h2>咨询总结</h2>
+    <div class="subt">以下内容可由医生现场编辑，便于与患者确认。</div>
+    <div class="field"><label>主要问题</label><div class="chips" id="sumProblems"></div></div>
+    <div class="field"><label>推荐方案</label><input id="sumPlan" value=""></div>
+    <div class="field"><label>预计疗程</label><input id="sumDur" value=""></div>
+    <div class="field"><label>预计费用区间（元）</label>
+      <div class="money"><input id="sumMin" inputmode="numeric"><span>至</span><input id="sumMax" inputmode="numeric"></div></div>
+    <div class="field"><label>医生备注</label><textarea id="sumNote" rows="3" placeholder="例如：每日佩戴 22 小时以上；每 8 周复诊一次…"></textarea></div>
+    <p style="font-size:12px;color:#7a8a99">仅供沟通参考，具体方案以医生诊断为准</p>
+    <div class="row" style="justify-content:flex-end;margin-top:8px">
+      <button class="btn" id="sumBack">返回修改</button>
+      <button class="btn" id="sumPrint">打印 / 保存</button>
+      <button class="btn pri" id="sumOk">确认方案</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =====================================================================
+   基础工具
+   ===================================================================== */
+const V3 = THREE.Vector3, Y_AXIS = new V3(0, 1, 0), Z_AXIS = new V3(0, 0, 1);
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+let _seed = 20240917;
+const rnd = () => { _seed = _seed + 0x6D2B79F5 | 0; let t = Math.imul(_seed ^ _seed >>> 15, 1 | _seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.setClearColor(0x000000, 0);
+stage.prepend(renderer.domElement);
+
+/* =====================================================================
+   程序化纹理（Canvas）
+   ===================================================================== */
+function canvasTex(w, h, draw, srgb = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+  return t;
+}
+const TEX = {};
+TEX.tooth = canvasTex(128, 512, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, 0, h);   // 顶部 = 咬合面，下部 = 根尖
+  [[0, '#e9eeee'], [.04, '#f6f4ee'], [.3, '#f8f2e4'], [.55, '#f2e7cf'], [.6, '#ead8b2'], [.66, '#e2cb9c'], [1, '#c8a671']].forEach(([s, c]) => gr.addColorStop(s, c));
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 5000; i++) { g.fillStyle = rnd() < .5 ? 'rgba(255,255,255,.08)' : 'rgba(150,110,60,.05)'; g.fillRect(rnd() * w, rnd() * h, 1.5, 1.5); }
+  g.strokeStyle = 'rgba(175,155,115,.06)';
+  for (let y = 6; y < h * .58; y += 5) { g.beginPath(); g.moveTo(0, y + rnd() * 2); g.lineTo(w, y + rnd() * 2); g.stroke(); }
+});
+TEX.gum = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = '#ec98a0'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 260; i++) {
+    const x = rnd() * w, y = rnd() * h, r = 4 + rnd() * 14, gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, rnd() < .5 ? 'rgba(212,108,122,.35)' : 'rgba(255,192,198,.35)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+  }
+  for (let i = 0; i < 3000; i++) { g.fillStyle = 'rgba(255,232,234,.25)'; g.fillRect(rnd() * w, rnd() * h, 1, 1); }
+  g.strokeStyle = 'rgba(190,70,90,.16)';
+  for (let i = 0; i < 14; i++) { g.beginPath(); let x = rnd() * w, y = rnd() * h; g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += (rnd() - .5) * 40; y += rnd() * 30; g.lineTo(x, y); } g.stroke(); }
+});
+TEX.bone = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = '#f1e7d0'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 900; i++) {
+    g.fillStyle = `rgba(${170 + rnd() * 30 | 0},${140 + rnd() * 30 | 0},${100 + rnd() * 20 | 0},${.22 + rnd() * .3})`;
+    g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 1 + rnd() * 4, 1 + rnd() * 3, rnd() * 3, 0, 7); g.fill();
+  }
+});
+TEX.skin = canvasTex(256, 256, (g, w, h) => {
+  g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 7000; i++) { g.fillStyle = `rgba(${200 + rnd() * 40 | 0},${150 + rnd() * 40 | 0},${130 + rnd() * 30 | 0},.07)`; g.fillRect(rnd() * w, rnd() * h, 2, 2); }
+});
+TEX.glow = canvasTex(128, 128, (g) => {
+  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(255,250,250,1)'); gr.addColorStop(.22, 'rgba(255,90,90,.95)'); gr.addColorStop(.55, 'rgba(240,40,50,.35)'); gr.addColorStop(1, 'rgba(255,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+});
+function boneTexScaled(s) { const t = TEX.bone.clone(); t.repeat.set(s, s); t.needsUpdate = true; return t; }
+
+/* 程序化环境贴图（供 PBR 反射，无外部 HDR） */
+function buildEnv() {
+  const s = new THREE.Scene();
+  const sky = canvasTex(64, 256, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(.42, '#e6eff5'); gr.addColorStop(.52, '#b7c6d1'); gr.addColorStop(1, '#6f7d89');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  });
+  s.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide })));
+  const lm = new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 5, 5), side: THREE.DoubleSide });
+  [[0, 34, 12, 34, 14], [-36, 12, 22, 12, 22], [38, 16, -12, 14, 26], [10, 4, 44, 26, 8]].forEach(([x, y, z, w, h]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), lm); m.position.set(x, y, z); m.lookAt(0, 0, 0); s.add(m);
+  });
+  const pm = new THREE.PMREMGenerator(renderer);
+  const tex = pm.fromScene(s, 0.03).texture; pm.dispose();
+  return tex;
+}
+const ENV = buildEnv();
+
+/* =====================================================================
+   PBR 材质
+   ===================================================================== */
+const MAT = {
+  tooth: new THREE.MeshPhysicalMaterial({ map: TEX.tooth, roughness: .36, clearcoat: .4, clearcoatRoughness: .32, sheen: .35, sheenColor: new THREE.Color('#fff3df'), sheenRoughness: .5 }),
+  gum: new THREE.MeshPhysicalMaterial({ map: TEX.gum, roughness: .45, transparent: true, opacity: .8, clearcoat: .55, clearcoatRoughness: .35, sheen: .6, sheenColor: new THREE.Color('#ffc4cc') }),
+  bone: new THREE.MeshStandardMaterial({ map: TEX.bone, roughness: .85, transparent: true, opacity: .32, depthWrite: false, side: THREE.DoubleSide }),
+  metal: new THREE.MeshStandardMaterial({ color: '#e4e8ed', metalness: 1, roughness: .14, envMapIntensity: 1.5 }),
+  wire: new THREE.MeshStandardMaterial({ color: '#d5dbe2', metalness: 1, roughness: .18, envMapIntensity: 1.5 }),
+  niti: new THREE.MeshStandardMaterial({ color: '#cfc6b4', metalness: 1, roughness: .2, envMapIntensity: 1.4 }),
+  ligature: new THREE.MeshPhysicalMaterial({ color: '#46a0ea', roughness: .3, clearcoat: .8, clearcoatRoughness: .2 }),
+  door: new THREE.MeshStandardMaterial({ color: '#f4f6f8', metalness: 1, roughness: .08, envMapIntensity: 1.8 }),
+  aligner: new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .07, transmission: 1, thickness: .8, ior: 1.5, clearcoat: 1, clearcoatRoughness: .05,
+    attenuationColor: new THREE.Color('#d8efff'), attenuationDistance: 4, envMapIntensity: 1.4, side: THREE.DoubleSide, transparent: true, opacity: .92 }),
+  composite: new THREE.MeshPhysicalMaterial({ color: '#fffaf0', roughness: .22, clearcoat: .7, clearcoatRoughness: .2 }),
+  ghost: new THREE.MeshStandardMaterial({ color: '#5f9dff', transparent: true, opacity: .26, depthWrite: false, roughness: .5 }),
+  skin: new THREE.MeshPhysicalMaterial({ map: TEX.skin, color: '#efc6aa', roughness: .6, sheen: .35, sheenColor: new THREE.Color('#ffd2c4'), sheenRoughness: .8 }),
+};
+
+/* =====================================================================
+   牙齿几何（LatheGeometry 旋转体 + 程序化变形）
+   ===================================================================== */
+const TT = {
+  U1: { w: 8.5, d: 7.0, ch: 10.5, rh: 13, kind: 'incisor', name: '中切牙' },
+  U2: { w: 6.6, d: 6.2, ch: 9.0, rh: 13, kind: 'incisor', name: '侧切牙' },
+  U3: { w: 7.6, d: 8.0, ch: 10.0, rh: 17, kind: 'canine', name: '尖牙' },
+  U4: { w: 7.0, d: 9.0, ch: 8.5, rh: 14, kind: 'premolar', name: '第一前磨牙' },
+  U5: { w: 6.6, d: 9.0, ch: 7.8, rh: 14, kind: 'premolar', name: '第二前磨牙' },
+  U6: { w: 10.2, d: 11.0, ch: 7.5, rh: 13, kind: 'molar', name: '第一磨牙' },
+  U7: { w: 9.2, d: 10.8, ch: 7.0, rh: 12, kind: 'molar', name: '第二磨牙' },
+  L1: { w: 5.4, d: 5.8, ch: 9.0, rh: 12.5, kind: 'incisor', name: '中切牙' },
+  L2: { w: 5.9, d: 6.0, ch: 9.5, rh: 14, kind: 'incisor', name: '侧切牙' },
+  L3: { w: 6.9, d: 7.6, ch: 11, rh: 16, kind: 'canine', name: '尖牙' },
+  L4: { w: 7.0, d: 7.6, ch: 8.5, rh: 14, kind: 'premolar', name: '第一前磨牙' },
+  L5: { w: 7.1, d: 8.0, ch: 8.0, rh: 14.5, kind: 'premolar', name: '第二前磨牙' },
+  L6: { w: 11.0, d: 10.4, ch: 7.5, rh: 14, kind: 'molar', name: '第一磨牙' },
+  L7: { w: 10.4, d: 10.0, ch: 7.0, rh: 13, kind: 'molar', name: '第二磨牙' },
+};
+const ROOTP = [[0, -1], [.22, -.96], [.4, -.82], [.53, -.58], [.64, -.3], [.72, 0]];
+const CROWN = {
+  incisor: [[.86, .12], [.97, .35], [1, .6], [.99, .8], [.96, .92], [.86, .98], [.5, 1], [0, 1]],
+  canine: [[.88, .12], [.99, .35], [1, .55], [.9, .72], [.66, .86], [.4, .95], [.16, .995], [0, 1]],
+  premolar: [[.88, .12], [.98, .35], [1, .58], [.95, .78], [.82, .92], [.6, .98], [.3, .96], [0, .9]],
+  molar: [[.9, .12], [.99, .32], [1, .55], [.97, .75], [.88, .9], [.68, .98], [.36, .97], [0, .9]],
+};
+const geoCache = {};
+/* mode: tooth 完整牙 / shell 牙套壳 / pdl 牙周膜 */
+function toothGeo(key, mode = 'tooth', off = 0) {
+  const ck = key + mode + off; if (geoCache[ck]) return geoCache[ck];
+  const T = TT[key], K = T.kind, hw = T.w / 2, hd = T.d / 2;
+  const R = ROOTP.map(([r, y]) => [r, y * T.rh]), C = CROWN[K].map(([r, y]) => [r, y * T.ch]);
+  const pts = mode === 'tooth' ? R.concat(C) : mode === 'shell' ? [[.66, -.6], [.72, 0]].concat(C) : R.concat([[.74, .8]]);
+  const g = new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(p[0], p[1])), 40, Math.PI, Math.PI * 2);
+  const p = g.attributes.position;
+  const rootBx = K === 'molar' ? .92 : K === 'premolar' ? .72 : K === 'canine' ? .75 : .8;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), r = Math.hypot(x, z), th = Math.atan2(x, z);
+    let bx = 1, bz = 1;
+    if (y > 0) {
+      const f = y / T.ch;
+      if (K === 'incisor') { bz = lerp(1, .3, sstep(.2, 1, f)); bx = 1 + .05 * f; }
+      else if (K === 'canine') bz = lerp(1, .66, sstep(.3, 1, f));
+      else if (K === 'premolar') bx = lerp(1, .92, f);
+    } else {
+      const f = sstep(-T.rh * .55, 0, y); bx = lerp(rootBx, 1, f); if (K === 'molar') bz = lerp(.86, 1, f);
+    }
+    const nx = Math.sin(th) * (r * hw * bx + off), nz = Math.cos(th) * (r * hd * bz + off);
+    let ny = y;
+    if (y > T.ch * .55 && (K === 'premolar' || K === 'molar')) {
+      const wgt = sstep(.55 * T.ch, .92 * T.ch, y), rho = Math.min(r, 1);
+      if (K === 'premolar') ny += wgt * T.ch * .13 * (Math.cos(th) ** 2 - .3) * Math.sin(Math.PI * rho);
+      else ny += wgt * T.ch * (.12 * (.5 - .5 * Math.cos(4 * th)) * Math.sin(Math.PI * rho) - .03);
+    }
+    if (mode === 'shell') ny += off * sstep(.4 * T.ch, T.ch, y);
+    if (mode === 'pdl') ny -= off * sstep(-.5 * T.rh, -T.rh, y);
+    p.setXYZ(i, nx, ny, nz);
+  }
+  g.computeVertexNormals();
+  return geoCache[ck] = g;
+}
+
+/* =====================================================================
+   牙弓与 28 颗牙的排列（FDI 编号）
+   ===================================================================== */
+const UC = new THREE.CatmullRomCurve3([[0, 0, 0], [9, 0, -2.2], [16, 0, -7.5], [21, 0, -15], [24.5, 0, -25], [27, 0, -36], [28.5, 0, -50], [29.5, 0, -62]].map(a => new V3(...a)));
+const LC = new THREE.CatmullRomCurve3([[0, 0, 0], [9, 0, -2.2], [16, 0, -7.5], [21, 0, -15], [24.5, 0, -25], [27, 0, -36], [28.5, 0, -50], [29.5, 0, -62]].map(([x, y, z]) => new V3(x * .92, y, z * .97 - 2.6)));
+const QNAME = { 1: '右上', 2: '左上', 3: '左下', 4: '右下' };
+const TEETH = [];
+for (const q of [1, 2, 3, 4]) for (let n = 1; n <= 7; n++) {
+  const upper = q <= 2, key = (upper ? 'U' : 'L') + n;
+  TEETH.push({ fdi: q * 10 + n, q, n, upper, key, T: TT[key], side: (q === 1 || q === 4) ? -1 : 1 });
+}
+(function layout() {
+  for (const upper of [true, false]) for (const side of [-1, 1]) {
+    const C = upper ? UC : LC, L = C.getLength();
+    let cum = 0;
+    TEETH.filter(r => r.upper === upper && r.side === side).sort((a, b) => a.n - b.n).forEach(r => {
+      const d = cum + r.T.w / 2; cum += r.T.w + .1; r.d = d;
+      const u = Math.min(d / L, 1), P = C.getPointAt(u), tg = C.getTangentAt(u);
+      let nx = -tg.z, nz = tg.x; if (side < 0) { P.x = -P.x; nx = -nx; }
+      r.yaw = Math.atan2(nx, nz); r.normal = new V3(nx, 0, nz);
+      const off = upper ? ({ 1: -1.6, 2: -1.2, 3: -.6 }[r.n] || 0) : ({ 1: 1, 2: 1, 3: .6, 4: -.2, 5: -.3, 6: -.2, 7: 0 }[r.n]);
+      r.pivotY = upper ? r.T.ch + off : -r.T.ch + off;
+      r.ideal = new V3(P.x, r.pivotY, P.z);
+      r.torque = upper ? ({ 1: -.24, 2: -.2, 3: -.1 }[r.n] || 0) : ({ 1: .12, 2: .12, 3: .06 }[r.n] || 0);
+      const n = r.n;
+      r.win = n >= 6 ? [0, 12] : n >= 4 ? [1, 17] : n === 3 ? (r.fdi === 13 ? [3, 23] : [2, 20]) : (upper ? [5, 24] : [2, 21]);
+    });
+  }
+})();
+/* 初始错颌：拥挤、扭转、深覆盖、中线偏（局部坐标：dx 远中+、dz 唇侧+、dy 上+） */
+const MAL = {
+  11: { dz: 2.4, dy: -.8, rx: -.16, ry: .1 }, 21: { dz: 2.8, dy: -.6, rx: -.2, ry: -.12, dx: .3 },
+  12: { dz: -2.4, ry: .4, dx: -.3 }, 22: { dz: .5, ry: .6 },
+  13: { dz: 2.6, dy: 2.4, dx: -.9, rz: .12 }, 23: { dz: 1, dy: .6 },
+  14: { ry: .15, dz: -.4 }, 24: { ry: -.1 }, 15: { dz: -1.1, ry: .25 }, 25: { dz: -.5 },
+  16: { dx: -1.2, rz: .06 }, 26: { dx: -1, rz: .05 }, 17: { dx: -1 }, 27: { dx: -.9 },
+  31: { dz: -1.6, ry: .45, dx: .4 }, 41: { dz: 1.3, ry: -.5 }, 32: { dz: 1.5, ry: -.35 }, 42: { dz: -1.9, ry: .5 },
+  33: { dz: 1.1, dy: .4 }, 43: { dz: .7, rx: .1 }, 34: { ry: .15 }, 35: { ry: .2 }, 44: { dz: -.4 }, 45: { ry: .65 },
+  36: { rz: -.05 }, 46: { rz: -.06 },
+};
+const LOWER_OFF = new V3(-2.5, 0, -1.8);   // 下牙列：中线右偏 2.5mm + 后缩
+const LOWER_WIN = [3, 22];
+const toothTitle = r => `${r.fdi} · ${QNAME[r.q]}${r.T.name}`;
+
+const _v = new V3();
+function poseTooth(t, a) {
+  const r = t.rec, m = MAL[r.fdi] || {};
+  _v.set((m.dx || 0) * r.side * a, (m.dy || 0) * a, (m.dz || 0) * a).applyAxisAngle(Y_AXIS, r.yaw);
+  t.root.position.copy(r.ideal).add(_v);
+  t.root.rotation.y = r.yaw;
+  t.tilt.rotation.set(r.torque + (m.rx || 0) * a, (m.ry || 0) * r.side * a, (m.rz || 0) * r.side * a, 'ZXY');
+}
+
+/* 牙龈 / 牙槽骨：沿牙弓扫掠的截面管 + 牙间乳头扇贝形边缘 */
+function archSoft(upper, kind, mat) {
+  const recs = TEETH.filter(r => r.upper === upper && r.side === 1).sort((a, b) => a.n - b.n);
+  const C = upper ? UC : LC, L = C.getLength(), last = recs[6];
+  const Lend = last.d + last.T.w / 2 + (kind === 'bone' ? 4 : 2.2);
+  const S = 170, K = 28, pos = [], uv = [], idx = [];
+  const lingual = [];
+  for (let i = 0; i <= S; i++) {
+    const s = -Lend + 2 * Lend * i / S, dist = Math.abs(s), sd = s < 0 ? -1 : 1;
+    const u = Math.min(dist / L, 1), P = C.getPointAt(u), tg = C.getTangentAt(u);
+    let nx = -tg.z, nz = tg.x; if (sd < 0) { P.x = -P.x; nx = -nx; }
+    let j = 0; while (j < 6 && recs[j + 1].d < dist) j++;
+    const A = recs[j], B = recs[Math.min(j + 1, 6)];
+    const bl = A === B ? 0 : clamp((dist - A.d) / (B.d - A.d), 0, 1);
+    const near = (B !== A && (B.d - dist) < (dist - A.d)) ? B : A;
+    const f = Math.cos(Math.PI * clamp((dist - near.d) / near.T.w, -.5, .5));
+    const cej = lerp(Math.abs(A.pivotY), Math.abs(B.pivotY), bl), hd = lerp(A.T.d, B.T.d, bl) / 2;
+    const rh = lerp(A.T.rh, B.T.rh, bl), tq = Math.abs(lerp(A.torque, B.torque, bl));
+    let hm, ht, AA;
+    if (kind === 'gum') { hm = cej - .6 - 2.8 * Math.pow(1 - f, 1.4); ht = cej + rh + 3.5; AA = hd + 1.5; }
+    else { hm = cej + 1.6 - 1.3 * (1 - f); ht = cej + rh + (upper ? 3 : 12); AA = hd + 2.6; }
+    const hc = (hm + ht) / 2, BB = (ht - hm) / 2;
+    for (let k = 0; k < K; k++) {
+      const al = k / K * Math.PI * 2, ca = Math.cos(al), sa = Math.sin(al);
+      const qx = Math.sign(ca) * Math.pow(Math.abs(ca), .4), qy = Math.sign(sa) * Math.pow(Math.abs(sa), .4);
+      const h = hc + qy * BB, no = qx * AA - tq * (h - cej);
+      pos.push(P.x + nx * no, upper ? h : -h, P.z + nz * no);
+      uv.push(s / 12, k / K);
+    }
+    if (sd > 0 || i === S / 2) { const h = cej + 4, no = -AA - tq * 4; lingual.push({ dist, x: P.x + nx * no, z: P.z + nz * no, h }); }
+  }
+  for (let i = 0; i < S; i++) for (let k = 0; k < K; k++) {
+    const a = i * K + k, b = (i + 1) * K + k, c = i * K + (k + 1) % K, d = (i + 1) * K + (k + 1) % K;
+    if (upper) idx.push(a, b, c, b, d, c); else idx.push(a, c, b, b, c, d);
+  }
+  // 端面封口
+  for (const [ring, first] of [[0, true], [S, false]]) {
+    let cx = 0, cy = 0, cz = 0;
+    for (let k = 0; k < K; k++) { cx += pos[(ring * K + k) * 3]; cy += pos[(ring * K + k) * 3 + 1]; cz += pos[(ring * K + k) * 3 + 2]; }
+    const ci = pos.length / 3; pos.push(cx / K, cy / K, cz / K); uv.push(0, 0);
+    for (let k = 0; k < K; k++) {
+      const a = ring * K + k, b = ring * K + (k + 1) % K;
+      if (first === upper) idx.push(ci, a, b); else idx.push(ci, b, a);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals();
+  const mesh = new THREE.Mesh(g, mat);
+  const grp = new THREE.Group(); grp.add(mesh);
+  // 上腭
+  if (upper && kind === 'gum') {
+    lingual.sort((a, b) => a.dist - b.dist);
+    const J = 16, pp = [], pi = [], pu = [];
+    lingual.forEach((l, i) => {
+      const dome = 10 * (1 - .35 * (l.dist / Lend));
+      for (let j = 0; j <= J; j++) {
+        const t = j / J, x = lerp(-l.x, l.x, t), h = l.h + dome * Math.pow(Math.sin(Math.PI * t), .7);
+        pp.push(x, h, l.z); pu.push(t * 3, i / 12);
+      }
+    });
+    for (let i = 0; i < lingual.length - 1; i++) for (let j = 0; j < J; j++) {
+      const a = i * (J + 1) + j, b = a + J + 1; pi.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
+    pg.setAttribute('uv', new THREE.Float32BufferAttribute(pu, 2));
+    pg.setIndex(pi); pg.computeVertexNormals();
+    const pm = mat.clone(); pm.side = THREE.DoubleSide;
+    const palate = new THREE.Mesh(pg, pm); grp.add(palate);
+    mesh.userData.partner = palate;
+  }
+  // 下颌升支
+  if (!upper && kind === 'bone') {
+    const P = C.getPointAt(Math.min(Lend / L, 1));
+    const sh = new THREE.Shape();
+    const pts = [[6, -33], [-4, -34], [-12, -30], [-15, -16], [-14, 0], [-13, 14], [-16, 22], [-11, 27], [-6, 23], [-5, 14], [0, 10], [5, 14], [9, 24], [12, 14], [10, 0], [8, -14]];
+    sh.moveTo(pts[0][0], pts[0][1]); sh.splineThru(pts.slice(1).map(p => new THREE.Vector2(p[0], p[1]))); sh.closePath();
+    const eg = new THREE.ExtrudeGeometry(sh, { depth: 4, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 2, curveSegments: 24 });
+    eg.translate(0, 0, -2);
+    for (const sd of [-1, 1]) {
+      const rm = new THREE.Mesh(eg, mat); rm.rotation.y = -Math.PI / 2; rm.position.set(sd * (P.x + 3), 0, P.z + 2); grp.add(rm);
+    }
+  }
+  return grp;
+}
+
+/* 牙列：28 颗牙 + 牙龈 + 骨，可插值到任意矫治阶段 */
+class Dentition {
+  constructor({ gum = true, bone = false, ghost = false, info = null } = {}) {
+    this.group = new THREE.Group(); this.upperG = new THREE.Group(); this.lowerG = new THREE.Group();
+    this.group.add(this.upperG, this.lowerG);
+    this.teeth = [];
+    for (const rec of TEETH) {
+      const root = new THREE.Group(), tilt = new THREE.Group(), holder = new THREE.Group();
+      root.add(tilt); tilt.add(holder);
+      if (rec.upper) holder.rotation.z = Math.PI;
+      const mesh = new THREE.Mesh(toothGeo(rec.key), ghost ? MAT.ghost : MAT.tooth.clone());
+      holder.add(mesh);
+      const t = { rec, root, tilt, holder, mesh, mv: 0, rot: 0, prog: 0 };
+      mesh.userData.tooth = t;
+      if (ghost) mesh.userData.noPick = true; else if (info) mesh.userData.info = info;
+      (rec.upper ? this.upperG : this.lowerG).add(root);
+      this.teeth.push(t);
+    }
+    const gumInfo = { title: '牙龈', desc: '包绕牙颈部的软组织。矫治中保持口腔卫生可避免牙龈炎症。' };
+    const boneInfo = { title: '牙槽骨 / 颌骨', desc: '支撑牙根的骨组织。牙齿移动依靠牙槽骨的吸收与重建完成。' };
+    if (gum) {
+      this.gums = [];
+      for (const up of [true, false]) {
+        const g = archSoft(up, 'gum', MAT.gum.clone());
+        g.traverse(o => { if (o.isMesh) o.userData.info = gumInfo; });
+        (up ? this.upperG : this.lowerG).add(g); this.gums.push(g);
+      }
+    }
+    if (bone) {
+      this.bones = [];
+      for (const up of [true, false]) {
+        const g = archSoft(up, 'bone', MAT.bone.clone());
+        g.traverse(o => { if (o.isMesh) o.userData.info = boneInfo; });
+        (up ? this.upperG : this.lowerG).add(g); this.bones.push(g);
+      }
+    }
+    this.setUniform(1);
+  }
+  setUniform(a) { for (const t of this.teeth) poseTooth(t, a); this.lowerG.position.copy(LOWER_OFF).multiplyScalar(a); }
+  setStage(k) {
+    for (const t of this.teeth) { const [s, e] = t.rec.win; t.prog = clamp((k - s) / (e - s), 0, 1); poseTooth(t, 1 - ease(t.prog)); }
+    const lp = clamp((k - LOWER_WIN[0]) / (LOWER_WIN[1] - LOWER_WIN[0]), 0, 1);
+    this.lowerG.position.copy(LOWER_OFF).multiplyScalar(1 - ease(lp));
+  }
+  byFdi(f) { return this.teeth.find(t => t.rec.fdi === f); }
+  setGum(v) { this.gums && this.gums.forEach(g => g.visible = v); }
+  setBone(v) { this.bones && this.bones.forEach(g => g.visible = v); }
+}
+
+/* 牙面唇侧点（射线求交），返回牙体局部坐标的点与法线 */
+const ray = new THREE.Raycaster();
+function labialPoint(t, frac) {
+  const mesh = t.mesh, T = t.rec.T, y = T.ch * frac;
+  mesh.updateWorldMatrix(true, false);
+  const o = mesh.localToWorld(new V3(0, y, T.d * 3)), tg = mesh.localToWorld(new V3(0, y, 0));
+  ray.set(o, tg.sub(o).normalize());
+  const h = ray.intersectObject(mesh, false)[0];
+  if (!h) return { p: new V3(0, y, T.d / 2), n: new V3(0, 0, 1) };
+  return { p: mesh.worldToLocal(h.point.clone()), n: h.face.normal.clone().normalize() };
+}
+function rrect(w, h, r) {
+  const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s;
+}
+function tube(points, r, mat, seg = 64, closed = false) {
+  const c = new THREE.CatmullRomCurve3(points, closed, 'centripetal');
+  return new THREE.Mesh(new THREE.TubeGeometry(c, seg, r, 8, closed), mat);
+}
+
+/* =====================================================================
+   场景框架：标签、拾取、高亮、信息卡
+   ===================================================================== */
+function makeScene() {
+  const s = new THREE.Scene(); s.environment = ENV;
+  s.add(new THREE.HemisphereLight(0xffffff, 0xd5dfe8, .75));
+  const d = new THREE.DirectionalLight(0xffffff, 1.7); d.position.set(30, 60, 80); s.add(d);
+  const d2 = new THREE.DirectionalLight(0xdcecff, .6); d2.position.set(-60, 20, -40); s.add(d2);
+  const d3 = new THREE.DirectionalLight(0xfff2e6, .5); d3.position.set(-40, -30, 60); s.add(d3);
+  return s;
+}
+function makeControls(cam, target, minD, maxD) {
+  const c = new OrbitControls(cam, renderer.domElement);
+  c.target.copy(target); c.enableDamping = true; c.dampingFactor = .08; c.rotateSpeed = .8;
+  c.minDistance = minD; c.maxDistance = maxD; c.enabled = false; c.update();
+  return c;
+}
+const labelLayer = $('#labels'), labels = [];
+function addLabel(tab, obj, html, o = {}) {
+  const el = document.createElement('div'); el.className = 'lbl ' + (o.cls || ''); el.innerHTML = html; el.style.display = 'none';
+  labelLayer.appendChild(el);
+  const L = { el, tab, obj, off: o.off || new V3(), col: o.col || 0, vis: o.vis || null };
+  labels.push(L); return L;
+}
+const _p = new V3();
+function updateLabels() {
+  const T = tabs[cur];
+  for (const L of labels) {
+    if (L.tab !== cur || (L.vis && !L.vis())) { L.el.style.display = 'none'; continue; }
+    if (typeof L.obj === 'function') _p.copy(L.obj()); else if (L.obj.isVector3) _p.copy(L.obj).add(L.off);
+    else { if (!isShown(L.obj)) { L.el.style.display = 'none'; continue; } _p.copy(L.off); L.obj.localToWorld(_p); }
+    _p.project(T.camera);
+    if (_p.z > 1 || _p.z < -1) { L.el.style.display = 'none'; continue; }
+    const cw = T.cols ? W / T.cols : W;
+    const x = (_p.x * .5 + .5) * cw + L.col * cw, y = (-_p.y * .5 + .5) * H;
+    if (T.cols && (x < L.col * cw - 20 || x > (L.col + 1) * cw + 20)) { L.el.style.display = 'none'; continue; }
+    L.el.style.display = 'block';
+    L.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,calc(-100% - 8px))`;
+  }
+}
+function isShown(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+function findInfo(o) { while (o) { if (o.userData.info) return o; o = o.parent; } return null; }
+function setHL(obj, on) {
+  const apply = m => {
+    const mt = m.material; if (!mt || !mt.emissive) return;
+    if (on) { if (mt.userData.hl) return; mt.userData.hl = true; mt.userData.e0 = mt.emissive.getHex(); mt.userData.ei0 = mt.emissiveIntensity; mt.emissive.set(0x2f7fe0); mt.emissiveIntensity = .42; }
+    else if (mt.userData.hl) { mt.userData.hl = false; mt.emissive.setHex(mt.userData.e0); mt.emissiveIntensity = mt.userData.ei0; }
+  };
+  const walk = o => { if (o.isMesh) apply(o); o.children.forEach(c => { if (!c.userData.info && !c.userData.own) walk(c); }); };
+  walk(obj);
+  if (obj.userData.partner) apply(obj.userData.partner);
+}
+let hovered = null, hoverXY = null;
+const infoEl = $('#info');
+function showInfo(o, cx, cy) {
+  const inf = typeof o.userData.info === 'function' ? o.userData.info(o) : o.userData.info;
+  infoEl.querySelector('.t').textContent = inf.title;
+  infoEl.querySelector('.t').className = 't' + (inf.warn ? ' warn' : '');
+  infoEl.querySelector('.s').textContent = inf.sub || '';
+  infoEl.querySelector('.d').textContent = inf.desc || '';
+  infoEl.querySelector('.rows').innerHTML = (inf.rows || []).map(r => `<div><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
+  const r = stage.getBoundingClientRect();
+  let x = cx - r.left + 18, y = cy - r.top + 18;
+  const iw = infoEl.offsetWidth || 240, ih = infoEl.offsetHeight || 120;
+  if (x + iw > r.width - 10) x = cx - r.left - iw - 18;
+  if (y + ih > r.height - 10) y = cy - r.top - ih - 18;
+  infoEl.style.left = Math.max(8, x) + 'px'; infoEl.style.top = Math.max(8, y) + 'px';
+  infoEl.classList.add('show');
+}
+function hideInfo() { infoEl.classList.remove('show'); }
+function pickAt(cx, cy) {
+  const r = stage.getBoundingClientRect(), x = cx - r.left, y = cy - r.top, T = tabs[cur];
+  let col = 0, w = r.width;
+  if (T.cols) { w = r.width / T.cols; col = clamp(Math.floor(x / w), 0, T.cols - 1); }
+  const nd = new THREE.Vector2(((x - col * w) / w) * 2 - 1, -(y / r.height) * 2 + 1);
+  ray.setFromCamera(nd, T.camera);
+  const roots = T.cols ? [T.scenes[col]] : [T.scene];
+  for (const h of ray.intersectObjects(roots, true)) {
+    if (h.object.userData.noPick || !isShown(h.object) || h.object.isSprite) continue;
+    const o = findInfo(h.object); if (o) return o;
+  }
+  return null;
+}
+function updateHover(cx, cy) {
+  const o = cx == null ? null : pickAt(cx, cy);
+  if (o !== hovered) { if (hovered) setHL(hovered, false); hovered = o; if (o) setHL(o, true); }
+  hoverXY = o ? [cx, cy] : null;
+  if (o) showInfo(o, cx, cy); else hideInfo();
+}
+function clearHover() { if (hovered) setHL(hovered, false); hovered = null; hoverXY = null; hideInfo(); }
+let downXY = null;
+const cvs = renderer.domElement;
+cvs.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && !e.buttons) updateHover(e.clientX, e.clientY); });
+cvs.addEventListener('pointerdown', e => { downXY = [e.clientX, e.clientY]; if (e.pointerType !== 'mouse') hideInfo(); });
+cvs.addEventListener('pointerup', e => { if (downXY && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) < 8) updateHover(e.clientX, e.clientY); downXY = null; });
+cvs.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') clearHover(); });
+
+function tweenCam(T, pos, tgt, dur = 1.2) { T.tw = { p0: T.camera.position.clone(), t0: T.controls.target.clone(), p1: pos.clone(), t1: tgt.clone(), k: 0, dur }; }
+function toggleEl(el, init, fn) { el.classList.toggle('on', init); el.addEventListener('click', () => { const v = !el.classList.contains('on'); el.classList.toggle('on', v); fn(v); }); }
+
+/* =====================================================================
+   TAB 1 · 我的问题
+   ===================================================================== */
+const PROBLEMS = [
+  { id: 'crowd', name: '牙列拥挤', teeth: [31, 32, 41, 42, 12, 13], desc: '牙弓间隙不足约 5mm，牙齿重叠错位，不易清洁，易蛀牙与牙龈炎。' },
+  { id: 'rot', name: '牙齿扭转', teeth: [22, 45], desc: '牙齿沿长轴扭转约 25–35°，影响邻接关系与咬合接触。' },
+  { id: 'oj', name: '深覆盖', teeth: [11, 21], desc: '上前牙唇倾前突，覆盖约 7mm（正常 2–3mm），伴深覆合，前牙外伤风险升高。' },
+  { id: 'mid', name: '中线偏斜', teeth: [], desc: '下牙列中线向右偏移约 2.5mm，与上中线及面部中线不一致。' },
+];
+const TNOTE = {
+  13: '尖牙唇侧高位（俗称“虎牙”），因间隙不足被挤出牙列。', 12: '侧切牙腭侧错位，被挤到牙弓内侧。',
+  22: '侧切牙扭转约 35°，与邻牙接触不良。', 45: '前磨牙扭转约 35°，影响咬合接触。',
+  11: '中切牙唇倾、伸长，覆盖约 7mm。', 21: '中切牙唇倾前突，覆盖约 7mm。',
+  31: '下中切牙舌侧错位并扭转，与邻牙重叠。', 41: '下中切牙唇侧错位、扭转。', 32: '下侧切牙唇侧错位。', 42: '下侧切牙舌侧错位、扭转。',
+};
+function buildTab0() {
+  const T = { scene: makeScene(), camera: new THREE.PerspectiveCamera(32, 1, 1, 4000), mode: 'dental' };
+  T.camera.position.set(0, 14, 128);
+  T.controls = makeControls(T.camera, new V3(0, -1, -16), 40, 700);
+  const probOf = {}; PROBLEMS.forEach(p => p.teeth.forEach(f => probOf[f] = p));
+  const dent = new Dentition({ gum: true, bone: true, info: o => {
+    const r = o.userData.tooth.rec, p = probOf[r.fdi];
+    if (p) return { title: '⚠ ' + p.name, sub: toothTitle(r), desc: TNOTE[r.fdi] || p.desc, warn: true };
+    return { title: toothTitle(r), desc: '位置与形态基本正常。' };
+  } });
+  dent.setUniform(1); T.scene.add(dent.group); dent.group.updateMatrixWorld(true);
+  T.dent = dent;
+  const markers = [];
+  dent.teeth.forEach(t => {
+    if (!probOf[t.rec.fdi]) return;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.glow, color: 0xffffff, transparent: true, depthWrite: false }));
+    const Tt = t.rec.T; sp.position.set(0, Tt.ch * .62, Tt.d * .5 + 1.6); sp.userData.own = true; sp.renderOrder = 5;
+    t.mesh.add(sp); markers.push({ sp, t, ph: rnd() * 6, p: probOf[t.rec.fdi] });
+  });
+  // 中线标记
+  const midInfo = { title: '⚠ 中线偏斜', desc: PROBLEMS[3].desc, warn: true };
+  const mU = new THREE.Mesh(new THREE.CylinderGeometry(.28, .28, 13, 12), new THREE.MeshStandardMaterial({ color: '#2f7fe0', roughness: .4 }));
+  mU.position.set(0, 4.5, 6.8); mU.userData.info = { title: '上牙列中线', desc: '与面部中线基本一致。' };
+  const mL = new THREE.Mesh(new THREE.CylinderGeometry(.28, .28, 13, 12), new THREE.MeshStandardMaterial({ color: '#e5484d', roughness: .4 }));
+  mL.position.set(0, -5.5, 3.6); mL.userData.info = midInfo;
+  T.scene.add(mU); dent.lowerG.add(mL);
+  addLabel(0, mU, '上中线', { off: new V3(0, 7, 0), cls: 'blue', vis: () => T.mode === 'dental' });
+  addLabel(0, mL, '下中线 · 右偏 2.5mm', { off: new V3(0, -7.5, 0), cls: 'warn', vis: () => T.mode === 'dental' });
+  const t11 = dent.byFdi(11), t21 = dent.byFdi(21);
+  addLabel(0, () => t11.mesh.localToWorld(new V3(4, t11.rec.T.ch, 3)).lerp(t21.mesh.localToWorld(new V3(-4, t21.rec.T.ch, 3)), .5).add(new V3(0, -3, 3)),
+    '覆盖 ≈ 7mm', { cls: 'warn', vis: () => T.mode === 'dental' });
+  addLabel(0, dent.byFdi(13).mesh, '尖牙唇侧高位', { off: new V3(0, 12, 4), cls: 'warn', vis: () => T.mode === 'dental' });
+
+  // 骨性视图：侧位头影
+  const ceph = buildCeph(T); ceph.group.visible = false; T.scene.add(ceph.group); T.ceph = ceph;
+
+  // UI
+  const list = $('#probList');
+  PROBLEMS.forEach(p => {
+    const el = document.createElement('div'); el.className = 'prob';
+    el.innerHTML = `<i class="dot"></i><div><b>${p.name}</b><span>${p.desc}</span></div>`;
+    el.onclick = () => {
+      if (T.mode !== 'dental') setMode('dental');
+      list.querySelectorAll('.prob').forEach(x => x.classList.remove('on')); el.classList.add('on');
+      T.focus = p.id;
+      const c = new V3(); let n = 0;
+      const ids = p.teeth.length ? p.teeth : [31, 41];
+      ids.forEach(f => { const tt = dent.byFdi(f); c.add(tt.mesh.localToWorld(new V3(0, tt.rec.T.ch * .6, 0))); n++; });
+      c.multiplyScalar(1 / n);
+      tweenCam(T, c.clone().add(new V3(c.x * .5, 10, 72)), c);
+    };
+    list.appendChild(el);
+  });
+  toggleEl($('#tgGum'), true, v => dent.setGum(v));
+  toggleEl($('#tgBone'), true, v => dent.setBone(v));
+  const seg = $('#segView');
+  function setMode(m) {
+    T.mode = m; seg.querySelectorAll('.btn').forEach(b => b.classList.toggle('on', b.dataset.v === m));
+    dent.group.visible = mU.visible = m === 'dental'; ceph.group.visible = m !== 'dental';
+    $('#cephPanel').style.display = m === 'dental' ? 'none' : 'block';
+    clearHover();
+    if (m === 'dental') tweenCam(T, new V3(0, 14, 128), new V3(0, -1, -16));
+    else tweenCam(T, new V3(-470, -10, 40), new V3(0, -8, 15));
+  }
+  seg.querySelectorAll('.btn').forEach(b => b.onclick = () => setMode(b.dataset.v));
+  T.update = (dt, time) => {
+    for (const m of markers) {
+      const s = .5 + .5 * Math.sin(time * 4 + m.ph), dim = T.focus && T.focus !== m.p.id ? .35 : 1;
+      m.sp.scale.setScalar((5 + 3.5 * s) * (dim < 1 ? .7 : 1)); m.sp.material.opacity = (.35 + .55 * s) * dim;
+      const mt = m.t.mesh.material;
+      if (!mt.userData.hl) { mt.emissive.setRGB(.6 * s * dim, .04 * s * dim, .05 * s * dim); mt.emissiveIntensity = 1; }
+    }
+  };
+  return T;
+}
+
+/* 侧位头影：颅骨 / 下颌 / 牙齿 / 软组织 + S N A B 点与 ANB 角 */
+function buildCeph(T) {
+  const group = new THREE.Group(); group.position.set(0, 15, -5);
+  const P3 = (x, y, layer = 0) => new V3(layer, y, x);
+  const S = new THREE.Vector2(0, 0), N = new THREE.Vector2(68, 14);
+  const dirNS = S.clone().sub(N).normalize(), base = Math.atan2(dirNS.y, dirNS.x);
+  const fromN = (deg, len) => new THREE.Vector2(N.x + Math.cos(base + deg * Math.PI / 180) * len, N.y + Math.sin(base + deg * Math.PI / 180) * len);
+  const A = fromN(82, 52), B = fromN(76, 98);
+  const ang = (P) => { const v = P.clone().sub(N).normalize(); return Math.acos(clamp(v.dot(dirNS), -1, 1)) * 180 / Math.PI; };
+  const SNA = ang(A), SNB = ang(B), ANB = SNA - SNB;
+  $('#mSNA').textContent = SNA.toFixed(1) + '°'; $('#mSNB').textContent = SNB.toFixed(1) + '°'; $('#mANB').textContent = ANB.toFixed(1) + '°';
+  const boneM = new THREE.MeshStandardMaterial({ map: boneTexScaled(.02), color: '#f6ecd8', roughness: .7 });
+  const mkShape = (pts, holes = []) => {
+    const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]);
+    sh.splineThru(pts.slice(1).concat([pts[0]]).map(p => new THREE.Vector2(p[0], p[1])));
+    holes.forEach(h => sh.holes.push(h)); return sh;
+  };
+  const extrude = (sh, depth, mat, info) => {
+    const g = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: true, bevelThickness: 1.2, bevelSize: 1.2, bevelSegments: 3, curveSegments: 40 });
+    g.translate(0, 0, -depth / 2);
+    const m = new THREE.Mesh(g, mat.clone()); m.rotation.y = -Math.PI / 2; m.userData.info = info; group.add(m); return m;
+  };
+  const cran = [[68, 14], [75, 26], [74, 48], [64, 78], [42, 100], [10, 112], [-28, 110], [-62, 92], [-86, 60], [-96, 22], [-92, -10], [-76, -34], [-52, -46], [-28, -38], [-14, -26], [2, -30], [22, -34], [36, -38], [48, -44], [62, -52], [74, -57], [72, -47], [A.x, A.y], [76, -33], [84, -31], [74, -24], [72, -10], [78, 0], [70, 8]];
+  const orbit = new THREE.Path(); orbit.absellipse(53, -3, 12, 11, 0, Math.PI * 2, true);
+  const sella = new THREE.Path(); sella.absarc(0, -1, 4.5, 0, Math.PI * 2, true);
+  extrude(mkShape(cran, [orbit, sella]), 6, boneM, { title: '颅骨与上颌骨', desc: `上颌位置 SNA ${SNA.toFixed(1)}°，在正常范围内。` });
+  const mand = [[-14, -22], [-6, -24], [-6, -32], [6, -40], [20, -30], [26, -42], [34, -56], [46, -62], [60, -66], [68, -70], [B.x, B.y], [67, -96], [63, -104], [55, -109], [30, -106], [6, -100], [-8, -92], [-14, -76], [-16, -50], [-18, -30]];
+  extrude(mkShape(mand), 6, boneM, { title: '下颌骨', desc: `SNB ${SNB.toFixed(1)}°，低于正常值，提示下颌后缩（骨性 II 类）。`, warn: true });
+  const toothShape = (p0, p1, wr, wc) => {
+    const a = new THREE.Vector2(...p0), b = new THREE.Vector2(...p1), ax = b.clone().sub(a), n = new THREE.Vector2(-ax.y, ax.x).normalize();
+    const prof = [[0, .25], [.3, .6], [.55, 1], [.75, 1.08], [.92, .7], [1, .15]], L = [], R = [];
+    prof.forEach(([t, s]) => { const c = a.clone().add(ax.clone().multiplyScalar(t)), w = (t < .55 ? wr : wc) * s; L.push(c.clone().add(n.clone().multiplyScalar(w))); R.push(c.clone().add(n.clone().multiplyScalar(-w))); });
+    const sh = new THREE.Shape(); const all = L.concat(R.reverse()); sh.moveTo(all[0].x, all[0].y); sh.splineThru(all.slice(1).concat([all[0]])); return sh;
+  };
+  const tM = MAT.tooth.clone(); tM.map = null; tM.color.set('#f6f0e2');
+  extrude(toothShape([61, -27], [80, -63], 2.6, 3.8), 5, tM, { title: '上中切牙', desc: '明显唇倾，覆盖约 7mm。', warn: true });
+  extrude(toothShape([57, -95], [73, -60], 2.3, 3.2), 5, tM, { title: '下中切牙', desc: '代偿性唇倾，以掩饰下颌后缩。' });
+  extrude(toothShape([41, -30], [43, -60], 4.2, 5.4), 5, tM, { title: '上颌第一磨牙', desc: '远中尖对下颌第一磨牙近中，呈远中关系。' });
+  extrude(toothShape([45, -92], [46, -62], 4.2, 5.4), 5, tM, { title: '下颌第一磨牙', desc: '相对上颌磨牙偏远中，II 类磨牙关系。' });
+  // 软组织侧貌
+  const soft = [[70, 112], [82, 70], [86, 30], [79, 13], [86, -4], [98, -18], [106, -26], [100, -34], [90, -38], [92, -44], [97, -52], [93, -58], [88, -61], [93, -66], [95, -72], [88, -80], [80, -86], [82, -96], [82, -104], [74, -114], [60, -120], [45, -124], [38, -142]];
+  const pm = new THREE.MeshStandardMaterial({ color: '#e0705f', roughness: .5 });
+  const prof = tube(soft.map(p => P3(p[0], p[1], -9)), .9, pm, 200); prof.userData.info = { title: '软组织侧貌', desc: '侧貌凸，下唇外翻，颏部后缩。' }; group.add(prof);
+  const skinSh = new THREE.Shape(); skinSh.moveTo(soft[0][0], soft[0][1]);
+  skinSh.splineThru(soft.slice(1).map(p => new THREE.Vector2(p[0], p[1])));
+  [[20, -150], [-112, -150], [-118, 40], [-100, 112], [-40, 140], [40, 132]].forEach(p => skinSh.lineTo(p[0], p[1]));
+  const skin = new THREE.Mesh(new THREE.ShapeGeometry(skinSh, 40), new THREE.MeshStandardMaterial({ color: '#f4c6ac', transparent: true, opacity: .32, depthWrite: false, side: THREE.DoubleSide }));
+  skin.rotation.y = -Math.PI / 2; skin.position.x = 7; skin.userData.noPick = true; group.add(skin);
+  // 测量点与线
+  const lineM = new THREE.MeshBasicMaterial({ color: '#1f5fbf', depthTest: false, transparent: true });
+  const lineM2 = new THREE.MeshBasicMaterial({ color: '#e5484d', depthTest: false, transparent: true });
+  const L = 10;
+  const ext = (P, f) => N.clone().add(P.clone().sub(N).multiplyScalar(f));
+  [[S, N, lineM, 1], [N, ext(A, 1.25), lineM2, 1], [N, ext(B, 1.12), lineM2, 1]].forEach(([a, b, m]) => {
+    const tb = tube([P3(a.x, a.y, -L), P3(b.x, b.y, -L)], .55, m, 4); tb.renderOrder = 10; tb.userData.noPick = true; group.add(tb);
+  });
+  const arcPts = []; const aA = Math.atan2(A.y - N.y, A.x - N.x), aB = Math.atan2(B.y - N.y, B.x - N.x);
+  for (let i = 0; i <= 24; i++) { const a = lerp(aA, aB, i / 24); arcPts.push(P3(N.x + Math.cos(a) * 44, N.y + Math.sin(a) * 44, -L)); }
+  const arc = tube(arcPts, .7, new THREE.MeshBasicMaterial({ color: '#e5484d', depthTest: false, transparent: true }), 30); arc.renderOrder = 11; group.add(arc);
+  arc.userData.info = { title: `ANB 角 = ${ANB.toFixed(1)}°`, desc: '反映上下颌骨前后关系。正常 0–4°，大于 4° 为骨性 II 类。', warn: true };
+  const ptM = new THREE.MeshBasicMaterial({ color: '#1c2a39', depthTest: false, transparent: true });
+  const lm = [['S', S, '蝶鞍点 S：颅底参考点'], ['N', N, '鼻根点 N：额鼻缝最前点'], ['A', A, '上齿槽座点 A：代表上颌基骨位置'], ['B', B, '下齿槽座点 B：代表下颌基骨位置']];
+  lm.forEach(([n, p, d]) => {
+    const s = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 12), ptM.clone()); s.position.copy(P3(p.x, p.y, -L)); s.renderOrder = 12;
+    s.userData.info = { title: '标志点 ' + n, desc: d }; group.add(s);
+    addLabel(0, s, n, { cls: 'pt', off: new V3(0, 3, 0), vis: () => T.mode === 'skeletal' });
+  });
+  const am = Math.atan2(Math.sin(aA) + Math.sin(aB), Math.cos(aA) + Math.cos(aB));
+  addLabel(0, P3(N.x + Math.cos(am) * 50, N.y + Math.sin(am) * 50, -L).add(group.position), `ANB = ${ANB.toFixed(1)}°`, { cls: 'warn big', vis: () => T.mode === 'skeletal' });
+  addLabel(0, P3(30, 16, -L).add(group.position), `SN 前颅底平面`, { cls: 'blue', vis: () => T.mode === 'skeletal' });
+  return { group, SNA, SNB, ANB };
+}
+
+/* =====================================================================
+   TAB 2 · 方案对比（三栏同步）
+   ===================================================================== */
+const PLANS = [
+  { name: '金属托槽', sub: '传统固定矫治 · 性价比高', fee: [1.5, 3], dur: '约 20–30 个月' },
+  { name: '自锁托槽', sub: '滑盖锁丝 · 摩擦力小', fee: [2.5, 4.5], dur: '约 18–26 个月' },
+  { name: '隐形矫治', sub: '透明牙套 · 可自行摘戴', fee: [3.5, 6], dur: '约 18–30 个月' },
+];
+const STATE = { plan: 2, preset: 1 };
+function buildTab1() {
+  const T = { cols: 3, scenes: [], camera: new THREE.PerspectiveCamera(30, 1, 1, 2000), colState: [] };
+  T.camera.position.set(0, 6, 150);
+  T.controls = makeControls(T.camera, new V3(0, -2, -14), 50, 380);
+  const ui = $('#ui1');
+  for (let c = 0; c < 3; c++) {
+    const scene = makeScene(); T.scenes.push(scene);
+    const dent = new Dentition({ gum: true, info: o => ({ title: toothTitle(o.userData.tooth.rec), desc: '牙齿' }) });
+    dent.setUniform(.35); scene.add(dent.group); scene.updateMatrixWorld(true);
+    const cs = { e: 0, et: 0, parts: [], wires: [], dent, scene };
+    T.colState.push(cs);
+    if (c === 0) buildFixed(cs, c, false); else if (c === 1) buildFixed(cs, c, true); else buildAligner(cs, c);
+    applyExplode(cs, true);
+    // 栏头
+    const h = document.createElement('div'); h.className = 'colhead'; h.style.left = (c * 33.333 + 16.667) + '%';
+    h.innerHTML = `<b>${PLANS[c].name}</b><span>${PLANS[c].sub}</span><div class="row"><button class="btn sm ex">⇔ 分解</button><button class="btn sm pk">设为推荐</button></div>`;
+    h.querySelector('.ex').onclick = (e) => { cs.et = cs.et > .5 ? 0 : 1; e.currentTarget.classList.toggle('on', cs.et > .5); e.currentTarget.textContent = cs.et > .5 ? '⇔ 合拢' : '⇔ 分解'; };
+    h.querySelector('.pk').onclick = () => { STATE.plan = c; refreshPlan(); };
+    ui.appendChild(h);
+    if (c) { const d = document.createElement('div'); d.className = 'coldiv'; d.style.left = (c * 33.333) + '%'; ui.appendChild(d); }
+  }
+  T.update = (dt) => {
+    for (const cs of T.colState) {
+      if (Math.abs(cs.e - cs.et) > 1e-3) { cs.e += (cs.et - cs.e) * Math.min(1, dt * 4.5); if (Math.abs(cs.e - cs.et) < 2e-3) cs.e = cs.et; applyExplode(cs); }
+    }
+  };
+  buildTable();
+  refreshPlan();
+  return T;
+}
+function applyExplode(cs, force) {
+  for (const p of cs.parts) p.obj.position.copy(p.base).addScaledVector(p.dir, p.dist * cs.e);
+  cs.scene.updateMatrixWorld(true);
+  for (const w of cs.wires) {
+    const pts = w.getters.map(f => f());
+    const a = pts[0], b = pts[1], y = pts[pts.length - 1], z = pts[pts.length - 2];
+    pts.unshift(a.clone().add(a.clone().sub(b).setLength(2.5))); pts.push(y.clone().add(y.clone().sub(z).setLength(2.5)));
+    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, 'centripetal'), 260, .21, 8, false);
+    if (w.mesh) { w.mesh.geometry.dispose(); w.mesh.geometry = geo; }
+    else { w.mesh = new THREE.Mesh(geo, w.mat); w.mesh.userData.info = w.info; cs.scene.add(w.mesh); }
+  }
+}
+const BR = {
+  base: new THREE.BoxGeometry(3.4, 3.0, .35), body: new THREE.BoxGeometry(2.4, 2.2, .8), wing: new THREE.BoxGeometry(.85, .75, 1.0), tip: new THREE.BoxGeometry(.85, .32, .35),
+  lig: new THREE.TorusGeometry(1.15, .26, 10, 28),
+  slBody: (() => { const g = new THREE.ExtrudeGeometry(rrect(2.9, 2.6, .7), { depth: 1.3, bevelEnabled: true, bevelThickness: .2, bevelSize: .2, bevelSegments: 3 }); g.translate(0, 0, .15); return g; })(),
+  door: (() => { const g = new THREE.ExtrudeGeometry(rrect(2.5, 1.35, .3), { depth: .22, bevelEnabled: true, bevelThickness: .06, bevelSize: .06, bevelSegments: 2 }); return g; })(),
+  tube: new THREE.CylinderGeometry(.55, .55, 3.8, 16), pad: new THREE.BoxGeometry(3.8, 2.6, .3),
+  attach: (() => { const g = new THREE.ExtrudeGeometry(rrect(2.6, 1.6, .5), { depth: .5, bevelEnabled: true, bevelThickness: .25, bevelSize: .2, bevelSegments: 3 }); return g; })(),
+};
+function numLbl(n, s) { return `<em>${n}</em>${s}`; }
+function buildFixed(cs, col, selfLig) {
+  const metal = MAT.metal.clone(), lig = MAT.ligature.clone(), doorM = MAT.door.clone(), bandM = MAT.metal.clone(), tubeM = MAT.metal.clone();
+  const I = selfLig ? {
+    br: { title: '① 自锁托槽主体', desc: '托槽本体与槽沟一体成型，体积较小，边缘圆钝，舒适度更高。' },
+    door: { title: '② 滑动锁盖', desc: '用滑盖代替结扎圈锁住弓丝，摩擦力小，牙齿移动更顺畅，复诊间隔更长。' },
+    wire: { title: '③ 高弹镍钛弓丝', desc: '形状记忆合金，在低摩擦下持续释放轻力。' },
+    tube: { title: '④ 颊面管', desc: '直接粘接在磨牙颊面，供弓丝末端穿入固定。' },
+  } : {
+    br: { title: '① 金属托槽', desc: '不锈钢双翼托槽，粘接在牙面上，承载弓丝并传递矫治力。' },
+    wire: { title: '② 弓丝', desc: '镍钛 / 不锈钢弓丝，利用回弹力带动牙齿沿牙弓排齐。' },
+    lig: { title: '③ 结扎圈', desc: '弹性橡皮圈把弓丝固定在托槽槽沟内，每次复诊更换，可选颜色。' },
+    band: { title: '④ 磨牙带环', desc: '套在第一磨牙上的不锈钢环，提供稳定支抗。' },
+    tube: { title: '⑤ 颊面管', desc: '焊接在带环颊侧，供弓丝末端穿入。' },
+  };
+  const getters = { U: [], L: [] };
+  const seq = (up) => cs.dent.teeth.filter(t => t.rec.upper === up && t.rec.n <= 6).sort((a, b) => (a.rec.side * a.rec.d) - (b.rec.side * b.rec.d));
+  for (const up of [true, false]) for (const t of seq(up)) {
+    const r = t.rec, Tt = r.T, gl = getters[up ? 'U' : 'L'];
+    if (r.n <= 5) {
+      const { p, n } = labialPoint(t, .52);
+      const g = new THREE.Group(); g.position.copy(p); g.quaternion.setFromUnitVectors(Z_AXIS, n);
+      const sc = Tt.w < 6 ? .82 : 1; g.scale.setScalar(sc);
+      if (!selfLig) {
+        const base = new THREE.Mesh(BR.base, metal); base.position.z = .18; g.add(base);
+        const body = new THREE.Mesh(BR.body, metal); body.position.z = .7; g.add(body);
+        for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+          const w = new THREE.Mesh(BR.wing, metal); w.position.set(sx * .8, sy * .75, 1.3); g.add(w);
+          const tp = new THREE.Mesh(BR.tip, metal); tp.position.set(sx * .8, sy * 1.18, 1.62); g.add(tp);
+        }
+        const L = new THREE.Mesh(BR.lig, lig); L.position.z = 1.3; L.userData.info = I.lig; g.add(L);
+        cs.parts.push({ obj: L, base: L.position.clone(), dir: Z_AXIS.clone(), dist: 3.5 });
+        if (r.fdi === 21) addLabel(1, L, numLbl(3, '结扎圈'), { cls: 'num', col, off: new V3(0, 1.5, 0) });
+      } else {
+        const body = new THREE.Mesh(BR.slBody, metal); g.add(body);
+        const d = new THREE.Mesh(BR.door, doorM); d.position.set(0, 0, 1.75); d.userData.info = I.door; g.add(d);
+        cs.parts.push({ obj: d, base: d.position.clone(), dir: new V3(0, .8, .6), dist: 3.4 });
+        if (r.fdi === 21) addLabel(1, d, numLbl(2, '滑动锁盖'), { cls: 'num', col, off: new V3(0, 1, 0) });
+      }
+      g.userData.info = I.br; t.mesh.add(g);
+      cs.parts.push({ obj: g, base: p.clone(), dir: n.clone(), dist: 5 });
+      if (r.fdi === 23) addLabel(1, g, numLbl(1, selfLig ? '自锁托槽' : '金属托槽'), { cls: 'num', col, off: new V3(0, 2, 0) });
+      gl.push(() => g.localToWorld(new V3(0, 0, 1.3 + 6 * cs.e)));
+    } else {
+      // 第一磨牙：带环 + 颊面管（自锁：直接粘接颊面管）
+      const hw = Tt.w / 2, hd = Tt.d / 2;
+      let holder, tubeLocal;
+      if (!selfLig) {
+        const bg = new THREE.CylinderGeometry(1, 1, 3.8, 40, 1, true); bg.scale(hw + .3, 1, hd + .3);
+        const band = new THREE.Mesh(bg, Object.assign(bandM, { side: THREE.DoubleSide })); band.position.y = Tt.ch * .5; band.userData.info = I.band;
+        t.mesh.add(band); cs.parts.push({ obj: band, base: band.position.clone(), dir: Y_AXIS.clone(), dist: 9 });
+        const tb = new THREE.Mesh(BR.tube, tubeM); tb.rotation.z = Math.PI / 2; tb.position.set(0, 0, hd + .9); tb.userData.info = I.tube; band.add(tb);
+        cs.parts.push({ obj: tb, base: tb.position.clone(), dir: Z_AXIS.clone(), dist: 3 });
+        holder = band; tubeLocal = () => new V3(0, 0, hd + .9 + 3 * cs.e + 5 * cs.e);
+        if (r.fdi === 26) { addLabel(1, band, numLbl(4, '带环'), { cls: 'num', col, off: new V3(0, 0, -hd) }); addLabel(1, tb, numLbl(5, '颊面管'), { cls: 'num', col, off: new V3(0, 1, 0) }); }
+      } else {
+        const { p, n } = labialPoint(t, .5);
+        const g = new THREE.Group(); g.position.copy(p); g.quaternion.setFromUnitVectors(Z_AXIS, n);
+        const pad = new THREE.Mesh(BR.pad, tubeM); pad.position.z = .15; g.add(pad);
+        const tb = new THREE.Mesh(BR.tube, tubeM); tb.rotation.z = Math.PI / 2; tb.position.z = .85; g.add(tb);
+        g.userData.info = I.tube; t.mesh.add(g); cs.parts.push({ obj: g, base: p.clone(), dir: n.clone(), dist: 5 });
+        holder = g; tubeLocal = () => new V3(0, 0, .85 + 6 * cs.e);
+        if (r.fdi === 26) addLabel(1, g, numLbl(4, '颊面管'), { cls: 'num', col, off: new V3(0, 1.5, 0) });
+      }
+      gl.push(() => holder.localToWorld(tubeLocal()));
+    }
+  }
+  const wm = selfLig ? MAT.niti.clone() : MAT.wire.clone();
+  for (const k of ['U', 'L']) cs.wires.push({ getters: getters[k], mat: wm, info: I.wire });
+  const u = getters.U;
+  addLabel(1, () => u[5]().lerp(u[6](), .5), numLbl(selfLig ? 3 : 2, selfLig ? '镍钛弓丝' : '弓丝'), { cls: 'num', col });
+}
+function buildAligner(cs, col) {
+  const mU = MAT.aligner.clone(), mL = MAT.aligner.clone(), cm = MAT.composite.clone();
+  const iU = { title: '① 上颌隐形牙套', desc: '医用级透明高分子膜片热压成型，每 7–14 天更换一副，每天佩戴 ≥22 小时。' };
+  const iL = { title: '② 下颌隐形牙套', desc: '与上颌牙套配合，逐步把牙齿推向目标位置。进食、刷牙时取下。' };
+  const iA = { title: '③ 附件', desc: '粘接在牙面的牙色树脂小凸点，帮助牙套“抓住”牙齿，完成扭转、伸长等复杂移动。' };
+  for (const t of cs.dent.teeth) {
+    const s = new THREE.Mesh(toothGeo(t.rec.key, 'shell', .5), t.rec.upper ? mU : mL);
+    s.userData.info = t.rec.upper ? iU : iL; t.mesh.add(s);
+    cs.parts.push({ obj: s, base: new V3(), dir: Y_AXIS.clone(), dist: 9 });
+    if (t.rec.fdi === 11) addLabel(1, s, numLbl(1, '上颌牙套'), { cls: 'num', col, off: new V3(0, t.rec.T.ch, 2) });
+    if (t.rec.fdi === 31) addLabel(1, s, numLbl(2, '下颌牙套'), { cls: 'num', col, off: new V3(0, t.rec.T.ch + 1, 2) });
+    if ([3, 4, 5].includes(t.rec.n)) {
+      const { p, n } = labialPoint(t, .45);
+      const a = new THREE.Mesh(BR.attach, cm); a.position.copy(p); a.quaternion.setFromUnitVectors(Z_AXIS, n);
+      a.userData.info = iA; t.mesh.add(a); cs.parts.push({ obj: a, base: p.clone(), dir: n.clone(), dist: 4 });
+      if (t.rec.fdi === 23) addLabel(1, a, numLbl(3, '附件'), { cls: 'num', col, off: new V3(0, 1, 0) });
+    }
+    if (t.rec.fdi === 24) addLabel(1, t.mesh, numLbl(4, '牙齿'), { cls: 'num', col, off: new V3(0, 2, 3) });
+  }
+}
+function stars(n) { return `<span class="star">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>`; }
+function buildTable() {
+  const rows = [
+    ['美观', [stars(2) + '<br><small>托槽明显</small>', stars(3) + '<br><small>体积较小</small>', stars(5) + '<br><small>几乎看不见</small>']],
+    ['舒适', [stars(2) + '<br><small>初期易磨口腔</small>', stars(3) + '<br><small>摩擦小、酸痛轻</small>', stars(4) + '<br><small>无金属刺激</small>']],
+    ['复诊间隔', ['约 4 周', '约 6–8 周', '约 8–12 周（可远程监控）']],
+    ['疗程', PLANS.map(p => p.dur)],
+    ['价格区间', PLANS.map(p => `¥${p.fee[0]}–${p.fee[1]} 万`)],
+    ['适合人群', ['复杂病例、预算优先', '希望减少复诊次数', '注重美观、能自律佩戴']],
+  ];
+  $('#cmpTable').innerHTML = `<thead><tr><th>对比项</th>${PLANS.map((p, i) => `<th data-c="${i}">${p.name}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${r[0]}</td>${r[1].map((v, i) => `<td data-c="${i}">${v}</td>`).join('')}</tr>`).join('') + '</tbody>';
+}
+function refreshPlan() {
+  document.querySelectorAll('#cmpTable [data-c]').forEach(el => el.classList.toggle('sel', +el.dataset.c === STATE.plan));
+  document.querySelectorAll('.colhead').forEach((h, i) => { h.classList.toggle('chosen', i === STATE.plan); h.querySelector('.pk').textContent = i === STATE.plan ? '✓ 已推荐' : '设为推荐'; h.querySelector('.pk').classList.toggle('on', i === STATE.plan); });
+}
+
+/* =====================================================================
+   TAB 3 · 矫治过程
+   ===================================================================== */
+const HEAT = [[0, new THREE.Color('#3b82f6')], [.33, new THREE.Color('#22c55e')], [.66, new THREE.Color('#facc15')], [1, new THREE.Color('#ef4444')]];
+function heatColor(v, out) {
+  v = clamp(v, 0, 1);
+  for (let i = 0; i < HEAT.length - 1; i++) if (v <= HEAT[i + 1][0]) return out.copy(HEAT[i][1]).lerp(HEAT[i + 1][1], (v - HEAT[i][0]) / (HEAT[i + 1][0] - HEAT[i][0]));
+  return out.copy(HEAT[3][1]);
+}
+function buildTab2() {
+  const T = { scene: makeScene(), camera: new THREE.PerspectiveCamera(32, 1, 1, 2000), k: 0, playing: false, heat: false };
+  T.camera.position.set(0, 16, 125);
+  T.controls = makeControls(T.camera, new V3(0, -1, -16), 40, 320);
+  const dent = new Dentition({ gum: true, info: o => {
+    const t = o.userData.tooth, r = t.rec;
+    const st = t.prog <= 0 ? '等待移动' : t.prog >= 1 ? '已到位 ✓' : '移动中';
+    return { title: `FDI ${r.fdi}`, sub: `${QNAME[r.q]}${r.T.name}`, desc: `第 ${Math.round(T.k)} 副牙套时的状态`,
+      rows: [['累计移动', t.mv.toFixed(2) + ' mm'], ['累计旋转', t.rot.toFixed(1) + '°'], ['计划窗口', `第 ${r.win[0]}–${r.win[1]} 副`], ['状态', st]] };
+  } });
+  T.scene.add(dent.group); T.dent = dent;
+  const ghost = new Dentition({ gum: false, ghost: true }); ghost.setUniform(1); ghost.group.visible = false; T.scene.add(ghost.group);
+  const mU = MAT.aligner.clone(), mL = MAT.aligner.clone(), shells = [];
+  dent.teeth.forEach(t => { const s = new THREE.Mesh(toothGeo(t.rec.key, 'shell', .45), t.rec.upper ? mU : mL); s.userData.noPick = true; s.userData.own = true; s.visible = false; t.mesh.add(s); shells.push(s); });
+  dent.setStage(0); T.scene.updateMatrixWorld(true);
+  const ref = new V3(), _q = new THREE.Quaternion(), _c = new THREE.Color();
+  dent.teeth.forEach(t => { t.c0 = t.mesh.localToWorld(new V3(0, t.rec.T.ch * .7, 0)); t.q0 = t.mesh.getWorldQuaternion(new THREE.Quaternion()); });
+  const PH = [[8, '阶段一：排齐整平', '解除拥挤、纠正扭转，为后续内收创造条件。'], [16, '阶段二：内收与咬合调整', '前牙内收减小覆盖，下牙列前移纠正中线。'], [24.01, '阶段三：精细调整', '中线对齐、咬合精调，进入保持准备。']];
+  T.apply = (k) => {
+    T.k = k; dent.setStage(k); T.scene.updateMatrixWorld(true);
+    let best = null;
+    for (const t of dent.teeth) {
+      t.mv = t.mesh.localToWorld(ref.set(0, t.rec.T.ch * .7, 0)).distanceTo(t.c0);
+      t.mesh.getWorldQuaternion(_q); t.rot = 2 * Math.acos(clamp(Math.abs(_q.dot(t.q0)), 0, 1)) * 180 / Math.PI;
+      if (!best || t.mv > best.mv) best = t;
+      const mt = t.mesh.material;
+      if (T.heat) heatColor(t.mv / 4, mt.color); else mt.color.set(0xffffff);
+    }
+    const s = $('#stageSlider'); s.value = k; s.style.setProperty('--p', (k / 24 * 100) + '%');
+    $('#stageNum').textContent = Math.round(k);
+    $('#weekTxt').textContent = k < .5 ? '治疗开始' : `约第 ${Math.round(k * 2)} 周（每副 10–14 天）`;
+    const ph = PH.find(p => k < p[0]); $('#phaseTitle').textContent = ph[1]; $('#phaseDesc').textContent = ph[2];
+    $('#maxMove').textContent = best.mv < .05 ? '—' : `${best.rec.fdi} · ${best.mv.toFixed(1)}mm`;
+    $('#pctDone').textContent = Math.round(k / 24 * 100) + '%';
+    if (hovered && hoverXY && cur === 2) showInfo(hovered, ...hoverXY);
+  };
+  T.apply(0);
+  const play = $('#playBtn');
+  const setPlay = v => { T.playing = v; play.textContent = v ? '❚❚' : '▶'; };
+  play.onclick = () => { if (!T.playing && T.k >= 24) T.apply(0); setPlay(!T.playing); };
+  $('#stageSlider').addEventListener('input', e => { setPlay(false); T.apply(+e.target.value); });
+  toggleEl($('#tgHeat'), false, v => { T.heat = v; $('#legendBox').style.display = v ? 'block' : 'none'; T.apply(T.k); });
+  toggleEl($('#tgGhost'), false, v => ghost.group.visible = v);
+  toggleEl($('#tgShell'), false, v => shells.forEach(s => s.visible = v));
+  toggleEl($('#tgGum3'), true, v => dent.setGum(v));
+  T.update = (dt) => { if (T.playing) { const k = Math.min(24, T.k + dt * 1.6); T.apply(k); if (k >= 24) setPlay(false); } };
+  return T;
+}
+
+/* =====================================================================
+   TAB 4 · 原理（局部分层 + 受力与骨改建）
+   ===================================================================== */
+function buildTab3() {
+  const T = { scene: makeScene(), camera: new THREE.PerspectiveCamera(32, 1, .5, 1000), e: 0, et: 0, force: false, ft: 0 };
+  T.camera.position.set(-38, 20, 62);
+  T.controls = makeControls(T.camera, new V3(0, -3, 0), 20, 200);
+  const seg = new THREE.Group(); T.scene.add(seg);
+  const LAYERS = {
+    shell: { n: 1, name: '隐形牙套', desc: '透明膜片包裹牙冠，按设计的微小位移给牙齿施加持续轻力。', objs: [] },
+    attach: { n: 2, name: '附件', desc: '树脂凸点提供受力面，让牙套更好地控制牙齿方向。', objs: [] },
+    tooth: { n: 3, name: '牙齿', desc: '牙冠露在口内，牙根埋在牙槽骨中，约占牙齿全长的 2/3。', objs: [] },
+    pdl: { n: 4, name: '牙周膜', desc: '牙根与骨之间约 0.2mm 的纤维膜，感知压力并启动骨改建，是牙齿能被移动的关键。', objs: [] },
+    bone: { n: 5, name: '牙槽骨', desc: '包绕牙根的骨组织，可在压力侧吸收、张力侧沉积，持续重塑。', objs: [] },
+  };
+  const info = k => ({ title: `${'①②③④⑤'[LAYERS[k].n - 1]} ${LAYERS[k].name}`, desc: LAYERS[k].desc });
+  const defs = [['U2', -7.65, -1], ['U1', 0, 0], ['U1', 8.6, 1]];
+  const pdlG = new THREE.Group(); seg.add(pdlG);
+  const shellM = MAT.aligner.clone(), attM = MAT.composite.clone();
+  const teeth = [];
+  defs.forEach(([key, x], i) => {
+    const wrap = new THREE.Group(); wrap.position.set(x, 0, 0); seg.add(wrap);
+    const mesh = new THREE.Mesh(toothGeo(key), MAT.tooth.clone()); mesh.userData.info = info('tooth'); wrap.add(mesh);
+    LAYERS.tooth.objs.push(mesh);
+    const t = { rec: { T: TT[key], kind: TT[key].kind }, mesh, wrap };
+    const pg = toothGeo(key, 'pdl', .38).clone();
+    const cols = new Float32Array(pg.attributes.position.count * 3);
+    const base = new THREE.Color('#f2a3b3');
+    for (let j = 0; j < pg.attributes.position.count; j++) base.toArray(cols, j * 3);
+    pg.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    const pdl = new THREE.Mesh(pg, new THREE.MeshPhysicalMaterial({ vertexColors: true, transparent: true, opacity: .8, roughness: .5, side: THREE.DoubleSide, depthWrite: false, sheen: .5 }));
+    pdl.position.x = x; pdl.userData.info = info('pdl'); pdlG.add(pdl); LAYERS.pdl.objs.push(pdl);
+    t.pdl = pdl;
+    const sh = new THREE.Mesh(toothGeo(key, 'shell', .55), shellM); sh.userData.info = info('shell'); mesh.add(sh); LAYERS.shell.objs.push(sh);
+    const { p, n } = labialPoint(t, .48);
+    const at = new THREE.Mesh(BR.attach, attM); at.position.copy(p); at.quaternion.setFromUnitVectors(Z_AXIS, n); at.userData.info = info('attach'); mesh.add(at);
+    LAYERS.attach.objs.push(at);
+    t.sh = sh; t.at = at; t.atBase = p.clone(); t.atDir = n.clone();
+    teeth.push(t);
+  });
+  // 牙槽骨：截面拉伸
+  const bs = new THREE.Shape();
+  const bp = [[4.6, -1.8], [5.6, -6], [6.6, -13], [7.2, -19], [6.2, -23], [0, -24.5], [-6.6, -23], [-7.6, -18], [-7, -10], [-5.6, -3.5], [-4.3, -1.8], [0, -2.6]];
+  bs.moveTo(bp[0][0], bp[0][1]); bs.splineThru(bp.slice(1).concat([bp[0]]).map(p => new THREE.Vector2(p[0], p[1])));
+  const bg = new THREE.ExtrudeGeometry(bs, { depth: 26, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 3, curveSegments: 30 });
+  bg.translate(0, 0, -13);
+  const boneM = new THREE.MeshStandardMaterial({ map: boneTexScaled(.07), color: '#f4ead6', roughness: .85, transparent: true, opacity: .42, depthWrite: false, side: THREE.DoubleSide });
+  const bone = new THREE.Mesh(bg, boneM); bone.rotation.y = -Math.PI / 2; bone.position.x = .5; bone.userData.info = info('bone'); seg.add(bone); LAYERS.bone.objs.push(bone);
+  // 标签
+  const mid = teeth[1];
+  const L1 = [
+    addLabel(3, mid.sh, numLbl(1, '隐形牙套'), { cls: 'num', off: new V3(0, 11.5, 0), vis: () => !T.force }),
+    addLabel(3, teeth[2].at, numLbl(2, '附件'), { cls: 'num', off: new V3(0, 1, 0), vis: () => !T.force }),
+    addLabel(3, teeth[2].mesh, numLbl(3, '牙齿'), { cls: 'num', off: new V3(3.5, 6, 0), vis: () => !T.force }),
+    addLabel(3, teeth[0].pdl, numLbl(4, '牙周膜'), { cls: 'num', off: new V3(-2, -8, 0), vis: () => !T.force }),
+    addLabel(3, bone, numLbl(5, '牙槽骨'), { cls: 'num', off: new V3(-6, -14, -12), vis: () => !T.force }),
+  ];
+  // 力箭头
+  const arrow = new THREE.Group();
+  const am = new THREE.MeshStandardMaterial({ color: '#e5484d', emissive: '#e5484d', emissiveIntensity: .35, roughness: .4 });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, 7, 16), am); shaft.position.y = -3.5;
+  const head = new THREE.Mesh(new THREE.ConeGeometry(1.2, 2.6, 20), am); head.position.y = 1.3;
+  arrow.add(shaft, head); arrow.rotation.x = -Math.PI / 2;
+  arrow.userData.info = { title: '矫治力', desc: '牙套对牙冠唇面施加约 50–100g 的持续轻力，方向朝舌侧。' };
+  arrow.visible = false; seg.add(arrow);
+  const fLbl = addLabel(3, arrow, '矫治力 F（轻力 50–100g）', { cls: 'warn', off: new V3(0, -6, 0), vis: () => T.force });
+  addLabel(3, () => mid.wrap.localToWorld(new V3(0, -7, -5.6)), '压力侧：牙周膜受压', { cls: 'warn', vis: () => T.force && T.ft > 2.5 });
+  addLabel(3, () => mid.wrap.localToWorld(new V3(0, -7, 5.4)), '张力侧：牙周膜受拉', { cls: 'blue', vis: () => T.force && T.ft > 2.5 });
+  addLabel(3, () => mid.wrap.localToWorld(new V3(0, -13, -6.5)), '破骨细胞 · 骨吸收', { cls: 'purple', vis: () => T.force && T.ft > 5 });
+  addLabel(3, () => mid.wrap.localToWorld(new V3(0, -13, 6.5)), '成骨细胞 · 骨沉积', { cls: 'green', vis: () => T.force && T.ft > 7 });
+  // 骨改建粒子
+  const pg = new THREE.SphereGeometry(.38, 10, 8), parts = [];
+  const Tm = TT.U1;
+  const rootR = (y, s) => lerp(.72, .25, clamp(-y / Tm.rh, 0, 1)) * (s === 'z' ? Tm.d / 2 : Tm.w / 2 * .8) + .85;
+  for (let i = 0; i < 64; i++) {
+    const res = i < 32, y = -1.5 - rnd() * 10.5, th = (res ? Math.PI : 0) + (rnd() - .5) * 1.8;
+    const m = new THREE.Mesh(pg, new THREE.MeshStandardMaterial({ color: res ? '#a855f7' : '#22c55e', roughness: .4, transparent: true }));
+    m.position.set(Math.sin(th) * rootR(y, 'x'), y, Math.cos(th) * rootR(y, 'z') + (res ? -.3 : .3));
+    m.userData.noPick = true; m.visible = false; seg.add(m);
+    parts.push({ m, res, t0: (res ? 4.2 : 6) + rnd() * 4, base: m.position.clone() });
+  }
+  const pink = new THREE.Color('#f2a3b3'), red = new THREE.Color('#e5383b'), blue = new THREE.Color('#3b82f6'), boneC = new THREE.Color('#efe2c4'), orange = new THREE.Color('#f59e0b'), tmpC = new THREE.Color();
+  const midPdl = mid.pdl, pn = midPdl.geometry.attributes.normal, pc = midPdl.geometry.attributes.color;
+  function paintPdl(I) {
+    for (let j = 0; j < pc.count; j++) {
+      const nz = pn.getZ(j);
+      if (nz < 0) tmpC.copy(pink).lerp(red, clamp(I * Math.pow(-nz, .6) * 1.2, 0, 1)); else tmpC.copy(pink).lerp(blue, clamp(I * Math.pow(nz, .6), 0, 1));
+      pc.setXYZ(j, tmpC.r, tmpC.g, tmpC.b);
+    }
+    pc.needsUpdate = true;
+  }
+  function applyLayers() {
+    const e = T.e;
+    bone.position.y = -17 * e; pdlG.position.y = -8 * e;
+    teeth.forEach(t => { t.sh.position.y = 11 * e; t.at.position.copy(t.atBase).addScaledVector(t.atDir, 5 * e); });
+  }
+  // UI
+  const ll = $('#layerList');
+  Object.entries(LAYERS).forEach(([k, L]) => {
+    const b = document.createElement('button'); b.className = 'btn sm'; b.style.justifyContent = 'flex-start';
+    b.innerHTML = `${'①②③④⑤'[L.n - 1]} ${L.name}`;
+    b.onclick = () => {
+      if (T.hlLayer) T.hlLayer.forEach(o => setHL(o, false));
+      ll.querySelectorAll('.btn').forEach(x => x.classList.remove('on'));
+      if (T.hlKey === k) { T.hlKey = null; T.hlLayer = null; return; }
+      T.hlKey = k; T.hlLayer = L.objs; L.objs.forEach(o => setHL(o, true)); b.classList.add('on');
+      if (T.et < .5) $('#btnExplode').click();
+    };
+    ll.appendChild(b);
+  });
+  const bx = $('#btnExplode'), bf = $('#btnForce');
+  bx.onclick = () => {
+    if (T.force) stopForce();
+    tweenCam(T, new V3(-40, 22, 72), new V3(0, -5, 0));
+    T.et = T.et > .5 ? 0 : 1; bx.classList.toggle('on', T.et > .5); bx.textContent = T.et > .5 ? '⇕ 合拢' : '⇕ 分层弹开';
+  };
+  function stopForce() {
+    T.force = false; arrow.visible = false; $('#steps').style.display = 'none'; bf.textContent = '▶ 受力演示'; bf.classList.add('pri');
+    parts.forEach(p => p.m.visible = false); paintPdl(0); mid.wrap.position.z = 0; mid.wrap.rotation.x = 0;
+    showNeighbors(true);
+  }
+  function showNeighbors(v) { [teeth[0], teeth[2]].forEach(t => { t.wrap.visible = v; t.pdl.visible = v; }); }
+  bf.onclick = () => {
+    if (T.force) { stopForce(); return; }
+    T.et = 0; bx.classList.remove('on'); bx.textContent = '⇕ 分层弹开';
+    T.force = true; T.ft = 0; arrow.visible = true; showNeighbors(false); $('#steps').style.display = 'flex'; bf.textContent = '■ 停止演示'; bf.classList.remove('pri');
+    tweenCam(T, new V3(-62, 4, 14), new V3(0, -5, 0), 1.4);
+  };
+  T.update = (dt, time) => {
+    if (Math.abs(T.e - T.et) > 1e-3) { T.e += (T.et - T.e) * Math.min(1, dt * 4); applyLayers(); }
+    if (!T.force) return;
+    T.ft += dt; if (T.ft > 13) { T.ft = 0; parts.forEach(p => p.m.visible = false); }
+    const t = T.ft, I = sstep(.8, 2.6, t) * (1 - sstep(12, 13, t)), mv = sstep(3, 11, t) * (1 - sstep(12.2, 13, t));
+    const Tm2 = mid.rec.T;
+    arrow.position.set(0, Tm2.ch * .6, Tm2.d / 2 + 4.2 - mv * 1.1 + Math.sin(time * 6) * .25 * I);
+    arrow.scale.setScalar(.6 + .4 * I);
+    mid.wrap.position.z = -1.1 * mv; mid.wrap.rotation.x = -.035 * mv;
+    paintPdl(I);
+    for (const p of parts) {
+      const a = t - p.t0;
+      if (a < 0 || t > 12.6) { p.m.visible = false; continue; }
+      p.m.visible = true;
+      if (p.res) { // 破骨：出现 → 变橙 → 消失
+        const s = a < .6 ? a / .6 : a < 2 ? 1 : Math.max(0, 1 - (a - 2) / 1.2);
+        p.m.scale.setScalar(Math.max(.001, s)); p.m.material.color.copy(tmpC.set('#a855f7').lerp(orange, sstep(1.2, 2.2, a)));
+        p.m.position.copy(p.base); p.m.position.z -= mv * .6;
+      } else { // 成骨：生长 → 转为骨色并保留
+        const s = Math.min(1, a / .8); p.m.scale.setScalar(Math.max(.001, s * 1.1));
+        p.m.material.color.copy(tmpC.set('#22c55e').lerp(boneC, sstep(1.5, 3.5, a)));
+        p.m.position.copy(p.base); p.m.position.z -= mv * .9;
+      }
+    }
+    const st = t < 2.5 ? 0 : t < 5 ? 1 : t < 7.5 ? 2 : 3;
+    document.querySelectorAll('#steps div').forEach((d, i) => d.classList.toggle('on', i === st));
+  };
+  return T;
+}
+
+/* =====================================================================
+   TAB 5 · 面型预测（参数化人头）
+   ===================================================================== */
+const MM = .0078; // 1mm 对应的模型单位
+const HK = [[1.0, 0, 0, 0], [.97, .28, .24, .34], [.88, .46, .40, .56], [.72, .57, .52, .69], [.52, .62, .58, .76], [.32, .63, .60, .74], [.15, .62, .57, .67], [0, .60, .53, .60], [-.15, .56, .50, .50], [-.30, .50, .46, .38], [-.45, .42, .42, .26], [-.58, .32, .36, .20], [-.68, .25, .22, .22], [-.80, .27, .13, .30], [-1.0, .29, .15, .32], [-1.25, .33, .18, .35]];
+const MK = [[1.0, 0, 1.5], [.90, .40, 1.4], [.70, .57, 1.3], [.45, .64, 1.2], [.32, .68, 1.0], [.25, .645, .6], [.15, .70, .22], [.05, .78, .17], [-.02, .84, .15], [-.08, .80, .17], [-.12, .72, .3], [-.18, .755, .42], [-.24, .80, .45], [-.30, .75, .45], [-.36, .78, .5], [-.44, .69, .55], [-.53, .70, .6], [-.62, .665, .65], [-.68, .55, .8], [-.73, .33, 1.0], [-.80, .13, 1.4], [-1.25, .18, 1.5]];
+function interp(keys, y, c) {
+  let i = 0; while (i < keys.length - 2 && y < keys[i + 1][0]) i++;
+  const t = clamp((keys[i][0] - y) / (keys[i][0] - keys[i + 1][0]), 0, 1);
+  const p1 = keys[i][c], p2 = keys[i + 1][c], p0 = i > 0 ? keys[i - 1][c] : p1, p3 = i + 2 < keys.length ? keys[i + 2][c] : p2;
+  return .5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
+}
+const G = (y, c, s) => Math.exp(-(((y - c) / s) ** 2));
+function dzOf(y, P) { return MM * (P.ul * G(y, -.235, .055) + P.ll * G(y, -.36, .055) + P.fold * G(y, -.45, .045) + P.chin * G(y, -.56, .085) + P.chin * .5 * G(y, -.66, .06)); }
+const zMid = (y, P) => interp(MK, y, 1) + dzOf(y, P);
+const PRESETS = [
+  { name: '不拔牙矫治', sub: '扩弓 / 邻面去釉排齐，侧貌改变较小', P: { ul: -1, ll: -1.4, fold: 0, chin: 0 }, dur: '约 18–24 个月', add: [0, 0],
+    desc: '适合轻中度拥挤。通过扩弓、邻面去釉获得间隙，嘴唇位置改变有限。' },
+  { name: '拔牙内收', sub: '拔除 4 颗前磨牙，内收前牙改善嘴突', P: { ul: -3.2, ll: -3.9, fold: -.5, chin: .5 }, dur: '约 24–30 个月', add: [.3, .5],
+    desc: '拔除 4 颗前磨牙提供约 14mm 间隙，前牙内收后上下唇明显后退，嘴突改善显著。' },
+  { name: '正颌手术联合', sub: '术前正畸 + 下颌前徙 / 颏成形', P: { ul: -1.3, ll: -.4, fold: 2.5, chin: 7 }, dur: '约 24–36 个月', add: [5, 9],
+    desc: '适用于骨性 II 类较严重者。下颌前徙与颏成形使颏部前移约 7mm，侧貌由凸变直。' },
+];
+const P0 = { ul: 0, ll: 0, fold: 0, chin: 0 };
+function makeHead() {
+  const R = 170, C = 128, g = new THREE.BufferGeometry();
+  const pos = new Float32Array((R + 1) * (C + 1) * 3), uv = new Float32Array((R + 1) * (C + 1) * 2), idx = [];
+  for (let i = 0; i <= R; i++) for (let j = 0; j <= C; j++) { const k = i * (C + 1) + j; uv[k * 2] = j / C * 2; uv[k * 2 + 1] = 1 - i / R * 2; }
+  for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) { const a = i * (C + 1) + j, b = a + C + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx);
+  g.userData = { R, C };
+  return g;
+}
+function shapeHead(g, P) {
+  const { R, C } = g.userData, pos = g.attributes.position.array;
+  for (let i = 0; i <= R; i++) {
+    const y = 1 - i / R * 2.25;
+    const Wd = Math.max(0, interp(HK, y, 1)), F = Math.max(0, interp(HK, y, 2)), B = Math.max(0, interp(HK, y, 3));
+    const M = zMid(y, P), sg = interp(MK, y, 2);
+    for (let j = 0; j <= C; j++) {
+      const ph = -Math.PI + 2 * Math.PI * j / C, c = Math.cos(ph), s = Math.sin(ph);
+      const pc = Math.sign(c) * Math.pow(Math.abs(c), .9), ps = Math.sign(s) * Math.pow(Math.abs(s), .9);
+      let x = Wd * ps, z = (c >= 0 ? F : B) * pc;
+      if (c > 0 && y > -.85) {
+        z += (M - F) * Math.exp(-((ph / sg) ** 2));
+        for (const e of [-1, 1]) {
+          z -= .055 * Math.exp(-(((ph - e * .42) / .16) ** 2) - ((y - .2) / .07) ** 2);
+          z += .028 * Math.exp(-(((ph - e * .2) / .08) ** 2) - ((y + .065) / .04) ** 2);
+          z += .03 * Math.exp(-(((ph - e * .72) / .25) ** 2) - ((y - .03) / .15) ** 2);
+          z += .02 * Math.exp(-(((ph - e * .3) / .1) ** 2) - ((y - .3) / .04) ** 2);
+        }
+      }
+      const k = (i * (C + 1) + j) * 3; pos[k] = x; pos[k + 1] = y; pos[k + 2] = z;
+    }
+  }
+  g.attributes.position.needsUpdate = true; g.computeVertexNormals(); g.computeBoundingSphere();
+}
+function eAnalysis(P) {
+  const best = (a, b) => { let m = -9, my = 0; for (let y = a; y >= b; y -= .002) { const z = zMid(y, P); if (z > m) { m = z; my = y; } } return new THREE.Vector2(my, m); };
+  const prn = best(.1, -.1), pog = best(-.46, -.64), ul = best(-.17, -.29), ll = best(-.31, -.42);
+  const d = new THREE.Vector2(pog.x - prn.x, pog.y - prn.y), len = d.length();
+  const sd = q => { const v = new THREE.Vector2(q.x - prn.x, q.y - prn.y); return -(d.x * v.y - d.y * v.x) / len / MM; };
+  return { prn, pog, ul, ll, dUL: sd(ul), dLL: sd(ll) };
+}
+class HeadRig {
+  constructor(T, tabIdx, zOff, profColor, showLbl) {
+    this.T = T; this.g = makeHead(); this.P = { ...P0 };
+    this.mesh = new THREE.Mesh(this.g, MAT.skin.clone()); this.mesh.position.z = zOff;
+    this.mesh.userData.info = { title: '软组织侧貌模型', desc: '侧貌受牙齿位置、颌骨位置与软组织厚度共同影响。预测仅为示意。' };
+    this.group = new THREE.Group(); this.group.add(this.mesh); T.scene.add(this.group);
+    const em = new THREE.MeshStandardMaterial({ color: '#efc6aa', roughness: .6 });
+    for (const sd of [-1, 1]) {
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), MAT.skin.clone());
+      ear.scale.set(.05, .16, .1); ear.position.set(sd * .615, .07, -.05); ear.rotation.x = .15; ear.userData.info = this.mesh.userData.info; this.mesh.add(ear);
+    }
+    this.zOff = zOff; this.lines = new THREE.Group(); this.lines.position.z = zOff; T.scene.add(this.lines);
+    this.lmE = new THREE.MeshBasicMaterial({ color: '#2f7fe0', depthTest: false, transparent: true });
+    this.lmP = new THREE.MeshBasicMaterial({ color: profColor, depthTest: false, transparent: true });
+    this.lmPerp = new THREE.MeshBasicMaterial({ color: '#2f7fe0', depthTest: false, transparent: true, opacity: .7 });
+    this.lblUL = addLabel(tabIdx, () => this.lp('ul'), '', { cls: 'blue', vis: () => this.mesh.visible && showLbl() });
+    this.lblLL = addLabel(tabIdx, () => this.lp('ll'), '', { cls: 'blue', vis: () => this.mesh.visible && showLbl() });
+    this.set(P0);
+  }
+  lp(k) { const a = this.ea[k]; return new V3(-.02, a.x, a.y + this.zOff + .09); }
+  set(P) {
+    this.P = P; shapeHead(this.g, P);
+    this.ea = eAnalysis(P);
+    this.lines.children.slice().forEach(c => { c.geometry.dispose(); this.lines.remove(c); });
+    const prof = []; for (let y = .92; y >= -.8; y -= .01) prof.push(new V3(-.003, y, zMid(y, P) + .002));
+    const pt = tube(prof, .0045, this.lmP, 200); pt.renderOrder = 20; pt.userData.noPick = true; this.lines.add(pt);
+    const { prn, pog } = this.ea, dir = new THREE.Vector2(pog.x - prn.x, pog.y - prn.y);
+    const a = prn.clone().addScaledVector(dir, -.25), b = prn.clone().addScaledVector(dir, 1.25);
+    const el = tube([new V3(-.004, a.x, a.y), new V3(-.004, b.x, b.y)], .005, this.lmE, 4); el.renderOrder = 21;
+    el.userData.info = { title: 'Ricketts E 线', desc: '鼻尖与软组织颏前点的连线。理想状态：上唇位于线后约 4mm，下唇约 2mm（东亚人群略靠前）。' };
+    this.lines.add(el);
+    const dn = dir.clone().normalize();
+    for (const k of ['ul', 'll']) {
+      const q = this.ea[k], v = q.clone().sub(prn), foot = prn.clone().addScaledVector(dn, v.dot(dn));
+      const pl = tube([new V3(-.004, q.x, q.y), new V3(-.004, foot.x, foot.y)], .003, this.lmPerp, 2); pl.renderOrder = 21; pl.userData.noPick = true; this.lines.add(pl);
+    }
+    const f = v => (v > 0 ? '+' : '') + v.toFixed(1) + 'mm';
+    this.lblUL.el.textContent = '上唇 ' + f(this.ea.dUL); this.lblLL.el.textContent = '下唇 ' + f(this.ea.dLL);
+  }
+}
+function buildTab4() {
+  const T = { scene: makeScene(), camera: new THREE.PerspectiveCamera(30, 1, .05, 100), mode: 'overlay', t: 1, tt: 1 };
+  T.camera.position.set(-3.9, .1, 1.25);
+  T.controls = makeControls(T.camera, new V3(0, -.12, .25), 1.2, 9);
+  const rigA = new HeadRig(T, 4, 0, '#16a34a', () => true);
+  const rigB = new HeadRig(T, 4, -1.55, '#e5484d', () => T.mode === 'side');
+  rigB.mesh.visible = false; rigB.lines.visible = false;
+  // 治疗前轮廓线（叠加模式）
+  const beforeM = new THREE.MeshBasicMaterial({ color: '#e5484d', depthTest: false, transparent: true, opacity: .9 });
+  const bp = []; for (let y = .92; y >= -.8; y -= .01) bp.push(new V3(-.003, y, zMid(y, P0) + .002));
+  const beforeLine = tube(bp, .0045, beforeM, 200); beforeLine.renderOrder = 19; beforeLine.userData.noPick = true; T.scene.add(beforeLine);
+  const baseE = eAnalysis(P0);
+  // 底座
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, .14, 48), new THREE.MeshPhysicalMaterial({ color: '#f7fafc', roughness: .3, clearcoat: .6 }));
+  stand.position.y = -1.32; stand.userData.noPick = true; T.scene.add(stand);
+  const stand2 = stand.clone(); stand2.position.z = -1.55; stand2.visible = false; T.scene.add(stand2);
+  const lA = addLabel(4, () => new V3(0, 1.12, T.mode === 'side' ? 1.55 * .5 : 0), '', { cls: 'big green', vis: () => T.mode === 'side' });
+  const lB = addLabel(4, () => new V3(0, 1.12, -1.55 * .5), '治疗前', { cls: 'big warn', vis: () => T.mode === 'side' });
+  lA.el.textContent = '治疗后预测';
+  const cur = () => PRESETS[STATE.preset].P;
+  const mix = (t) => { const P = cur(), o = {}; for (const k in P0) o[k] = lerp(P0[k], P[k], t); return o; };
+  T.refresh = () => {
+    const P = mix(T.t); rigA.set(P);
+    const fa = eAnalysis(cur());
+    const f = v => (v > 0 ? '+' : '') + v.toFixed(1);
+    $('#ulB').textContent = f(baseE.dUL); $('#llB').textContent = f(baseE.dLL);
+    $('#ulA').textContent = f(fa.dUL) + 'mm'; $('#llA').textContent = f(fa.dLL) + 'mm';
+    $('#chinA').textContent = (cur().chin > 0 ? '+' : '') + cur().chin.toFixed(1) + ' mm';
+    $('#presetDesc').textContent = PRESETS[STATE.preset].desc;
+  };
+  const pl = $('#presetList');
+  PRESETS.forEach((p, i) => {
+    const b = document.createElement('button'); b.className = 'btn preset'; b.innerHTML = `${p.name}<small>${p.sub}</small>`;
+    b.onclick = () => { STATE.preset = i; pl.querySelectorAll('.btn').forEach((x, j) => x.classList.toggle('on', j === i)); T.t = 0; T.tt = 1; $('#morphSlider').value = 0; T.refresh(); };
+    pl.appendChild(b);
+  });
+  pl.children[STATE.preset].classList.add('on');
+  $('#morphSlider').addEventListener('input', e => { T.tt = T.t = +e.target.value; T.refresh(); });
+  const seg = $('#segFace');
+  seg.querySelectorAll('.btn').forEach(b => b.onclick = () => {
+    T.mode = b.dataset.v; seg.querySelectorAll('.btn').forEach(x => x.classList.toggle('on', x === b));
+    const side = T.mode === 'side';
+    rigA.mesh.position.z = side ? 1.55 * .5 : 0; rigA.lines.position.z = rigA.zOff = side ? 1.55 * .5 : 0;
+    rigB.mesh.position.z = rigB.lines.position.z = rigB.zOff = -1.55 * .5;
+    rigB.mesh.visible = rigB.lines.visible = side; beforeLine.visible = !side;
+    stand.position.z = rigA.mesh.position.z; stand2.position.z = -1.55 * .5; stand2.visible = side;
+    $('#morphBox').style.display = side ? 'none' : 'block';
+    if (side) { T.t = T.tt = 1; $('#morphSlider').value = 1; T.refresh(); tweenCam(T, new V3(-7.2, .1, .2), new V3(0, -.1, 0)); }
+    else tweenCam(T, new V3(-3.9, .1, 1.25), new V3(0, -.12, .25));
+    clearHover();
+  });
+  T.update = (dt) => {
+    if (Math.abs(T.t - T.tt) > 1e-3) { T.t += (T.tt - T.t) * Math.min(1, dt * 2.2); if (Math.abs(T.t - T.tt) < .004) T.t = T.tt; $('#morphSlider').value = T.t; T.refresh(); }
+  };
+  T.refresh();
+  return T;
+}
+
+/* =====================================================================
+   导航、渲染循环、总结卡
+   ===================================================================== */
+let W = 1, H = 1, cur = 0;
+const tabs = [buildTab0(), buildTab1(), buildTab2(), buildTab3(), buildTab4()];
+const NEXT = ['下一页：方案对比 →', '下一页：矫治过程 →', '下一页：原理 →', '下一页：面型预测 →', '完成讲解 · 查看总结 ✓'];
+function resize() {
+  const r = stage.getBoundingClientRect(); W = Math.max(1, r.width); H = Math.max(1, r.height);
+  renderer.setSize(W, H);
+  tabs.forEach(T => { T.camera.aspect = T.cols ? (W / T.cols) / H : W / H; T.camera.updateProjectionMatrix(); });
+}
+new ResizeObserver(resize).observe(stage);
+function switchTab(i) {
+  clearHover();
+  tabs[cur].controls.enabled = false;
+  document.querySelectorAll('.tab').forEach((b, j) => { b.classList.toggle('active', j === i); if (j < i) b.classList.add('done'); });
+  cur = i; tabs[i].controls.enabled = true;
+  document.querySelectorAll('.tab-ui').forEach(u => u.classList.toggle('show', +u.dataset.tab === i));
+  $('#bottom').classList.toggle('show', i === 1);
+  $('#nextBtn').textContent = NEXT[i];
+  requestAnimationFrame(resize);
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => switchTab(+b.dataset.i));
+$('#nextBtn').onclick = () => { if (cur < 4) switchTab(cur + 1); else openSummary(); };
+
+function openSummary() {
+  const p = PLANS[STATE.plan], pr = PRESETS[STATE.preset];
+  $('#sumProblems').innerHTML = PROBLEMS.map(x => `<span class="tag red">${x.name}</span>`).join('') + `<span class="tag blue">骨性 II 类（ANB ${tabs[0].ceph.ANB.toFixed(1)}°）</span>`;
+  $('#sumPlan').value = `${p.name} · ${pr.name}`;
+  $('#sumDur').value = STATE.plan === 2 && STATE.preset !== 2 ? `${pr.dur}（约 24–30 副牙套）` : pr.dur;
+  $('#sumMin').value = Math.round((p.fee[0] + pr.add[0]) * 10000);
+  $('#sumMax').value = Math.round((p.fee[1] + pr.add[1]) * 10000);
+  $('#modal').classList.add('show');
+}
+$('#sumBack').onclick = () => $('#modal').classList.remove('show');
+$('#sumPrint').onclick = () => window.print();
+$('#sumOk').onclick = () => { const b = $('#sumOk'); b.textContent = '✓ 已确认'; setTimeout(() => { b.textContent = '确认方案'; $('#modal').classList.remove('show'); }, 900); };
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').classList.remove('show'); });
+
+const clock = new THREE.Clock(); let time = 0;
+resize(); switchTab(0);
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), .05); time += dt;
+  const T = tabs[cur];
+  if (T.tw) {
+    T.tw.k += dt / T.tw.dur; const e = ease(Math.min(T.tw.k, 1));
+    T.camera.position.lerpVectors(T.tw.p0, T.tw.p1, e); T.controls.target.lerpVectors(T.tw.t0, T.tw.t1, e);
+    if (T.tw.k >= 1) T.tw = null;
+  }
+  T.controls.update();
+  T.update && T.update(dt, time);
+  if (T.cols) {
+    renderer.setScissorTest(true); const cw = W / T.cols;
+    for (let c = 0; c < T.cols; c++) { renderer.setViewport(c * cw, 0, cw, H); renderer.setScissor(c * cw, 0, cw, H); renderer.render(T.scenes[c], T.camera); }
+    renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H);
+  } else renderer.render(T.scene, T.camera);
+  updateLabels();
+});
+const ld = $('#loading'); ld.style.opacity = 0; setTimeout(() => ld.remove(), 450);
+window.__ortho = { tabs, switchTab, openSummary };
+</script>
+</body>
+</html>
