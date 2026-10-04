@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>喵喵消消乐</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1d2b12;
+    font-family: "PingFang SC", "Microsoft YaHei", "WenQuanYi Zen Hei", sans-serif; }
+  #wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #stage { position: relative; width: 540px; height: 960px; overflow: hidden; transform-origin: center center;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 55%, rgba(255,240,170,.85), rgba(255,230,140,0) 70%),
+      radial-gradient(circle at 12% 20%, #4f7a2a 0 70px, transparent 72px),
+      radial-gradient(circle at 88% 16%, #557f2c 0 80px, transparent 82px),
+      radial-gradient(circle at 5% 60%, #3f6a22 0 90px, transparent 92px),
+      radial-gradient(circle at 98% 68%, #456f25 0 100px, transparent 102px),
+      radial-gradient(circle at 20% 98%, #3a6420 0 120px, transparent 122px),
+      radial-gradient(circle at 82% 100%, #36601d 0 130px, transparent 132px),
+      linear-gradient(180deg, #6f9a3a 0%, #a9c45a 35%, #d7d77a 55%, #8fb04a 80%, #4d7a2a 100%);
+  }
+  /* soft leaves */
+  .leaf { position: absolute; border-radius: 50% 0 50% 0; background: rgba(120,170,50,.55); filter: blur(.5px); }
+  .trunk { position: absolute; width: 26px; background: linear-gradient(90deg,#6b4a2a,#8a6238,#5e3f22); border-radius: 12px; opacity: .55; }
+
+  /* header */
+  .round-btn { position: absolute; top: 40px; width: 64px; height: 64px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #f4f4f4, #b9bdc2); border: 4px solid #8e959c;
+    box-shadow: 0 4px 0 #5f666d, 0 6px 10px rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; }
+  .round-btn svg { width: 34px; height: 34px; }
+  #logo { position: absolute; top: 30px; left: 0; right: 0; text-align: center; pointer-events: none; }
+  #logo .l1 { font-size: 26px; font-weight: 900; color: #5ad1ff; letter-spacing: 2px;
+    text-shadow: 0 3px 0 #1765b8, 0 0 2px #1765b8, 2px 0 #1765b8, -2px 0 #1765b8, 0 -2px #1765b8; }
+  #logo .l2 { font-size: 40px; font-weight: 900; color: #fff3a6; margin-top: -4px; letter-spacing: 3px;
+    text-shadow: 0 4px 0 #c9631a, 0 0 3px #c9631a, 3px 0 #c9631a, -3px 0 #c9631a, 0 -3px #c9631a, 0 7px 8px rgba(0,0,0,.35); }
+  #level { position: absolute; top: 112px; left: 0; right: 0; text-align: center; color: #fff; font-size: 16px; font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+
+  /* tray */
+  #tray { position: absolute; left: 14px; right: 14px; top: 138px; height: 92px; border-radius: 18px;
+    background: linear-gradient(180deg,#c9874a,#9c5d2a); border: 4px solid #6e3c17;
+    box-shadow: inset 0 3px 0 rgba(255,220,170,.5), 0 6px 0 #5a2f10, 0 10px 18px rgba(0,0,0,.35); }
+  .slot { position: absolute; top: 10px; width: 64px; height: 66px; border-radius: 10px; background: rgba(60,50,45,.55);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,.5); }
+  #tray.danger { animation: danger .5s ease-in-out infinite alternate; }
+  @keyframes danger { to { box-shadow: inset 0 3px 0 rgba(255,220,170,.5), 0 6px 0 #5a2f10, 0 0 24px 6px rgba(255,60,40,.9); } }
+
+  /* tiles */
+  .tile { position: absolute; width: 64px; height: 70px; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(180deg,#ffffff 0%, #f1f3f8 80%);
+    box-shadow: 0 6px 0 #c3c8d6, 0 8px 6px rgba(0,0,0,.35);
+    transition: left .32s cubic-bezier(.3,.8,.3,1), top .32s cubic-bezier(.3,.8,.3,1), transform .2s, filter .25s, opacity .25s; }
+  .tile svg { position: absolute; left: 3px; top: 3px; width: 58px; height: 58px; }
+  .tile.blocked { filter: brightness(.5) saturate(.7); cursor: default; }
+  .tile.inTray { cursor: default; }
+  .tile.pop { transform: scale(1.18); }
+  .tile.gone { transform: scale(0) rotate(25deg); opacity: 0; }
+  .tile.hint { animation: hint .6s ease-in-out infinite alternate; }
+  @keyframes hint { to { transform: translateY(-6px); } }
+
+  .spark { position: absolute; width: 12px; height: 12px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle,#fff 0 30%, #ffd84a 60%, transparent 70%);
+    transition: transform .55s ease-out, opacity .55s ease-out; z-index: 2000; }
+  .combo { position: absolute; z-index: 2100; font-size: 30px; font-weight: 900; color: #fff6a8; pointer-events: none;
+    text-shadow: 0 3px 0 #d0601a, 2px 0 #d0601a, -2px 0 #d0601a, 0 -2px #d0601a; transition: transform .8s ease-out, opacity .8s ease-out; }
+
+  /* bottom buttons */
+  #tools { position: absolute; bottom: 34px; left: 0; right: 0; display: flex; justify-content: center; gap: 22px; }
+  .tool { width: 132px; height: 56px; border-radius: 16px; color: #fff; font-size: 19px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center; gap: 6px; border: 3px solid #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,.3); box-shadow: 0 5px 0 rgba(0,0,0,.3); cursor: pointer; position: relative; }
+  .tool .n { position: absolute; top: -10px; right: -8px; width: 26px; height: 26px; border-radius: 50%; background: #ff4b4b;
+    font-size: 15px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+  .t1 { background: linear-gradient(#5fc4ff,#2f8ae0); }
+  .t2 { background: linear-gradient(#ffcf4d,#f09a17); }
+  .t3 { background: linear-gradient(#8de06a,#3fa83a); }
+  .tool.used { filter: grayscale(.8); }
+  .tool.press { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+
+  /* overlays */
+  .overlay { position: absolute; inset: 0; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(20,30,10,.55); opacity: 0; pointer-events: none; transition: opacity .5s; }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .panel { background: linear-gradient(#fff8e1,#ffe7a8); border: 6px solid #e39a2d; border-radius: 28px; padding: 30px 34px; text-align: center;
+    box-shadow: 0 10px 0 #b56d14, 0 18px 30px rgba(0,0,0,.4); transform: scale(.6); transition: transform .5s cubic-bezier(.3,1.6,.5,1); }
+  .overlay.show .panel { transform: scale(1); }
+  .panel h1 { font-size: 46px; color: #e5651a; text-shadow: 0 3px 0 #fff; }
+  .panel p { font-size: 20px; color: #7a4a1a; margin-top: 10px; }
+  .stars { font-size: 54px; color: #ffc61a; letter-spacing: 6px; text-shadow: 0 3px 0 #c87a00; margin: 10px 0; }
+  .btn { margin-top: 18px; display: inline-block; padding: 12px 40px; border-radius: 30px; font-size: 22px; font-weight: bold; color: #fff;
+    background: linear-gradient(#8de06a,#3fa83a); border: 3px solid #fff; box-shadow: 0 5px 0 #2a7a26; cursor: pointer; }
+  #intro .cats { display: flex; gap: 6px; margin-top: 18px; }
+  #intro .cats svg { width: 52px; height: 52px; background: #fff; border-radius: 10px; box-shadow: 0 4px 0 #c3c8d6; }
+  .confetti { position: absolute; width: 10px; height: 16px; z-index: 3100; pointer-events: none; }
+
+  /* demo finger */
+  #finger { position: absolute; width: 60px; height: 60px; z-index: 5000; pointer-events: none; left: 300px; top: 1000px;
+    transition: left .28s cubic-bezier(.4,.1,.3,1), top .28s cubic-bezier(.4,.1,.3,1), transform .1s; }
+  #finger.tap { transform: scale(.85); }
+  .ripple { position: absolute; width: 20px; height: 20px; border-radius: 50%; border: 3px solid rgba(255,255,255,.95); z-index: 4999;
+    pointer-events: none; transition: transform .45s ease-out, opacity .45s ease-out; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="round-btn" style="left:26px"><svg viewBox="0 0 24 24"><path d="M14 5 7 12l7 7M7 12h12" stroke="#6d757d" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="round-btn" style="right:26px"><svg viewBox="0 0 24 24"><path fill="#6d757d" d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8.6 5-.1-3-2.2-.6-.6-1.4 1.1-2-2.1-2.1-2 1.1-1.4-.6L13 2.6h-3l-.6 2.3-1.4.6-2-1.1L3.9 6.5 5 8.5l-.6 1.4-2.2.6v3l2.2.6.6 1.4-1.1 2 2.1 2.1 2-1.1 1.4.6.6 2.3h3l.6-2.3 1.4-.6 2 1.1 2.1-2.1-1.1-2 .6-1.4z"/></svg></div>
+  <div id="logo"><div class="l1">喵 喵</div><div class="l2">消消乐</div></div>
+  <div id="level">第 1 关</div>
+  <div id="tray"></div>
+  <div id="board"></div>
+  <div id="tools">
+    <div class="tool t1" id="toolOut">移出<span class="n">1</span></div>
+    <div class="tool t2" id="toolUndo">撤回<span class="n">1</span></div>
+    <div class="tool t3" id="toolShuffle">洗牌<span class="n">1</span></div>
+  </div>
+  <div class="overlay" id="intro"><div class="panel">
+    <h1>喵喵消消乐</h1>
+    <p>点击猫咪方块放入槽位<br>凑齐 3 个相同即可消除！</p>
+    <div class="cats" id="introCats"></div>
+    <div class="btn" id="startBtn">开始游戏</div>
+  </div></div>
+  <div class="overlay" id="win"><div class="panel">
+    <h1>恭喜过关！</h1>
+    <div class="stars">★★★</div>
+    <p id="winInfo"></p>
+    <div class="btn" id="againBtn">下一关</div>
+  </div></div>
+  <div class="overlay" id="lose"><div class="panel">
+    <h1 style="color:#c0392b">槽位已满</h1>
+    <p>差一点就成功啦，再试一次吧！</p>
+    <div class="btn" id="retryBtn">重新开始</div>
+  </div></div>
+  <svg id="finger" viewBox="0 0 64 64">
+    <path d="M24 6c3 0 5 2 5 5v17l2-1c2-1 5 0 6 2l1 2 2-1c2-1 5 0 6 2l1 2 1-.3c2.7-.7 5 1.3 5 4v10c0 8-6 14-14 14h-6c-5 0-9-2-12-6L9 41c-1.5-2-1-5 1-6.3 2-1.3 4.5-.8 6 1l3 3.5V11c0-3 2-5 5-5Z"
+      fill="#fff" stroke="#333" stroke-width="2.4" stroke-linejoin="round"/>
+  </svg>
+</div></div>
+
+<script>
+// ---------- cat face artwork (pure SVG, no external assets) ----------
+const EAR = (c, inner) => `
+  <path d="M14 30 L12 6 L32 20 Z" fill="${c}"/><path d="M88 30 L90 6 L70 20 Z" fill="${c}"/>
+  <path d="M17 26 L16 12 L28 21 Z" fill="${inner}"/><path d="M85 26 L86 12 L74 21 Z" fill="${inner}"/>`;
+const EYES = (iris, pupil='#1b1b1b') => `
+  <ellipse cx="36" cy="54" rx="8.5" ry="9.5" fill="#fff"/><ellipse cx="66" cy="54" rx="8.5" ry="9.5" fill="#fff"/>
+  <ellipse cx="36" cy="55" rx="6.8" ry="7.8" fill="${iris}"/><ellipse cx="66" cy="55" rx="6.8" ry="7.8" fill="${iris}"/>
+  <ellipse cx="36" cy="56" rx="3.2" ry="5" fill="${pupil}"/><ellipse cx="66" cy="56" rx="3.2" ry="5" fill="${pupil}"/>
+  <circle cx="38.5" cy="51.5" r="2.2" fill="#fff"/><circle cx="68.5" cy="51.5" r="2.2" fill="#fff"/>
+  <ellipse cx="36" cy="54" rx="8.5" ry="9.5" fill="none" stroke="#2a2a2a" stroke-width="1.6"/>
+  <ellipse cx="66" cy="54" rx="8.5" ry="9.5" fill="none" stroke="#2a2a2a" stroke-width="1.6"/>`;
+const MOUTH = (wh='#666') => `
+  <path d="M47 66 h8 l-4 4.5 z" fill="#f28aa0" stroke="#c45a74" stroke-width="1"/>
+  <path d="M51 70.5 q-3 6 -8 3 M51 70.5 q3 6 8 3" stroke="#3a2a2a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M28 66 L8 62 M28 70 L8 72 M74 66 L94 62 M74 70 L94 72" stroke="${wh}" stroke-width="1.4" stroke-linecap="round"/>`;
+const HEAD = 'M51 18 C26 18 12 32 11 52 C10 74 28 90 51 90 C74 90 92 74 91 52 C90 32 76 18 51 18 Z';
+const FLUFF = 'M51 16 C40 14 33 20 26 21 C18 24 15 30 12 36 C7 42 9 50 8 56 C8 64 12 70 15 76 C19 82 26 86 33 89 C39 92 45 90 51 92 C57 90 63 92 69 89 C76 86 83 82 87 76 C90 70 94 64 94 56 C93 50 95 42 90 36 C87 30 84 24 76 21 C69 20 62 14 51 16 Z';
+const STROKE = 'stroke="#3a2a22" stroke-width="2.2"';
+const CATS = [
+  // 0 ginger tabby
+  () => `${EAR('#f2a541','#ffc9b5')}<path d="${HEAD}" fill="#f6b04e" ${STROKE}/>
+    <path d="M51 22v10M43 23l2 9M59 23l-2 9M14 50h9M13 57h9M88 50h-9M89 57h-9" stroke="#c96a1b" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="51" cy="72" rx="17" ry="12" fill="#fff4e6"/>${EYES('#7dc242')}${MOUTH()}`,
+  // 1 white persian
+  () => `${EAR('#f6f6f8','#ffc6d2')}<path d="${FLUFF}" fill="#fbfbfd" ${STROKE}/>${EYES('#9fb4c8')}${MOUTH('#aaa')}`,
+  // 2 tuxedo
+  () => `${EAR('#222','#f7a8b8')}<path d="${HEAD}" fill="#262626" ${STROKE}/>
+    <path d="M51 34 C44 46 30 60 26 74 C34 86 44 90 51 90 C58 90 68 86 76 74 C72 60 58 46 51 34 Z" fill="#fff"/>
+    ${EYES('#e7d23a')}${MOUTH('#ddd')}`,
+  // 3 calico
+  () => `${EAR('#fff','#ffc6d2')}<path d="M14 30 L12 6 L32 20 Z" fill="#e8892c"/><path d="M88 30 L90 6 L70 20 Z" fill="#2a2a2a"/>
+    <path d="${HEAD}" fill="#fffdf9" ${STROKE}/>
+    <path d="M51 19 C30 19 15 30 12 48 C20 50 30 44 36 36 C42 30 46 24 51 19 Z" fill="#e8892c"/>
+    <path d="M60 19 C76 21 88 32 90 50 C82 50 74 44 70 36 C66 30 62 24 60 19 Z" fill="#2a2a2a"/>
+    <path d="${HEAD}" fill="none" ${STROKE}/>${EYES('#4fa3e8')}${MOUTH('#999')}`,
+  // 4 ragdoll
+  () => `${EAR('#7b5a46','#e8b0b0')}<path d="${FLUFF}" fill="#fbf4ea" ${STROKE}/>
+    <path d="M22 44 C26 32 40 30 46 46 C42 54 30 58 22 44 Z M80 44 C76 32 62 30 56 46 C60 54 72 58 80 44 Z" fill="#9a7458"/>
+    <path d="M51 30 C46 40 46 50 51 60 C56 50 56 40 51 30 Z" fill="#fbf4ea"/>
+    ${EYES('#3d8fe0')}${MOUTH('#999')}`,
+  // 5 bengal
+  () => `${EAR('#e0a53a','#ffc9a8')}<path d="${HEAD}" fill="#e9b44c" ${STROKE}/>
+    <g fill="#8a5a1a"><circle cx="24" cy="40" r="3"/><circle cx="78" cy="40" r="3"/><circle cx="18" cy="56" r="2.6"/><circle cx="84" cy="56" r="2.6"/>
+    <circle cx="28" cy="74" r="2.6"/><circle cx="74" cy="74" r="2.6"/></g>
+    <path d="M51 22v12M42 24l3 10M60 24l-3 10" stroke="#8a5a1a" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="51" cy="73" rx="15" ry="11" fill="#fbecc8"/>${EYES('#9ccc3c')}${MOUTH()}`,
+  // 6 grey british shorthair
+  () => `${EAR('#8b96a6','#e7b4c0')}<path d="M51 20 C24 20 9 36 9 56 C9 76 28 90 51 90 C74 90 93 76 93 56 C93 36 78 20 51 20 Z" fill="#9aa5b5" ${STROKE}/>
+    <ellipse cx="51" cy="72" rx="16" ry="11" fill="#b8c1cd"/>${EYES('#f0a22a')}${MOUTH('#e5e8ee')}`,
+];
+const catSVG = t => `<svg viewBox="0 0 102 102">${CATS[t]()}</svg>`;
+
+// ---------- seeded RNG ----------
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ---------- level generation ----------
+const TYPES = CATS.length, TRAY = 7;
+function genLevel(seed) {
+  const R = rng(seed), tiles = [];
+  // layers: [cols, rows, offsetX, offsetY, fill]
+  const layers = [[7,8,0,0,.62],[6,7,.5,.5,.6],[5,6,1,1,.55],[4,5,1.5,1.5,.55],[3,4,2,2,.6],[2,3,2.5,2.5,.7]];
+  layers.forEach(([c, r, ox, oy, f], z) => {
+    for (let y = 0; y < r; y++) for (let x = 0; x < Math.ceil(c / 2); x++) {
+      if (R() > f) continue;
+      const mx = c - 1 - x; // mirror for a symmetric layout
+      tiles.push({ x: ox + x, y: oy + y, z });
+      if (mx !== x) tiles.push({ x: ox + mx, y: oy + y, z });
+    }
+  });
+  while (tiles.length % 3) tiles.splice(Math.floor(R() * tiles.length), 1);
+  const types = [];
+  for (let i = 0; i < tiles.length / 3; i++) { const t = i % TYPES; types.push(t, t, t); }
+  for (let i = types.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [types[i], types[j]] = [types[j], types[i]]; }
+  tiles.forEach((t, i) => { t.type = types[i]; t.id = i; t.state = 'board'; });
+  return tiles;
+}
+const covers = (a, b) => b.z > a.z && Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1;
+function isFree(t, tiles) { return t.state === 'board' && !tiles.some(o => o.state === 'board' && covers(t, o)); }
+
+// bot: pick the best free tile given tray contents
+function botPick(tiles, tray) {
+  const free = tiles.filter(t => isFree(t, tiles));
+  if (!free.length) return null;
+  const cnt = Array(TYPES).fill(0); tray.forEach(t => cnt[t.type]++);
+  const freeCnt = Array(TYPES).fill(0); free.forEach(t => freeCnt[t.type]++);
+  let best = null, bs = -1e9;
+  for (const t of free) {
+    const c = cnt[t.type]; let s;
+    if (c === 2) s = 1000;
+    else if (c === 1) s = freeCnt[t.type] >= 2 ? 900 : 500;
+    else s = freeCnt[t.type] >= 3 ? 700 : (freeCnt[t.type] === 2 ? 300 : 100) - tray.length * 20;
+    s += t.z * 5 + (tiles.filter(o => o.state === 'board' && covers(o, t)).length) * 3; // prefer uncovering
+    if (s > bs) { bs = s; best = t; }
+  }
+  return best;
+}
+function simulate(seed) {
+  const tiles = genLevel(seed), tray = [];
+  let moves = 0;
+  while (tiles.some(t => t.state === 'board')) {
+    const t = botPick(tiles, tray); if (!t) return false;
+    t.state = 'tray'; tray.push(t); moves++;
+    const same = tray.filter(o => o.type === t.type);
+    if (same.length === 3) same.forEach(o => { o.state = 'gone'; tray.splice(tray.indexOf(o), 1); });
+    if (tray.length >= TRAY) return false;
+  }
+  return moves;
+}
+
+// ---------- rendering & play ----------
+const stage = document.getElementById('stage'), board = document.getElementById('board'), trayEl = document.getElementById('tray');
+const TW = 64, TH = 70, BOARD_TOP = 262, SLOT_X = i => 14 + 4 + 8 + i * 70.5, SLOT_Y = 138 + 4 + 10;
+for (let i = 0; i < TRAY; i++) { const s = document.createElement('div'); s.className = 'slot'; s.style.left = (8 + i * 70.5) + 'px'; trayEl.appendChild(s); }
+document.getElementById('introCats').innerHTML = CATS.map((_, i) => catSVG(i)).join('');
+
+// decorative leaves & trunks
+for (let i = 0; i < 4; i++) { const t = document.createElement('div'); t.className = 'trunk';
+  Object.assign(t.style, { left: [70, 150, 380, 460][i] + 'px', top: '200px', height: '600px', transform: `rotate(${[-8, 4, -4, 9][i]}deg)` }); stage.prepend(t); }
+{ const R = rng(7); for (let i = 0; i < 46; i++) { const l = document.createElement('div'); l.className = 'leaf'; const s = 18 + R() * 30;
+  Object.assign(l.style, { width: s + 'px', height: s + 'px', left: R() * 540 + 'px', top: (R() < .5 ? R() * 260 : 780 + R() * 180) + 'px',
+    transform: `rotate(${R() * 360}deg)`, background: `rgba(${100 + R() * 60 | 0},${150 + R() * 50 | 0},${40 + R() * 30 | 0},.6)` }); stage.prepend(l); } }
+
+let tiles = [], tray = [], history = [], busy = false, level = 1, seed = 1, moves = 0, startTime = 0, demo = false;
+function fitStage() { const s = Math.min(innerWidth / 540, innerHeight / 960); stage.style.transform = `scale(${s})`; }
+addEventListener('resize', fitStage); fitStage();
+
+function boardPos(t) {
+  const maxX = Math.max(...tiles.map(o => o.x)) + 1, maxY = Math.max(...tiles.map(o => o.y)) + 1;
+  const ox = (540 - maxX * TW) / 2, oy = BOARD_TOP + (560 - maxY * TH * .92) / 2;
+  return { left: ox + t.x * TW - t.z * 2, top: oy + t.y * TH * .92 - t.z * 5 };
+}
+function newGame(s) {
+  seed = s; board.innerHTML = ''; tray = []; history = []; moves = 0; busy = false;
+  document.querySelectorAll('.tool').forEach(b => { b.classList.remove('used'); b.querySelector('.n').textContent = '1'; });
+  document.getElementById('level').textContent = `第 ${level} 关`;
+  tiles = genLevel(seed);
+  tiles.forEach((t, i) => {
+    const el = document.createElement('div'); el.className = 'tile'; el.innerHTML = catSVG(t.type); t.el = el;
+    const p = boardPos(t); el.style.left = p.left + 'px'; el.style.top = (p.top - 700) + 'px'; el.style.zIndex = t.z * 100 + Math.round(t.y * 10);
+    el.onclick = () => !demo && tap(t);
+    board.appendChild(el);
+    setTimeout(() => { el.style.transition = 'top .5s cubic-bezier(.3,1.3,.5,1), left .3s, transform .2s, filter .25s, opacity .25s'; el.style.top = p.top + 'px'; },
+      40 + t.z * 120 + i * 4);
+  });
+  setTimeout(() => tiles.forEach(t => t.el.style.transition = ''), 1600);
+  refresh(); startTime = Date.now();
+}
+function refresh() { tiles.forEach(t => t.state === 'board' && t.el.classList.toggle('blocked', !isFree(t, tiles)));
+  trayEl.classList.toggle('danger', tray.length >= TRAY - 2); }
+function layoutTray() { tray.forEach((t, i) => { t.el.style.left = SLOT_X(i) + 'px'; t.el.style.top = SLOT_Y + 'px'; t.el.style.zIndex = 1500 + i; }); }
+
+function tap(t) {
+  if (busy || !isFree(t, tiles)) return;
+  busy = true; moves++;
+  t.state = 'tray'; t.el.classList.remove('blocked'); t.el.classList.add('inTray');
+  let idx = tray.length; for (let i = tray.length - 1; i >= 0; i--) if (tray[i].type === t.type) { idx = i + 1; break; }
+  tray.splice(idx, 0, t); history.push(t);
+  t.el.style.zIndex = 1600; layoutTray(); refresh();
+  setTimeout(() => {
+    const same = tray.filter(o => o.type === t.type);
+    if (same.length === 3) {
+      same.forEach(o => o.el.classList.add('pop'));
+      setTimeout(() => {
+        const r = same[1].el.getBoundingClientRect(), sr = stage.getBoundingClientRect(), sc = sr.width / 540;
+        burst((r.left - sr.left) / sc + 32, (r.top - sr.top) / sc + 32);
+        same.forEach(o => { o.el.classList.add('gone'); o.state = 'gone'; tray.splice(tray.indexOf(o), 1); });
+        history = history.filter(o => o.state !== 'gone');
+        setTimeout(() => { same.forEach(o => o.el.remove()); layoutTray(); refresh(); busy = false; checkEnd(); }, 230);
+      }, 160);
+    } else { busy = false; checkEnd(); }
+  }, 330);
+}
+function checkEnd() {
+  if (!tiles.some(t => t.state === 'board') && !tray.length) {
+    const sec = Math.round((Date.now() - startTime) / 1000);
+    document.getElementById('winInfo').textContent = `用时 ${sec} 秒 · 共 ${moves} 步`;
+    setTimeout(() => { show('win'); confetti(); }, 300);
+  } else if (tray.length >= TRAY) setTimeout(() => show('lose'), 300);
+}
+let comboN = 0, comboT = 0;
+function burst(x, y) {
+  for (let i = 0; i < 14; i++) { const s = document.createElement('div'); s.className = 'spark'; s.style.left = x + 'px'; s.style.top = y + 'px';
+    stage.appendChild(s); const a = Math.PI * 2 * i / 14, d = 50 + Math.random() * 40;
+    requestAnimationFrame(() => requestAnimationFrame(() => { s.style.transform = `translate(${Math.cos(a) * d}px,${Math.sin(a) * d}px) scale(.3)`; s.style.opacity = 0; }));
+    setTimeout(() => s.remove(), 600); }
+  comboN = Date.now() - comboT < 1800 ? comboN + 1 : 1; comboT = Date.now();
+  const c = document.createElement('div'); c.className = 'combo'; c.textContent = comboN > 1 ? `连击 x${comboN}!` : ['太棒了!', '漂亮!', '喵~!'][Math.random() * 3 | 0];
+  c.style.left = (x - 50) + 'px'; c.style.top = (y + 30) + 'px'; stage.appendChild(c);
+  requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transform = 'translateY(-40px) scale(1.1)'; c.style.opacity = 0; }));
+  setTimeout(() => c.remove(), 850);
+}
+function confetti() {
+  const cols = ['#ff5e5e', '#ffd84a', '#5ad1ff', '#8de06a', '#ff9de0', '#ffa53a'];
+  for (let i = 0; i < 90; i++) { const c = document.createElement('div'); c.className = 'confetti'; c.style.background = cols[i % 6];
+    c.style.left = Math.random() * 540 + 'px'; c.style.top = '-20px'; stage.appendChild(c);
+    c.animate([{ transform: `translate(0,0) rotate(0)` }, { transform: `translate(${(Math.random() - .5) * 200}px,${1000 + Math.random() * 100}px) rotate(${Math.random() * 900}deg)` }],
+      { duration: 2200 + Math.random() * 1600, delay: Math.random() * 600, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' });
+    setTimeout(() => c.remove(), 4500); }
+}
+const show = id => document.getElementById(id).classList.add('show');
+const hide = id => document.getElementById(id).classList.remove('show');
+
+// tools
+function useTool(btn) { if (btn.classList.contains('used')) return false; btn.classList.add('used'); btn.querySelector('.n').textContent = '0'; return true; }
+document.getElementById('toolUndo').onclick = () => {
+  if (busy || !history.length || !useTool(document.getElementById('toolUndo'))) return;
+  const t = history.pop(); tray.splice(tray.indexOf(t), 1); t.state = 'board'; t.el.classList.remove('inTray');
+  const p = boardPos(t); t.el.style.left = p.left + 'px'; t.el.style.top = p.top + 'px'; t.el.style.zIndex = t.z * 100 + Math.round(t.y * 10);
+  layoutTray(); refresh();
+};
+document.getElementById('toolShuffle').onclick = () => {
+  if (busy || !useTool(document.getElementById('toolShuffle'))) return;
+  const on = tiles.filter(t => t.state === 'board'), ty = on.map(t => t.type).sort(() => Math.random() - .5);
+  on.forEach((t, i) => { t.type = ty[i]; t.el.style.transform = 'rotateY(90deg)'; setTimeout(() => { t.el.innerHTML = catSVG(t.type); t.el.style.transform = ''; }, 200); });
+};
+document.getElementById('toolOut').onclick = () => {
+  if (busy || tray.length < 3 || !useTool(document.getElementById('toolOut'))) return;
+  // move first 3 tray tiles back onto a free row above the tray area (simple version: return to board top layer)
+  tray.splice(0, 3).forEach((t, i) => { t.state = 'board'; t.el.classList.remove('inTray'); t.z = 9; t.x = 2 + i * 1.5; t.y = -0.9;
+    t.el.style.left = (130 + i * 100) + 'px'; t.el.style.top = '240px'; t.el.style.zIndex = 1400; });
+  history = []; layoutTray(); refresh();
+};
+document.getElementById('startBtn').onclick = () => { hide('intro'); newGame(seed); };
+document.getElementById('againBtn').onclick = () => { hide('win'); level++; newGame(findSeed(seed + 1)); };
+document.getElementById('retryBtn').onclick = () => { hide('lose'); newGame(seed); };
+
+function findSeed(from) { for (let s = from; s < from + 2000; s++) if (simulate(s)) return s; return from; }
+
+// ---------- auto-play demo (?demo) ----------
+const finger = document.getElementById('finger');
+const wait = ms => new Promise(r => setTimeout(r, ms));
+async function fingerTap(el) {
+  const r = el.getBoundingClientRect(), sr = stage.getBoundingClientRect(), sc = sr.width / 540;
+  const x = (r.left - sr.left) / sc + r.width / sc / 2, y = (r.top - sr.top) / sc + r.height / sc / 2;
+  finger.style.left = (x - 22) + 'px'; finger.style.top = (y - 6) + 'px';
+  await wait(230); finger.classList.add('tap');
+  const rp = document.createElement('div'); rp.className = 'ripple'; rp.style.left = (x - 10) + 'px'; rp.style.top = (y - 10) + 'px'; stage.appendChild(rp);
+  requestAnimationFrame(() => requestAnimationFrame(() => { rp.style.transform = 'scale(3)'; rp.style.opacity = 0; }));
+  setTimeout(() => rp.remove(), 500);
+  await wait(90); finger.classList.remove('tap'); el.click();
+}
+async function runDemo() {
+  demo = true;
+  seed = findSeed(Number(new URLSearchParams(location.search).get('seed') || 1));
+  show('intro'); await wait(2200);
+  await fingerTap(document.getElementById('startBtn')); await wait(1800);
+  while (tiles.some(t => t.state === 'board')) {
+    while (busy) await wait(30);
+    const t = botPick(tiles, tray); if (!t) break;
+    demo = false; await fingerTap(t.el); demo = true;
+    await wait(120);
+  }
+  while (busy) await wait(30);
+  finger.style.top = '1100px';
+  await wait(4500);
+  document.title = 'DEMO_DONE';
+}
+if (location.search.includes('demo')) runDemo();
+else { seed = findSeed(1); show('intro'); }
+</script>
+</body>
+</html>
