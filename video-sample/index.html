@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>SpaceX Sample</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  body { font-family: "WenQuanYi Zen Hei", "Noto Sans CJK SC", sans-serif; }
+  .scene { position: absolute; inset: 0; display: none; overflow: hidden; }
+  .abs { position: absolute; }
+  .heavy { font-weight: 900; -webkit-text-stroke: 3px currentColor; letter-spacing: -2px; }
+  .dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 2px, transparent 2.5px); background-size: 48px 48px; }
+  #sub { position: absolute; left: 50%; bottom: 46px; transform: translateX(-50%); background: rgba(20,20,20,.72);
+         color: #fff; font-size: 40px; padding: 8px 22px; border-radius: 8px; white-space: nowrap; display: none; letter-spacing: 1px; }
+
+  /* S1 */
+  #s1 { background: #FF5A36; color: #fff; }
+  /* S2 */
+  #s2 { background: #14213D; color: #fff; }
+  /* S3 */
+  #s3 { background: #FFD23F; color: #111; }
+  #s3 .rays { position: absolute; left: 50%; top: 50%; width: 3000px; height: 3000px; margin: -1500px 0 0 -1500px;
+     background: repeating-conic-gradient(rgba(255,255,255,.22) 0 8deg, transparent 8deg 20deg); }
+  /* S4 */
+  #s4 { background: #050607; color: #fff; }
+  #s4 .grid { position: absolute; inset: 0; background-image:
+     linear-gradient(rgba(80,200,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(80,200,255,.06) 1px, transparent 1px);
+     background-size: 60px 60px; }
+</style>
+</head>
+<body>
+
+<!-- ============ S1: 创立 ============ -->
+<div class="scene" id="s1">
+  <div class="dots"></div>
+  <div class="abs" id="s1brand" style="left:0;right:0;top:250px;text-align:center;font-size:56px;letter-spacing:18px;font-weight:700;">SpaceX</div>
+  <div class="abs heavy" id="s1year" style="left:0;right:0;top:330px;text-align:center;font-size:260px;line-height:1;">2002</div>
+  <div class="abs" id="s1tag" style="left:1290px;top:340px;background:#fff;color:#FF5A36;font-size:64px;font-weight:900;padding:6px 26px;border-radius:14px;">创立</div>
+  <svg class="abs" width="1920" height="1080" style="left:0;top:0">
+    <line id="s1line" x1="560" y1="720" x2="560" y2="720" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+    <circle id="s1d0" cx="560" cy="720" r="16" fill="#fff"/>
+    <circle id="s1d1" cx="1360" cy="720" r="16" fill="#fff" opacity="0"/>
+    <g id="s1rocket">
+      <path d="M0,-34 C10,-20 12,-4 12,16 L-12,16 C-12,-4 -10,-20 0,-34 Z" fill="#fff"/>
+      <path d="M-12,6 L-22,22 L-12,18 Z M12,6 L22,22 L12,18 Z" fill="#fff"/>
+      <path id="s1flame" d="M-7,18 L0,40 L7,18 Z" fill="#FFD23F"/>
+    </g>
+  </svg>
+  <div class="abs" id="s1l0" style="left:500px;top:750px;width:120px;text-align:center;font-size:40px;font-weight:700;">2002</div>
+  <div class="abs" id="s1l1" style="left:1300px;top:750px;width:120px;text-align:center;font-size:40px;font-weight:700;opacity:0">2026</div>
+</div>
+
+<!-- ============ S2: 连炸三次 ============ -->
+<div class="scene" id="s2">
+  <div class="dots"></div>
+  <div class="abs" id="s2small" style="left:180px;top:330px;font-size:48px;color:#9fb3d9;letter-spacing:4px;">2006 — 2008</div>
+  <div class="abs heavy" id="s2big" style="left:170px;top:400px;font-size:170px;color:#FF5A36;line-height:1.1;">连炸<br>三次</div>
+  <svg class="abs" width="1920" height="1080" style="left:0;top:0" id="s2svg"></svg>
+</div>
+
+<!-- ============ S3: 入轨 ============ -->
+<div class="scene" id="s3">
+  <div class="rays" id="s3rays"></div>
+  <svg class="abs" width="1920" height="1080" style="left:0;top:0">
+    <path id="s3trail" d="M1500,1180 C1480,800 1380,450 1150,120 C1080,20 1000,-40 900,-80" fill="none" stroke="#111" stroke-width="6" stroke-dasharray="18 16"/>
+    <g id="s3rocket">
+      <path d="M0,-90 C24,-55 28,-15 28,40 L-28,40 C-28,-15 -24,-55 0,-90 Z" fill="#fff" stroke="#111" stroke-width="6"/>
+      <rect x="-28" y="-10" width="56" height="12" fill="#111"/>
+      <path d="M-28,12 L-52,58 L-28,48 Z M28,12 L52,58 L28,48 Z" fill="#FF5A36" stroke="#111" stroke-width="6" stroke-linejoin="round"/>
+      <path id="s3flame" d="M-18,44 L0,120 L18,44 Z" fill="#FF5A36" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+    </g>
+  </svg>
+  <div class="abs" id="s3meta" style="left:170px;top:230px;font-size:46px;font-weight:700;letter-spacing:2px;">Falcon 1 · 第 4 次</div>
+  <div class="abs heavy" id="s3y" style="left:160px;top:300px;font-size:150px;line-height:1;">2008</div>
+  <div class="abs heavy" id="s3d" style="left:150px;top:450px;font-size:300px;line-height:1;">9.28</div>
+  <div class="abs" id="s3stamp" style="left:880px;top:360px;font-size:120px;font-weight:900;color:#fff;background:#E63B2E;
+       border:8px solid #111;padding:4px 34px;border-radius:22px;box-shadow:10px 10px 0 #111;">入轨!</div>
+</div>
+
+<!-- ============ S4: 回收 ============ -->
+<div class="scene" id="s4">
+  <div class="grid"></div>
+  <div class="abs" style="left:120px;top:90px;font-size:40px;color:#ddd;letter-spacing:2px;">把一级火箭飞回来，再用一次</div>
+  <div class="abs" id="s4date" style="right:120px;top:80px;font-size:68px;font-family:Georgia,serif;color:#fff;">2015.12</div>
+  <svg class="abs" width="1920" height="1080" style="left:0;top:0">
+    <line x1="200" y1="840" x2="1720" y2="840" stroke="#555" stroke-width="3"/>
+    <rect x="440" y="826" width="40" height="14" fill="#555"/>
+    <path id="s4up" d="M460,826 C470,560 640,300 980,190" fill="none" stroke="#5ec8ff" stroke-width="4"/>
+    <path id="s4back" d="M980,190 C1130,150 1260,220 1240,330 C1225,420 1200,520 1200,560" fill="none" stroke="#5ec8ff" stroke-width="3" stroke-dasharray="10 10" opacity=".8"/>
+    <circle id="s4sep" cx="980" cy="190" r="9" fill="#fff" opacity="0"/>
+    <ellipse id="s4pad" cx="1200" cy="840" rx="90" ry="16" fill="none" stroke="#3ee08f" stroke-width="5"/>
+    <ellipse id="s4ring" cx="1200" cy="840" rx="90" ry="16" fill="none" stroke="#3ee08f" stroke-width="3" opacity="0"/>
+    <g id="s4booster">
+      <path id="s4flame" d="M-9,0 L0,70 L9,0 Z" fill="#ffb347"/>
+      <rect x="-12" y="-230" width="24" height="230" rx="3" fill="#f2f2f2"/>
+      <rect x="-12" y="-232" width="24" height="16" fill="#333"/>
+      <g id="s4legs" stroke="#ccc" stroke-width="5" stroke-linecap="round">
+        <line id="s4legL" x1="-10" y1="-40" x2="-14" y2="0"/>
+        <line id="s4legR" x1="10" y1="-40" x2="14" y2="0"/>
+      </g>
+    </g>
+  </svg>
+  <div class="abs" id="s4lsep" style="left:1000px;top:130px;font-size:32px;color:#aaa;opacity:0">分离</div>
+  <div class="abs" id="s4lre" style="left:1265px;top:360px;font-size:32px;color:#aaa;opacity:0">再入</div>
+  <div class="abs" id="s4lpad" style="left:1140px;top:870px;width:120px;text-align:center;font-size:30px;color:#3ee08f;">着陆区</div>
+  <div class="abs" id="s4ok" style="left:1330px;top:640px;font-size:76px;font-weight:900;color:#3ee08f;opacity:0">稳稳落地</div>
+</div>
+
+<div id="sub"></div>
+
+<script>
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+const outCubic = k => 1 - Math.pow(1 - k, 3);
+const inCubic = k => k * k * k;
+const outBack = k => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
+const $ = id => document.getElementById(id);
+const rnd = s => { const x = Math.sin(s * 9301.7) * 49297.3; return x - Math.floor(x); };
+
+const SCENES = [["s1", 0, 2.75], ["s2", 2.75, 4.95], ["s3", 4.95, 7.45], ["s4", 7.45, 10.01]];
+const SUBS = [
+  [0.15, 2.6, "2002年，马斯克创办SpaceX"],
+  [2.9, 4.75, "前三次发射，全炸了"],
+  [5.1, 7.25, "2008年第四次，终于入轨"],
+  [7.6, 9.9, "七年后，火箭竖着飞了回来"],
+];
+
+// ---- S2 static build: three rockets + explosion particle groups ----
+const s2svg = $("s2svg");
+const NS = "http://www.w3.org/2000/svg";
+const RX = [1090, 1330, 1570];
+RX.forEach((x, i) => {
+  const g = document.createElementNS(NS, "g");
+  g.id = "r" + i;
+  g.innerHTML = `
+    <path d="M0,-300 C16,-270 20,-230 20,-190 L20,180 L-20,180 L-20,-190 C-20,-230 -16,-270 0,-300 Z" fill="#f4f4f4"/>
+    <rect x="-20" y="-120" width="40" height="10" fill="#14213D" opacity=".35"/>
+    <path d="M-20,120 L-46,190 L-20,180 Z M20,120 L46,190 L20,180 Z" fill="#f4f4f4"/>`;
+  s2svg.appendChild(g);
+  const boom = document.createElementNS(NS, "g");
+  boom.id = "b" + i;
+  let html = `<circle class="flash" r="0" fill="#FFD23F"/>`;
+  for (let p = 0; p < 18; p++) html += `<circle class="p" r="${8 + rnd(i * 50 + p) * 14}" fill="${p % 3 ? '#FF5A36' : '#FFD23F'}"/>`;
+  boom.innerHTML = html;
+  s2svg.appendChild(boom);
+  const x2 = document.createElementNS(NS, "g");
+  x2.id = "x" + i;
+  x2.innerHTML = `<path d="M-70,-70 L70,70 M70,-70 L-70,70" stroke="#FF3B30" stroke-width="26" stroke-linecap="round"/>`;
+  s2svg.appendChild(x2);
+});
+
+const trail = $("s3trail"), trailLen = trail.getTotalLength();
+const up = $("s4up"), upLen = up.getTotalLength();
+const back = $("s4back"), backLen = back.getTotalLength();
+
+function render(t) {
+  for (const [id, a, b] of SCENES) $(id).style.display = (t >= a && t < b) ? "block" : "none";
+
+  // subtitles
+  const sub = SUBS.find(s => t >= s[0] && t < s[1]);
+  $("sub").style.display = sub ? "block" : "none";
+  if (sub) $("sub").textContent = sub[2];
+
+  // ---------- S1 ----------
+  if (t < 2.75) {
+    const k = t;
+    $("s1brand").style.opacity = seg(k, 0.05, 0.35);
+    $("s1brand").style.letterSpacing = lerp(40, 18, outCubic(seg(k, 0.05, 0.6))) + "px";
+    const ky = seg(k, 0.15, 0.6);
+    $("s1year").style.transform = `scale(${lerp(0.4, 1, outBack(ky))})`;
+    $("s1year").style.opacity = seg(k, 0.15, 0.3);
+    const kt = seg(k, 0.65, 0.95);
+    $("s1tag").style.transform = `rotate(${lerp(-30, 8, outBack(kt))}deg) scale(${lerp(2.2, 1, outCubic(kt))})`;
+    $("s1tag").style.opacity = kt > 0 ? 1 : 0;
+    const kl = outCubic(seg(k, 0.9, 2.3));
+    const x = lerp(560, 1360, kl);
+    $("s1line").setAttribute("x2", x);
+    $("s1rocket").setAttribute("transform", `translate(${x},${668 - Math.sin(kl * Math.PI) * 20}) rotate(${kl < 1 ? 90 : 0})`);
+    $("s1rocket").style.opacity = seg(k, 0.9, 1.05);
+    $("s1flame").setAttribute("transform", `scale(1,${0.7 + 0.5 * rnd(Math.floor(t * 30))})`);
+    const ke = seg(k, 2.1, 2.3);
+    $("s1d1").setAttribute("opacity", ke);
+    $("s1l1").style.opacity = ke;
+    $("s1d0").setAttribute("r", 16 + 6 * Math.sin(k * 8) * (1 - seg(k, 0.9, 1.5)));
+  }
+
+  // ---------- S2 ----------
+  if (t >= 2.75 && t < 4.95) {
+    const k = t - 2.75;
+    $("s2small").style.opacity = seg(k, 0, 0.2);
+    const kb = seg(k, 0.05, 0.35);
+    $("s2big").style.transform = `translateX(${lerp(-80, 0, outCubic(kb))}px)`;
+    $("s2big").style.opacity = kb;
+    const T = [0.45, 0.95, 1.45]; // explosion times
+    RX.forEach((x, i) => {
+      const appear = outBack(seg(k, 0.05 + i * 0.07, 0.35 + i * 0.07));
+      const shake = (k > T[i] - 0.25 && k < T[i]) ? (rnd(Math.floor(t * 60) + i) - 0.5) * 16 : 0;
+      const rise = seg(k, 0.2, T[i]) * 40;
+      const exploded = k >= T[i];
+      const g = $("r" + i);
+      g.setAttribute("transform", `translate(${x + shake},${lerp(1300, 600, appear) - rise})`);
+      g.setAttribute("opacity", exploded ? 0.18 : 1);
+      // explosion
+      const ke = seg(k, T[i], T[i] + 0.45);
+      const boom = $("b" + i);
+      boom.setAttribute("transform", `translate(${x},${560 - rise})`);
+      boom.style.display = (k >= T[i] && ke < 1) ? "block" : "none";
+      const flash = boom.querySelector(".flash");
+      flash.setAttribute("r", 140 * outCubic(seg(k, T[i], T[i] + 0.12)));
+      flash.setAttribute("opacity", 1 - seg(k, T[i] + 0.05, T[i] + 0.25));
+      boom.querySelectorAll(".p").forEach((p, j) => {
+        const ang = rnd(i * 31 + j) * Math.PI * 2, d = 120 + rnd(i * 77 + j) * 160;
+        p.setAttribute("cx", Math.cos(ang) * d * outCubic(ke));
+        p.setAttribute("cy", Math.sin(ang) * d * outCubic(ke) + ke * ke * 80);
+        p.setAttribute("opacity", 1 - ke);
+      });
+      // red X
+      const kx = seg(k, T[i] + 0.08, T[i] + 0.28);
+      const xg = $("x" + i);
+      xg.setAttribute("transform", `translate(${x},${560 - rise}) scale(${kx > 0 ? lerp(2, 1, outBack(kx)) : 0})`);
+    });
+    // camera shake on each boom
+    let sh = 0;
+    T.forEach(tt => { if (k >= tt && k < tt + 0.15) sh = (rnd(Math.floor(t * 60)) - 0.5) * 24 * (1 - (k - tt) / 0.15); });
+    $("s2").style.transform = `translate(${sh}px,${sh * 0.6}px)`;
+  }
+
+  // ---------- S3 ----------
+  if (t >= 4.95 && t < 7.45) {
+    const k = t - 4.95;
+    $("s3rays").style.transform = `rotate(${k * 12}deg)`;
+    $("s3meta").style.opacity = seg(k, 0.05, 0.25);
+    const ky = seg(k, 0, 0.3), kd = seg(k, 0.12, 0.45);
+    $("s3y").style.transform = `translateY(${lerp(60, 0, outCubic(ky))}px)`; $("s3y").style.opacity = ky;
+    $("s3d").style.transform = `scale(${lerp(0.5, 1, outBack(kd))})`; $("s3d").style.opacity = kd;
+    $("s3d").style.transformOrigin = "0 60%";
+    const kr = inCubic(seg(k, 0.3, 1.5)) * 0.82 + seg(k, 0.3, 1.5) * 0.18;
+    const L = kr * trailLen;
+    trail.setAttribute("stroke-dasharray", `18 16`);
+    trail.style.clipPath = "none";
+    trail.setAttribute("stroke-dashoffset", 0);
+    trail.style.opacity = 1;
+    // reveal trail with a mask by drawing only up to L
+    trail.setAttribute("stroke-dasharray", dashUpTo(L, trailLen));
+    const p = trail.getPointAtLength(Math.max(0.1, L));
+    const p2 = trail.getPointAtLength(Math.max(0, L - 4));
+    const ang = Math.atan2(p.y - p2.y, p.x - p2.x) * 180 / Math.PI + 90;
+    $("s3rocket").setAttribute("transform", `translate(${p.x},${p.y}) rotate(${L > 1 ? ang : 0})`);
+    $("s3flame").setAttribute("transform", `scale(1,${0.8 + 0.6 * rnd(Math.floor(t * 30) + 3)})`);
+    const ks = seg(k, 1.0, 1.25);
+    $("s3stamp").style.transform = `rotate(${lerp(-25, -8, outBack(ks))}deg) scale(${ks > 0 ? lerp(2.4, 1, outBack(ks)) : 0})`;
+    let sh = (k > 1.2 && k < 1.35) ? (rnd(Math.floor(t * 60)) - 0.5) * 18 : 0;
+    $("s3").style.transform = `translate(${sh}px,${-sh}px)`;
+  }
+
+  // ---------- S4 ----------
+  if (t >= 7.45) {
+    const k = t - 7.45;
+    $("s4date").style.opacity = seg(k, 0, 0.2);
+    const ku = outCubic(seg(k, 0.05, 0.6));
+    up.setAttribute("stroke-dasharray", `${upLen * ku} ${upLen}`);
+    const ksep = seg(k, 0.55, 0.7);
+    $("s4sep").setAttribute("opacity", ksep);
+    $("s4lsep").style.opacity = ksep;
+    const kb = seg(k, 0.6, 1.1);
+    back.setAttribute("stroke-dashoffset", 0);
+    back.setAttribute("stroke-dasharray", dashUpTo(backLen * outCubic(kb), backLen, 10, 10));
+    $("s4lre").style.opacity = seg(k, 0.9, 1.05);
+    // booster: ride the return path, then vertical descent to pad
+    let bx, by, rot = 0;
+    if (k < 1.1) {
+      const pt = back.getPointAtLength(backLen * outCubic(kb));
+      bx = pt.x; by = pt.y + 115; rot = lerp(-120, 0, outCubic(kb));
+    } else {
+      const kd = seg(k, 1.1, 2.15);
+      bx = 1200; by = lerp(560 + 115, 840, outCubic(kd)); rot = Math.sin(k * 14) * 2 * (1 - kd);
+    }
+    const g = $("s4booster");
+    g.setAttribute("transform", `translate(${bx},${by}) rotate(${rot}) scale(0.9)`);
+    g.style.opacity = seg(k, 0.6, 0.75);
+    const landed = k >= 2.15;
+    const burn = (k > 1.1 && !landed) ? 0.7 + 0.6 * rnd(Math.floor(t * 30) + 9) : 0;
+    $("s4flame").setAttribute("transform", `scale(1,${burn})`);
+    const kl = outBack(seg(k, 1.75, 2.05));
+    $("s4legL").setAttribute("x2", lerp(-14, -48, kl)); $("s4legR").setAttribute("x2", lerp(14, 48, kl));
+    const kr = seg(k, 2.15, 2.55);
+    const ring = $("s4ring");
+    ring.setAttribute("rx", 90 + 160 * outCubic(kr)); ring.setAttribute("ry", 16 + 30 * outCubic(kr));
+    ring.setAttribute("opacity", landed ? 1 - kr : 0);
+    $("s4pad").setAttribute("stroke-width", landed ? 8 : 5);
+    const ko = seg(k, 2.15, 2.35);
+    $("s4ok").style.opacity = ko;
+    $("s4ok").style.transform = `scale(${ko > 0 ? lerp(1.5, 1, outBack(ko)) : 1})`;
+  }
+}
+
+// dasharray that shows exactly the first L units of a path of length total, with dashes d/g
+function dashUpTo(L, total, d = 18, g = 16) {
+  if (L <= 0) return `0 ${total + 1}`;
+  const arr = [];
+  let acc = 0;
+  while (acc + d < L) { arr.push(d, g); acc += d + g; }
+  arr.push(Math.max(0, Math.min(d, L - acc)), total + 1);
+  return arr.join(" ");
+}
+
+window.render = render;
+render(0);
+</script>
+</body>
+</html>
