@@ -1,0 +1,76 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Whiteboard</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="fonts/klee-latin.css">
+<link rel="stylesheet" href="fonts/g_NotoSansSC.css">
+<style>
+  html,body{margin:0;padding:0;background:#fbfbfb;overflow:hidden}
+  #stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#fbfbfb}
+  #paper{position:absolute;inset:0}
+  svg{position:absolute;inset:0;font-synthesis:none}
+  #sub{position:absolute;left:50%;top:951px;transform:translateX(-50%);height:68px;line-height:68px;padding:0 19px;
+       background:rgba(0,0,0,0.645);color:#fff;border-radius:7px;font-family:'Noto Sans SC';font-weight:700;font-size:51px;
+       white-space:nowrap;letter-spacing:0px;display:none}
+</style></head>
+<body><div id="stage">
+<canvas id="paper" width="1920" height="1080"></canvas>
+<svg id="board" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+<svg id="hud" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs><filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+  <g id="pencil" style="display:none">
+    <g transform="translate(26,30)" filter="url(#sh)" opacity="0.15">
+      <g transform="rotate(-38)"><rect x="34" y="-20" width="226" height="40" rx="12" fill="#000"/><polygon points="0,0 38,-17 38,17" fill="#000"/></g>
+    </g>
+    <g transform="rotate(-38)">
+      <polygon points="0,0 38,-17 38,17" fill="#ece6dc"/>
+      <polygon id="lead" points="0,0 12,-5.4 12,5.4" fill="#141414"/>
+      <rect x="36" y="-20" width="200" height="40" rx="4" fill="#1b1b1b"/>
+      <rect x="46" y="-11" width="180" height="6" rx="3" fill="#5c5c5c" opacity="0.85"/>
+      <rect id="cap" x="228" y="-20" width="34" height="40" rx="11" fill="#0c0c0c"/>
+    </g>
+  </g>
+</svg>
+<div id="sub"></div>
+</div>
+<script src="engine.js"></script>
+<script src="shapes.js"></script>
+<script src="scene-spacex.js"></script>
+<script>
+// faint crumpled-paper texture
+(function paper(){
+  const cv=document.getElementById('paper'),cx=cv.getContext('2d');
+  cx.fillStyle='#fbfbfb';cx.fillRect(0,0,1920,1080);
+  const r=rng(42);
+  const small=document.createElement('canvas');small.width=40;small.height=23;
+  const sc=small.getContext('2d'),img=sc.createImageData(40,23);
+  for(let i=0;i<img.data.length;i+=4){const v=r();img.data[i]=img.data[i+1]=img.data[i+2]=v<0.5?0:255;img.data[i+3]=Math.round(Math.abs(v-0.5)*4);}
+  sc.putImageData(img,0,0);
+  cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality='high';cx.drawImage(small,0,0,1920,1080);
+  cx.lineCap='round';
+  for(let k=0;k<26;k++){const x=r()*1920,y=r()*1080,a=r()*Math.PI,l=200+r()*500;
+    cx.strokeStyle=`rgba(0,0,0,${0.002+r()*0.003})`;cx.lineWidth=20+r()*50;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);cx.stroke();}
+})();
+
+let board;
+const pencilEl=document.getElementById('pencil'),capEl=document.getElementById('cap'),leadEl=document.getElementById('lead'),subEl=document.getElementById('sub');
+window.setup=async()=>{
+  await document.fonts.ready;
+  const probe=['KleeLatin','Xiaolai','Noto Sans SC'];
+  await Promise.all(probe.map(f=>document.fonts.load(`600 100px '${f}'`,'2008年猎鹰鹰号连败三次最后一发成了同一天星舰入轨马斯克目标第四次私人研制进入轨道的液体燃料火箭SpaceX')));
+  await document.fonts.load(`700 51px 'Noto Sans SC'`, SUBS.map(s=>s[2]).join(''));
+  board=new Board(document.getElementById('board'));
+  buildScene();
+  return DURATION;
+};
+window.renderAt=t=>{
+  const c=board.render(t);
+  const p=board.pencil(t,c);
+  if(p){pencilEl.style.display='';pencilEl.setAttribute('transform',`translate(${p.p[0].toFixed(1)},${p.p[1].toFixed(1)})`);
+    const col=p.color===ORANGE?ORANGE:'#0c0c0c';capEl.setAttribute('fill',col);leadEl.setAttribute('fill',p.color===ORANGE?ORANGE:'#141414');}
+  else pencilEl.style.display='none';
+  const s=SUBS.find(s=>t>=s[0]&&t<s[1]);
+  if(s){subEl.style.display='block';if(subEl.textContent!==s[2])subEl.textContent=s[2];}else subEl.style.display='none';
+};
+window.penEvents=()=>board.segs.map(s=>[+s.a.toFixed(3),+s.b.toFixed(3)]);
+</script>
+</body></html>
