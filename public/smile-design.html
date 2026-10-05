@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的微笑设计</title>
+<style>
+:root{
+  /* Layout: consult desk — workflow rail on the left, photo/3D stage in the middle, design panel on the right */
+  --bg:#eaf0ef;
+  --surface:#ffffff;
+  --surface-2:#f4f7f7;
+  --line:#d6e0df;
+  --ink:#16282c;
+  --muted:#5c7075;
+  --accent:#1d7a72;
+  --accent-soft:#dcefeb;
+  --rose:#b65a6b;
+  --ok:#25864f;
+  --warn:#a86d0c;
+  --bad:#b43c35;
+  --f-ui:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"SF Pro Rounded",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  --r:12px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--f-ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-columns:300px minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top top top" "left stage right" "foot foot foot"}
+.top{grid-area:top;display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-right:auto}
+.brand h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.04em}
+.privacy{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px}
+.privacy::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 14px;border-radius:8px;min-height:36px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(22,40,44,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:500;transition:border-color .15s,background .15s}
+.btn:hover:not(:disabled){border-color:#a9bdbb}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:#17675f}
+.btn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.btn.sm{min-height:34px;padding:5px 10px;font-size:13px}
+.btn.block{width:100%}
+
+.left,.right{overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--surface-2);min-height:0}
+.left{grid-area:left;border-right:1px solid var(--line)}
+.right{grid-area:right;border-left:1px solid var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.card.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.card.locked{opacity:.55}
+.step-h{display:flex;align-items:center;gap:10px}
+.step-h h2{margin:0;font-size:15px;font-weight:600}
+.step-n{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--f-num);background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.card.done .step-n{background:var(--accent);border-color:var(--accent);color:#fff}
+.note{margin:0;font-size:12.5px;color:var(--muted)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.checks li{display:flex;gap:8px;align-items:baseline}
+.checks li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--line);transform:translateY(-1px)}
+.checks li.ok::before{background:var(--ok)}
+.checks li.warn::before{background:var(--warn)}
+.checks li.bad::before{background:var(--bad)}
+.checks li span{margin-left:auto;color:var(--muted);font:12px var(--f-num);font-variant-numeric:tabular-nums}
+
+.ctrl{display:flex;flex-direction:column;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+.ctrl:first-of-type{border-top:0;padding-top:0}
+.ctrl-h{display:flex;align-items:baseline;gap:8px}
+.ctrl-h b{font-weight:600;font-size:14px}
+.ctrl-h .val{margin-left:auto;font:600 13px var(--f-num);font-variant-numeric:tabular-nums}
+.metric{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.metric .pill{margin-left:auto}
+.pill{font-size:11.5px;line-height:1;padding:5px 9px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.ok{background:#dff1e6;color:var(--ok)}
+.pill.warn{background:#f6ebd3;color:var(--warn)}
+.pill.bad{background:#f6dfdc;color:var(--bad)}
+.pill.idle{background:var(--surface-2);color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px;margin:0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.shades{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.shade{border:2px solid transparent;border-radius:9px;padding:0;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;gap:2px;padding-bottom:3px;min-height:46px}
+.shade i{display:block;width:100%;height:24px;border-radius:7px 7px 3px 3px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.08)}
+.shade span{font:600 10.5px var(--f-num);color:var(--muted)}
+.shade[aria-pressed="true"]{border-color:var(--accent)}
+.shade[aria-pressed="true"] span{color:var(--accent)}
+.teeth{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.tooth{min-height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font:600 13px var(--f-num)}
+.tooth[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.swatch{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);flex:none}
+textarea{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface-2);line-height:1.5}
+.file-btn{position:relative;overflow:hidden}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.align-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.align-list li{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;background:var(--surface-2)}
+.align-list li.cur{outline:2px solid var(--accent)}
+.align-list b{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--rose);color:#fff;font:700 11px var(--f-num)}
+.align-list span.st{font:12px var(--f-num);color:var(--muted)}
+
+.stage{grid-area:stage;position:relative;min-width:0;min-height:0;background:#dbe3e2;overflow:hidden}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#threeCv{cursor:grab}
+.stage.aligning #photoCv{width:50%}
+.stage.aligning #threeCv{left:50%;width:50%;border-left:2px solid var(--surface)}
+.pane-tag{position:absolute;top:12px;font-size:12px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:4px 10px;pointer-events:none}
+.drop{position:absolute;inset:16px;border:2px dashed #a8bcba;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;background:rgba(255,255,255,.55)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop h2{margin:0;font-size:22px;font-weight:600;text-wrap:balance}
+.drop ul{margin:0;padding:0;list-style:none;color:var(--muted);font-size:13px;display:grid;gap:4px}
+.stage-tools{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 24px)}
+.stage-tools .group{display:flex;gap:4px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;padding:4px;box-shadow:0 4px 16px rgba(22,40,44,.1)}
+.stage-tools .btn{min-height:34px;padding:5px 10px;font-size:13px;border-color:transparent;background:transparent}
+.stage-tools .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent}
+.split3d{position:absolute;top:0;bottom:0;width:2px;background:#fff;pointer-events:none}
+.split3d span{position:absolute;top:12px;font-size:13px;font-weight:600;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.split3d .l{right:12px}.split3d .r{left:12px}
+.hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:8px 14px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18);max-width:calc(100% - 24px);text-align:center}
+.busy{position:absolute;inset:0;display:grid;place-items:center;background:rgba(234,240,239,.78)}
+.busy div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 22px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px rgba(22,40,44,.12)}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--accent-soft);border-top-color:var(--accent);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+
+.foot{grid-area:foot;text-align:center;font-size:12px;color:var(--muted);padding:7px 16px;padding-bottom:calc(7px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+
+.overlay{position:fixed;inset:0;background:rgba(18,32,35,.42);display:grid;place-items:center;padding:16px;z-index:20}
+.dialog{background:var(--surface);border-radius:18px;padding:24px;max-width:460px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.dialog h2{margin:0;font-size:20px;text-wrap:balance}
+.dialog p{margin:0;color:var(--muted)}
+.dialog ul{margin:0;padding-left:18px;color:var(--ink);font-size:13.5px;display:grid;gap:4px}
+.dialog .row{justify-content:flex-end}
+.dialog .reason{background:#f6dfdc;color:var(--bad);border-radius:10px;padding:10px 12px;font-weight:500}
+
+.patient-card{grid-area:pnote;background:var(--surface);border-top:1px solid var(--line);padding:14px 20px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto;gap:8px 28px;align-items:start}
+.patient-card h3{margin:0 0 4px;font-size:16px}
+.patient-card p{margin:0;white-space:pre-wrap;min-width:0}
+.patient-card ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px;min-width:0}
+@media (max-width:900px){.patient-card{grid-template-columns:minmax(0,1fr)}}
+
+.app.patient{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"top" "stage" "pnote" "foot"}
+.app.patient .left,.app.patient .right,.app.patient .hide-patient{display:none!important}
+
+@media (max-width:1100px){
+  .app{grid-template-columns:270px minmax(0,1fr) 300px}
+}
+@media (max-width:900px){
+  html,body{height:auto}
+  .app{height:auto;min-height:100%;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 64vh auto auto auto;grid-template-areas:"top" "stage" "right" "left" "foot"}
+  .left,.right{border:0;overflow:visible}
+  .app.patient{grid-template-rows:auto 70vh auto auto}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>我的微笑设计</h1>
+      <span class="privacy">照片和口扫仅在本机处理，不上传、不保存</span>
+    </div>
+    <div class="top-actions">
+      <div class="seg" role="group" aria-label="视图">
+        <button id="vPhoto" aria-pressed="true">照片视图</button>
+        <button id="v3d" aria-pressed="false">3D 视图</button>
+      </div>
+      <button class="btn" id="bCompare" aria-pressed="false" disabled>前后对比</button>
+      <button class="btn" id="bPatient" aria-pressed="false" disabled>患者模式</button>
+      <button class="btn" id="bExport" disabled>导出 PNG</button>
+      <button class="btn hide-patient" id="bReset">重新开始</button>
+    </div>
+  </header>
+
+  <aside class="left" aria-label="操作步骤">
+    <section class="card active" id="c1">
+      <div class="step-h"><span class="step-n">1</span><h2>上传照片</h2></div>
+      <p class="note" id="c1note">拍一张正面、露出上牙的微笑照片。光线均匀，镜头与眼睛同高。</p>
+      <label class="btn primary file-btn" id="photoBtn">选择照片<input type="file" id="photoIn" accept="image/jpeg,image/png" disabled></label>
+      <ul class="checks" id="checks" hidden></ul>
+      <label class="row" style="font-size:13px" id="ovRow" hidden><input type="checkbox" id="ovToggle" checked> 显示美学参考线</label>
+    </section>
+    <section class="card locked" id="c2">
+      <div class="step-h"><span class="step-n">2</span><h2>本人 3D 脸</h2></div>
+      <p class="note" id="c2note">识别 478 个人脸关键点后，自动把照片贴到 3D 人脸网格上。</p>
+      <button class="btn sm" id="go3d" disabled>查看 3D 脸</button>
+    </section>
+    <section class="card locked" id="c3">
+      <div class="step-h"><span class="step-n">3</span><h2>放入牙齿</h2></div>
+      <div class="seg" role="group" aria-label="牙齿来源" style="align-self:flex-start">
+        <button id="mB" aria-pressed="true" disabled>标准牙列</button>
+        <button id="mA" aria-pressed="false" disabled>上传口扫</button>
+      </div>
+      <div id="mBbox">
+        <p class="note">没有口扫时，按照片中嘴唇宽度生成一副标准上前牙。现状牙位根据照片中的切缘线估算，仅作示意。</p>
+      </div>
+      <div id="mAbox" hidden>
+        <p class="note">上传上颌口扫 STL，再在照片和 3D 牙列上各点 4 个对应点完成对齐。</p>
+        <label class="btn sm file-btn">选择 STL 文件<input type="file" id="stlIn" accept=".stl"></label>
+        <p class="note" id="scanInfo" hidden></p>
+        <div id="alignBox" hidden>
+          <ol class="align-list" id="alignList"></ol>
+          <div class="row" style="margin-top:8px">
+            <button class="btn sm" id="flipV">上下翻转</button>
+            <button class="btn sm" id="flipF">前后翻转</button>
+            <button class="btn sm" id="clrPts">清除点</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn sm primary" id="doAlign" disabled>完成对齐</button>
+            <button class="btn sm" id="cancelAlign">取消</button>
+          </div>
+        </div>
+        <p class="note" id="alignResult" hidden></p>
+      </div>
+      <div class="ctrl" style="border-top:1px solid var(--line);padding-top:10px">
+        <div class="ctrl-h"><b>照片牙色</b><span class="val" id="baseShadeName">—</span></div>
+        <div class="row"><span class="swatch" id="baseSwatch"></span><button class="btn sm" id="bDrop" aria-pressed="false" disabled>吸管取色</button><span class="note">在照片的牙齿上点一下</span></div>
+      </div>
+    </section>
+  </aside>
+
+  <main class="stage" id="stage">
+    <canvas id="photoCv" aria-label="照片视图"></canvas>
+    <canvas id="threeCv" aria-label="3D 视图" hidden></canvas>
+    <span class="pane-tag" id="tagPhoto" style="left:12px" hidden>照片：按顺序点 4 个点</span>
+    <span class="pane-tag" id="tagScan" style="left:calc(50% + 12px)" hidden>口扫：按顺序点 4 个点（拖动可旋转）</span>
+    <div class="drop" id="drop">
+      <h2>拖入正面微笑照片，或点击选择</h2>
+      <ul>
+        <li>正对镜头，头不要偏、不要仰</li>
+        <li>自然大笑，露出上排牙齿</li>
+        <li>光线均匀明亮，不要逆光</li>
+        <li>支持 JPG / PNG</li>
+      </ul>
+      <label class="btn primary file-btn">选择照片<input type="file" id="photoIn2" accept="image/jpeg,image/png"></label>
+    </div>
+    <div class="stage-tools" id="stageTools" hidden>
+      <div class="group" id="zoomGroup">
+        <button class="btn" id="zFace">全脸</button>
+        <button class="btn" id="zMouth">嘴部特写</button>
+        <button class="btn" id="zOut" aria-label="缩小">−</button>
+        <button class="btn" id="zIn" aria-label="放大">＋</button>
+      </div>
+      <div class="group" id="cmpGroup" hidden>
+        <button class="btn" id="cSplit" aria-pressed="true">分割线</button>
+        <button class="btn" id="cSide" aria-pressed="false">并排</button>
+      </div>
+    </div>
+    <div class="split3d" id="split3d" hidden><span class="l">治疗前</span><span class="r">模拟效果</span></div>
+    <div class="hint" id="hint" hidden></div>
+    <div class="busy" id="busy" hidden><div><span class="spin"></span><span id="busyTxt">处理中…</span></div></div>
+  </main>
+
+  <aside class="right" aria-label="治疗方案">
+    <section class="card locked" id="c4">
+      <div class="step-h"><span class="step-n">4</span><h2>治疗方案模拟</h2></div>
+
+      <div class="ctrl">
+        <div class="ctrl-h"><b>排齐</b><span class="val" id="vAlign">100%</span></div>
+        <input type="range" id="sAlign" min="0" max="100" step="1" value="100" disabled aria-label="排齐程度">
+        <div class="metric" id="mAlignTxt">现状 → 理想弓形</div>
+        <div class="metric">微笑弧线<span class="pill idle" id="pArc">—</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-h"><b>美白</b><span class="val" id="vShade">原色</span></div>
+        <div class="shades" id="shades"></div>
+        <div class="metric" id="mShadeTxt">点选目标色阶</div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-h"><b>贴面 / 全瓷冠</b></div>
+        <div class="seg" role="group" aria-label="修复类型" style="align-self:flex-start">
+          <button id="tVeneer" aria-pressed="true">贴面</button>
+          <button id="tCrown" aria-pressed="false">全瓷冠</button>
+        </div>
+        <div class="teeth" id="teethPick"></div>
+        <div class="ctrl-h"><span class="note">长度</span><span class="val" id="vLen">0.0 mm</span></div>
+        <input type="range" id="sLen" min="-2" max="2" step="0.1" value="0" disabled aria-label="牙齿长度">
+        <div class="ctrl-h"><span class="note">中切牙宽长比</span><span class="val" id="vRatio">—</span></div>
+        <input type="range" id="sRatio" min="65" max="90" step="0.5" value="78" disabled aria-label="中切牙宽长比">
+        <div class="metric">中切牙临床冠长<span class="pill idle" id="pLen">—</span></div>
+        <div class="metric">宽长比（推荐 75–80%）<span class="pill idle" id="pRatio">—</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-h"><b>中线纠正</b><span class="val" id="vMid">0.0 mm</span></div>
+        <input type="range" id="sMid" min="-4" max="4" step="0.1" value="0" disabled aria-label="牙列中线移动">
+        <div class="row"><button class="btn sm" id="bAutoMid" disabled>自动对齐面中线</button></div>
+        <div class="metric">牙列中线偏差（推荐 ≤ 1 mm）<span class="pill idle" id="pMid">—</span></div>
+      </div>
+
+      <div class="ctrl">
+        <div class="ctrl-h"><b>牙龈线</b><span class="val" id="vGum">0.0 mm</span></div>
+        <input type="range" id="sGum" min="-2" max="2" step="0.1" value="0" disabled aria-label="牙龈线上移">
+        <div class="metric">正值表示牙龈线上移（冠延长）</div>
+        <div class="metric">微笑露龈量（推荐 0–2 mm）<span class="pill idle" id="pGum">—</span></div>
+      </div>
+    </section>
+
+    <section class="card locked" id="c5">
+      <div class="step-h"><span class="step-n">5</span><h2>对比与展示</h2></div>
+      <label class="note" for="docNote">给患者的说明</label>
+      <textarea id="docNote" placeholder="例如：建议先做隐形矫治排齐，再对 11、21 做贴面，整体疗程约 12 个月。"></textarea>
+      <div class="row">
+        <button class="btn sm" id="bCompare2" disabled>前后对比</button>
+        <button class="btn sm" id="bPatient2" disabled>患者模式</button>
+        <button class="btn sm" id="bExport2" disabled>导出 PNG</button>
+      </div>
+    </section>
+  </aside>
+
+  <section class="patient-card" id="patientCard" hidden aria-label="方案说明">
+    <div><h3>您的微笑设计方案</h3><p id="pNote"></p></div>
+    <ul id="pSummary"></ul>
+    <button class="btn sm" id="exitPatient">退出患者模式</button>
+  </section>
+
+  <footer class="foot">模拟效果仅供医患沟通参考，不代表实际治疗结果，不得用于宣传</footer>
+</div>
+
+<div class="overlay" id="consent">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="consentT">
+    <h2 id="consentT">使用前请确认</h2>
+    <p>本工具会处理您的人脸照片，仅在本设备上运行，不会上传或保存。</p>
+    <ul>
+      <li>照片和口扫文件只在浏览器内存中处理，关闭页面即清除</li>
+      <li>不使用任何本地存储，不向任何服务器发送照片或口扫数据</li>
+      <li>模拟效果仅供医患沟通参考，不代表实际治疗结果</li>
+    </ul>
+    <p id="declined" hidden style="color:var(--bad)">未同意时无法上传照片。如需使用，请点击“同意”。</p>
+    <div class="row">
+      <button class="btn" id="noConsent">不同意</button>
+      <button class="btn primary" id="yesConsent">同意并开始</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="failDlg" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="failT">
+    <h2 id="failT">这张照片不太适合做微笑设计</h2>
+    <div class="reason" id="failReason"></div>
+    <p>请按下面的要求重拍：</p>
+    <ul>
+      <li>正对镜头，头部不要左右偏转或仰头低头</li>
+      <li>自然大笑，露出上排前牙（至少看到 6 颗）</li>
+      <li>光线明亮均匀，脸上没有强烈阴影，不要逆光</li>
+      <li>脸部占画面宽度的一半左右，不要太远</li>
+    </ul>
+    <div class="row">
+      <button class="btn" id="failAnyway">仍然继续</button>
+      <label class="btn primary file-btn">重新选择照片<input type="file" id="photoIn3" accept="image/jpeg,image/png"></label>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+<script type="module">
+'use strict';
+const MP_VER = '0.10.14';
+const MP_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`;
+const MP_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`;
+const MODEL_LOCAL = 'models/face_landmarker.task';
+const MODEL_CDN = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+
+const V3 = THREE.Vector3;
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- MediaPipe 关键点索引 ---------- */
+const FACE_OVAL = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+const LIP_OUTER = [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+const LIP_INNER = [78,191,80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95];
+const UP_INNER = [78,191,80,81,82,13,312,311,310,415,308];
+const LO_INNER = [78,95,88,178,87,14,317,402,318,324,308];
+const MIDLINE = [10,151,9,8,168,164,0];   // 额中、眉心、人中：与嘴唇深度接近，头部轻微偏转时更稳定
+
+/* ---------- 牙齿尺寸（mm，平均值） ---------- */
+const UP = {1:{W:8.6,L:10.6,T:7.0,kind:'inc',name:'中切牙'},2:{W:6.6,L:9.0,T:6.2,kind:'inc',name:'侧切牙'},3:{W:7.6,L:10.2,T:8.0,kind:'can',name:'尖牙'},4:{W:7.0,L:8.4,T:9.0,kind:'pm',name:'第一前磨牙'},5:{W:6.6,L:7.6,T:9.0,kind:'pm',name:'第二前磨牙'},6:{W:10.2,L:7.0,T:10.5,kind:'mol',name:'第一磨牙'}};
+const LO = {1:{W:5.4,L:9.0,T:5.8,kind:'inc'},2:{W:5.9,L:9.5,T:6.2,kind:'inc'},3:{W:6.9,L:11.0,T:7.6,kind:'can'},4:{W:7.0,L:8.5,T:7.8,kind:'pm'},5:{W:7.1,L:8.0,T:8.2,kind:'pm'}};
+const IDEAL_OFF = {1:0, 2:0.7, 3:0.3, 4:0.9, 5:1.4, 6:2.0};
+const VVITA = [['BL1','#f7f4ee'],['BL2','#f3efe6'],['BL3','#efe9dc'],['BL4','#ebe3d3'],['B1','#ede4d1'],['A1','#e9ddc7'],['B2','#e8dbbf'],['D2','#dfd4c1'],['A2','#e3d3b8'],['C1','#ded4c0'],['C2','#d5c9b0'],['A3','#dbc6a4'],['D3','#d4c5a8'],['B3','#dec99f'],['A3.5','#d4bb98'],['A4','#c9ad87']];
+const SHADE_OK = new Set(['BL3','BL4','B1','A1','B2','D2','A2']);
+const VENEER_TEETH = [13,12,11,21,22,23];
+
+/* ---------- 状态 ---------- */
+const S = {
+  consent:false, ready:false,
+  W:0, H:0, L:null, k:1, ox:0, oy:0, oz:0,
+  photo:null, luma:null, photoHole:null, sim:null, f:null,
+  method:'B', scan:null, align:null,
+  p:{ t:1, shade:-1, veneer:new Set(), vType:'veneer', len:0, ratio:78, mid:0, gum:0 },
+  baseColor:'#e2d4bc',
+  view:'photo', compare:false, cmpMode:'split', split:.5, overlays:true, patient:false,
+  zoom:{s:1, cx:0, cy:0}, pick:null, photoDirty:true, design:null
+};
+window.SmileDesign = { S };
+
+/* ================= 同意与上传 ================= */
+let landmarker=null, mpLoading=null;
+async function initMP(){
+  if(landmarker) return landmarker;
+  if(!mpLoading) mpLoading = (async()=>{
+    const { FaceLandmarker, FilesetResolver } = await import(MP_URL);
+    const vision = await FilesetResolver.forVisionTasks(MP_WASM);
+    const opts = path => ({ baseOptions:{ modelAssetPath:path, delegate:'CPU' }, runningMode:'IMAGE', numFaces:1, outputFaceBlendshapes:false, outputFacialTransformationMatrixes:false });
+    try{ landmarker = await FaceLandmarker.createFromOptions(vision, opts(MODEL_LOCAL)); }
+    catch(e){ landmarker = await FaceLandmarker.createFromOptions(vision, opts(MODEL_CDN)); }
+    return landmarker;
+  })();
+  try{ return await mpLoading; } catch(e){ mpLoading=null; throw e; }
+}
+
+$('yesConsent').onclick = () => {
+  S.consent = true; $('consent').hidden = true;
+  ['photoIn'].forEach(id=>$(id).disabled=false);
+  initMP().catch(()=>{});
+};
+$('noConsent').onclick = () => { $('declined').hidden = false; };
+function guardConsent(){ if(!S.consent){ $('consent').hidden=false; return false; } return true; }
+
+for(const id of ['photoIn','photoIn2','photoIn3']){
+  $(id).addEventListener('click', e=>{ if(!guardConsent()) e.preventDefault(); });
+  $(id).addEventListener('change', e=>{ const f=e.target.files[0]; e.target.value=''; if(f){ $('failDlg').hidden=true; loadPhoto(f); } });
+}
+const drop=$('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e=>{ if(!guardConsent()) return; const f=[...e.dataTransfer.files].find(f=>/image\/(jpeg|png)/.test(f.type)); if(f) loadPhoto(f); });
+$('stage').addEventListener('dragover', e=>e.preventDefault());
+
+function busy(on, txt){ $('busy').hidden=!on; if(txt) $('busyTxt').textContent=txt; }
+let hintTimer=0;
+function hint(txt, ms=3500){ const h=$('hint'); h.textContent=txt; h.hidden=!txt; clearTimeout(hintTimer); if(txt && ms) hintTimer=setTimeout(()=>{ h.hidden=true; }, ms); }
+
+async function loadPhoto(file){
+  busy(true,'正在读取照片…');
+  try{
+    const url=URL.createObjectURL(file); const img=new Image(); img.src=url; await img.decode(); URL.revokeObjectURL(url);
+    const sc=Math.min(1, 1600/Math.max(img.naturalWidth, img.naturalHeight));
+    const W=Math.round(img.naturalWidth*sc), H=Math.round(img.naturalHeight*sc);
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H; cv.getContext('2d').drawImage(img,0,0,W,H);
+    busy(true, landmarker ? '正在识别人脸关键点…' : '正在加载人脸识别模型（首次约 10 MB）…');
+    let lm;
+    try{ lm=await initMP(); }
+    catch(e){ busy(false); fail('人脸识别模型加载失败，请检查网络后刷新页面重试。', false); return; }
+    busy(true,'正在识别人脸关键点…');
+    const res=lm.detect(cv);
+    busy(false);
+    analyze(cv, res);
+  }catch(e){ console.error(e); busy(false); fail('无法读取这张图片，请换一张 JPG 或 PNG 照片。', false); }
+}
+
+let pendingFail=null;
+function fail(reason, canContinue, cont){
+  $('failReason').textContent=reason; $('failAnyway').hidden=!canContinue; pendingFail=cont||null; $('failDlg').hidden=false;
+}
+$('failAnyway').onclick=()=>{ $('failDlg').hidden=true; if(pendingFail) pendingFail(); };
+
+/* ================= 照片分析 ================= */
+const dist2=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function pip(x,y,poly){ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const a=poly[i], b=poly[j]; if(((a[1]>y)!==(b[1]>y)) && (x < (b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])) c=!c; } return c; }
+
+function analyze(cv, res){
+  if(!res.faceLandmarks || !res.faceLandmarks.length){ fail('没有检测到人脸。请确认照片中有一张清晰的正脸。', false); return; }
+  const W=cv.width, H=cv.height;
+  const L=res.faceLandmarks[0].map(p=>({x:p.x*W, y:p.y*H, z:p.z*W}));
+  const ctx=cv.getContext('2d'); const data=ctx.getImageData(0,0,W,H).data;
+  const luma=new Float32Array(W*H);
+  for(let i=0;i<W*H;i++) luma[i]=(0.2126*data[i*4]+0.7152*data[i*4+1]+0.0722*data[i*4+2])/255;
+
+  const checks=[]; const problems=[];
+  // 侧脸
+  const eL=Math.min(L[234].x,L[454].x), eR=Math.max(L[234].x,L[454].x);
+  const r=(L[1].x-eL)/Math.max(1,(eR-L[1].x));
+  S.yawR=r; const yawOk = r>0.6 && r<1.65, yawGood = r>0.75 && r<1.33;
+  checks.push({t:'正脸角度', s:yawGood?'ok':yawOk?'warn':'bad', v:yawGood?'正面':yawOk?'轻微偏转':'偏转过大'}); if(!yawOk) problems.push('头部左右偏转角度过大，请正对镜头。');
+  // 倾斜
+  const iris=[L[468],L[473]].sort((a,b)=>a.x-b.x);
+  const roll=Math.atan2(iris[1].y-iris[0].y, iris[1].x-iris[0].x)*180/Math.PI;
+  checks.push({t:'头部倾斜', s:Math.abs(roll)<6?'ok':'warn', v:roll.toFixed(1)+'°'});
+  // 人脸大小
+  const faceW=dist2(L[234],L[454]); const sizeOk=faceW>W*0.22;
+  checks.push({t:'人脸大小', s:sizeOk?'ok':'warn', v:Math.round(faceW/W*100)+'%'}); if(!sizeOk) problems.push('人脸在画面中太小，请靠近一些拍摄。');
+  // 亮度
+  const oval=FACE_OVAL.map(i=>[L[i].x,L[i].y]); let sum=0,n=0;
+  const bb=bbox(oval);
+  for(let y=bb.y0;y<bb.y1;y+=3) for(let x=bb.x0;x<bb.x1;x+=3){ if(pip(x,y,oval)){ sum+=luma[(y|0)*W+(x|0)]; n++; } }
+  const bright=n?sum/n:0; const brightOk=bright>0.28;
+  checks.push({t:'光线亮度', s:brightOk?'ok':'bad', v:Math.round(bright*100)+'%'}); if(!brightOk) problems.push('照片太暗，请在明亮均匀的光线下重拍。');
+  // 张嘴露齿
+  const inner=LIP_INNER.map(i=>[L[i].x,L[i].y]); const ib=bbox(inner);
+  const gap=dist2(L[13],L[14])/dist2(L[10],L[152]);
+  let tn=0, tb=0; const vals=[];
+  for(let y=ib.y0;y<=ib.y1;y++) for(let x=ib.x0;x<=ib.x1;x++){ if(!pip(x,y,inner)) continue; const i=(y*W+x)*4; const R=data[i],G=data[i+1],B=data[i+2]; const mx=Math.max(R,G,B), mn=Math.min(R,G,B); const sat=mx?(mx-mn)/mx:0; const l=luma[y*W+x]; tn++; if(l>0.45 && sat<0.38){ tb++; vals.push([l,R,G,B]); } }
+  const teethFrac=tn?tb/tn:0;
+  const mouthOk = gap>0.03 && teethFrac>0.12;
+  checks.push({t:'露出牙齿', s:mouthOk?'ok':'bad', v:Math.round(teethFrac*100)+'%'});
+  if(!mouthOk) problems.push(gap<=0.03 ? '嘴巴是闭着的，请自然大笑露出上排牙齿。' : '照片中露出的牙齿太少，请笑得更开一些。');
+  // 牙色
+  vals.sort((a,b)=>b[0]-a[0]); const top=vals.slice(0, Math.max(1, Math.floor(vals.length*0.35)));
+  let toothRGB=[226,212,188], toothLuma=0.75;
+  if(top.length>5){ toothRGB=[0,1,2].map(c=>top.reduce((s,v)=>s+v[c+1],0)/top.length); toothLuma=top.reduce((s,v)=>s+v[0],0)/top.length; }
+
+  const proceed=()=>setup(cv, L, luma, checks, toothRGB, toothLuma);
+  if(problems.length){
+    const fatal = r<0.4 || r>2.5;
+    fail(problems.join(' '), !fatal && (brightOk || mouthOk), proceed);
+  } else proceed();
+}
+function bbox(poly){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const [x,y] of poly){ x0=Math.min(x0,x); y0=Math.min(y0,y); x1=Math.max(x1,x); y1=Math.max(y1,y); } return {x0:Math.floor(x0),y0:Math.floor(y0),x1:Math.ceil(x1),y1:Math.ceil(y1)}; }
+
+/* ================= 建立场景 ================= */
+function setup(cv, L, luma, checks, toothRGB, toothLuma){
+  disposeAll();
+  S.photo=cv; S.W=cv.width; S.H=cv.height; S.L=L; S.luma=luma; S.toothLuma=toothLuma;
+  const iris=[L[468],L[473]].sort((a,b)=>a.x-b.x);
+  const ipdPx=dist2(iris[0],iris[1]);
+  S.k=63/ipdPx;                              // 按平均瞳距 63 mm 换算
+  S.ox=(L[13].x+L[14].x)/2; S.oy=(L[13].y+L[14].y)/2; S.oz=(L[13].z+L[14].z)/2;
+  S.baseColor=rgbHex(toothRGB.map(v=>Math.min(255,v/0.92)));
+  computeFeatures(iris);
+  buildPhotoHole();
+  buildFace();
+  setupOrtho();
+  S.p={ t:1, shade:-1, veneer:new Set(), vType:'veneer', len:0, ratio:78, mid:0, gum:0 };
+  S.method='B'; S.scan=null; S.align=null;
+  rebuildDesign();
+  S.p.ratio = Math.round(S.design.naturalRatio*2)/2;
+  syncControls();
+  // UI
+  $('drop').hidden=true; $('stageTools').hidden=false;
+  const ul=$('checks'); ul.innerHTML=''; ul.hidden=false;
+  for(const c of checks){ const li=document.createElement('li'); li.className=c.s; li.innerHTML=c.t+'<span>'+c.v+'</span>'; ul.appendChild(li); }
+  const extra=document.createElement('li'); extra.className='ok'; extra.innerHTML='比例换算<span>1 px ≈ '+S.k.toFixed(3)+' mm</span>'; ul.appendChild(extra);
+  $('ovRow').hidden=false; $('photoBtn').firstChild.textContent='换一张照片';
+  $('c1note').textContent='已识别 478 个关键点。比例按平均瞳距 63 mm 估算。';
+  for(const id of ['c1','c2','c3','c4','c5']){ $(id).classList.remove('locked'); }
+  $('c1').classList.add('done'); $('c2').classList.add('done'); $('c1').classList.remove('active'); $('c3').classList.add('active');
+  $('c2note').textContent='已生成本人 3D 脸：'+S.faceTris+' 个三角面，照片作为贴图。可左右旋转约 ±30°。';
+  ['go3d','mA','mB','bDrop','sAlign','sMid','bAutoMid','sGum','bCompare','bCompare2','bPatient','bPatient2','bExport','bExport2'].forEach(id=>$(id).disabled=false);
+  setMethodUI();
+  S.ready=true; S.view='photo'; setView('photo');
+  zoomPreset('face');
+  updateBaseShade();
+  hint('已生成模拟效果。拖动右侧滑块调整方案，点“前后对比”查看变化。', 5000);
+}
+
+function computeFeatures(iris){
+  const L=S.L, f={};
+  f.iris=iris.map(toW);
+  f.upper=UP_INNER.map(i=>toW(L[i])).sort((a,b)=>a.x-b.x);
+  f.lower=LO_INNER.map(i=>toW(L[i])).sort((a,b)=>a.x-b.x);
+  f.innerPoly=LIP_INNER.map(i=>[L[i].x,L[i].y]);
+  f.outerPoly=LIP_OUTER.map(i=>[L[i].x,L[i].y]);
+  // 面中线：x = a*y + b（世界坐标）
+  const mp=MIDLINE.map(i=>toW(L[i])); let sy=0,sx=0,syy=0,sxy=0; for(const p of mp){ sy+=p.y; sx+=p.x; syy+=p.y*p.y; sxy+=p.x*p.y; }
+  const n=mp.length; const a=(n*sxy-sx*sy)/(n*syy-sy*sy||1); f.mid={a, b:(sx-a*sy)/n};
+  f.cornerL=toW(L[78]); f.cornerR=toW(L[308]);
+  f.mouthW=Math.abs(f.cornerR.x-f.cornerL.x);
+  f.lipZ=toW(L[13]).z;
+  f.ipdTilt=(f.iris[1].y-f.iris[0].y)/(f.iris[1].x-f.iris[0].x);
+  f.lipTilt=(polyY(f.lower,f.cornerR.x-4)-polyY(f.lower,f.cornerL.x+4))/((f.cornerR.x-4)-(f.cornerL.x+4));
+  f.faceTop=toW(L[10]); f.chin=toW(L[152]);
+  const ob=bbox(f.outerPoly); const mw=ob.x1-ob.x0, mh=ob.y1-ob.y0;
+  f.box={x0:clamp(Math.floor(ob.x0-mw*.18),0,S.W-1), y0:clamp(Math.floor(ob.y0-mh*.35),0,S.H-1)};
+  f.box.x1=clamp(Math.ceil(ob.x1+mw*.18),f.box.x0+8,S.W); f.box.y1=clamp(Math.ceil(ob.y1+mh*.35),f.box.y0+8,S.H);
+  f.box.w=f.box.x1-f.box.x0; f.box.h=f.box.y1-f.box.y0;
+  S.f=f;
+}
+function toW(p){ return new V3((p.x-S.ox)*S.k, -(p.y-S.oy)*S.k, -(p.z-S.oz)*S.k); }
+function toPx(x,y){ return {x:x/S.k+S.ox, y:-y/S.k+S.oy}; }
+function polyY(poly,x){ if(x<=poly[0].x) return poly[0].y; for(let i=1;i<poly.length;i++){ if(x<=poly[i].x){ const a=poly[i-1], b=poly[i]; const t=(x-a.x)/((b.x-a.x)||1); return a.y+(b.y-a.y)*t; } } return poly[poly.length-1].y; }
+function faceMidX(y){ return S.f.mid.a*y+S.f.mid.b; }
+function rgbHex(c){ return '#'+c.map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join(''); }
+function hexRgb(h){ return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16)); }
+
+function buildPhotoHole(){
+  const {W,H}=S; const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  x.drawImage(S.photo,0,0);
+  x.globalCompositeOperation='destination-out';
+  x.shadowColor='#000'; x.shadowBlur=Math.max(1.5, S.f.mouthW/S.k*0.008);
+  pathPoly(x, S.f.innerPoly); x.fill();
+  S.photoHole=c;
+  S.sim=document.createElement('canvas'); S.sim.width=W; S.sim.height=H;
+}
+function pathPoly(x, poly){ x.beginPath(); poly.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.closePath(); }
+
+/* ================= Three.js ================= */
+const scene=new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a706b, 0.42));
+const keyL=new THREE.DirectionalLight(0xffffff, 0.62); keyL.position.set(-40,90,140); scene.add(keyL);
+const fillL=new THREE.DirectionalLight(0xfff3ea, 0.16); fillL.position.set(70,10,120); scene.add(fillL);
+
+const rPhoto=new THREE.WebGLRenderer({antialias:true, alpha:true, preserveDrawingBuffer:true});
+rPhoto.outputEncoding=THREE.sRGBEncoding; rPhoto.setClearColor(0x000000,0); rPhoto.setPixelRatio(2);
+const orthoCam=new THREE.OrthographicCamera(-1,1,1,-1,1,4000);
+
+const threeCv=$('threeCv');
+const r3D=new THREE.WebGLRenderer({canvas:threeCv, antialias:true});
+r3D.outputEncoding=THREE.sRGBEncoding; r3D.setPixelRatio(Math.min(devicePixelRatio||1,2)); r3D.setClearColor(0xdbe3e2,1);
+const cam3=new THREE.PerspectiveCamera(26,1,1,5000);
+const ctl=new THREE.OrbitControls(cam3, threeCv);
+ctl.enableDamping=true; ctl.dampingFactor=.1; ctl.enablePan=false;
+
+const root=new THREE.Group(); scene.add(root);
+const G={ face:null, cavity:null, before:new THREE.Group(), after:new THREE.Group(), scan:new THREE.Group() };
+root.add(G.before, G.after, G.scan);
+
+function lin(hex){ return new THREE.Color(hex).convertSRGBToLinear(); }
+function disposeGroup(g){ g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{ if(m.map && m.map!==S.photoTex) m.map.dispose(); m.dispose(); }); } }); while(g.children.length) g.remove(g.children[0]); }
+function disposeAll(){
+  if(G.face){ root.remove(G.face); G.face.geometry.dispose(); G.face.material.dispose(); G.face=null; }
+  if(G.cavity){ root.remove(G.cavity); G.cavity.geometry.dispose(); G.cavity.material.dispose(); G.cavity=null; }
+  if(S.photoTex){ S.photoTex.dispose(); S.photoTex=null; }
+  if(S.alphaTex){ S.alphaTex.dispose(); S.alphaTex=null; }
+  if(G.portal){ root.remove(G.portal); G.portal.geometry.dispose(); G.portal.material.dispose(); G.portal=null; }
+  disposeGroup(G.before); disposeGroup(G.after); disposeGroup(G.scan);
+}
+
+/* ---------- Delaunay（Bowyer–Watson） ---------- */
+function delaunay(P){
+  const n=P.length; let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const [x,y] of P){ x0=Math.min(x0,x); y0=Math.min(y0,y); x1=Math.max(x1,x); y1=Math.max(y1,y); }
+  const dm=Math.max(x1-x0,y1-y0)||1, mx=(x0+x1)/2, my=(y0+y1)/2;
+  const pts=P.concat([[mx-30*dm,my-dm],[mx,my+30*dm],[mx+30*dm,my-dm]]);
+  const tri=(a,b,c)=>{ const [ax,ay]=pts[a],[bx,by]=pts[b],[cx,cy]=pts[c]; const d=2*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by))||1e-12;
+    const ux=((ax*ax+ay*ay)*(by-cy)+(bx*bx+by*by)*(cy-ay)+(cx*cx+cy*cy)*(ay-by))/d, uy=((ax*ax+ay*ay)*(cx-bx)+(bx*bx+by*by)*(ax-cx)+(cx*cx+cy*cy)*(bx-ax))/d;
+    return {a,b,c,cx:ux,cy:uy,r2:(ax-ux)**2+(ay-uy)**2}; };
+  let T=[tri(n,n+1,n+2)];
+  for(let i=0;i<n;i++){
+    const [x,y]=pts[i]; const keep=[], edges=new Map();
+    for(const t of T){
+      if((x-t.cx)**2+(y-t.cy)**2 < t.r2){
+        for(const [a,b] of [[t.a,t.b],[t.b,t.c],[t.c,t.a]]){ const k=a<b?a+'_'+b:b+'_'+a; edges.set(k, edges.has(k)?null:[a,b]); }
+      } else keep.push(t);
+    }
+    T=keep; for(const e of edges.values()) if(e) T.push(tri(e[0],e[1],i));
+  }
+  return T.filter(t=>t.a<n&&t.b<n&&t.c<n).map(t=>[t.a,t.b,t.c]);
+}
+
+/* ---------- 本人 3D 脸 ---------- */
+function buildFace(){
+  const L=S.L, pts=L.map(p=>({x:p.x,y:p.y,z:p.z}));
+  const oval=FACE_OVAL.map(i=>L[i]);
+  const c={x:oval.reduce((s,p)=>s+p.x,0)/oval.length, y:oval.reduce((s,p)=>s+p.y,0)/oval.length};
+  const fw=dist2(L[234],L[454]);
+  // 轮廓加密：每段插 7 个点，让轮廓边落在三角剖分里
+  const D=[]; const no=FACE_OVAL.length;
+  FACE_OVAL.forEach((oi,j)=>{ const p=L[oi], q=L[FACE_OVAL[(j+1)%no]]; D.push(oi); for(let k=1;k<8;k++){ const t=k/8; pts.push({x:lerp(p.x,q.x,t), y:lerp(p.y,q.y,t), z:lerp(p.z,q.z,t)}); D.push(pts.length-1); } });
+  // 脸内部：Delaunay 后去掉嘴部开口和轮廓外的三角形
+  const tris=delaunay(pts.map(p=>[p.x,p.y]));
+  const inner=S.f.innerPoly, ovalPoly=D.map(i=>[pts[i].x,pts[i].y]); const idx=[];
+  const push=(a,b,d)=>{ const cr=(pts[b].x-pts[a].x)*(pts[d].y-pts[a].y)-(pts[b].y-pts[a].y)*(pts[d].x-pts[a].x); if(cr>0) idx.push(a,d,b); else idx.push(a,b,d); };
+  for(const [a,b,d] of tris){
+    const cx=(pts[a].x+pts[b].x+pts[d].x)/3, cy=(pts[a].y+pts[b].y+pts[d].y)/3;
+    if(pip(cx,cy,inner) || !pip(cx,cy,ovalPoly)) continue;
+    push(a,b,d);
+  }
+  // 外延：三圈规整的环形条带，逐渐向后弯
+  let prev=D.slice(); const nd=D.length;
+  for(const [r,back] of [[1.12,.07],[1.3,.2],[1.55,.38]]){
+    const ring=[]; D.forEach(di=>{ const p=pts[di]; pts.push({x:c.x+(p.x-c.x)*r, y:c.y+(p.y-c.y)*r, z:p.z+back*fw}); ring.push(pts.length-1); });
+    for(let j=0;j<nd;j++){ const a=prev[j], b=prev[(j+1)%nd], d=ring[j], e=ring[(j+1)%nd]; push(a,b,d); push(b,e,d); }
+    prev=ring;
+  }
+  const pos=new Float32Array(pts.length*3), uv=new Float32Array(pts.length*2);
+  pts.forEach((p,i)=>{ const w=toW(p); pos.set([w.x,w.y,w.z],i*3); uv.set([clamp(p.x/S.W,0,1), 1-clamp(p.y/S.H,0,1)], i*2); });
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
+  S.photoTex=new THREE.CanvasTexture(S.photo); S.photoTex.encoding=THREE.sRGBEncoding; S.photoTex.anisotropy=4;
+  // 边缘渐隐遮罩（与照片同一 UV）
+  const mk=document.createElement('canvas'); mk.width=Math.ceil(S.W/4); mk.height=Math.ceil(S.H/4); const mx=mk.getContext('2d');
+  mx.fillStyle='#000'; mx.fillRect(0,0,mk.width,mk.height);
+  for(let i=0;i<=24;i++){ const r=lerp(1.56,1.02,i/24), v=Math.round(255*Math.pow(i/24,1.3)); mx.fillStyle='rgb('+v+','+v+','+v+')'; mx.beginPath(); oval.forEach((p,j)=>{ const X=(c.x+(p.x-c.x)*r)/4, Y=(c.y+(p.y-c.y)*r)/4; j?mx.lineTo(X,Y):mx.moveTo(X,Y); }); mx.closePath(); mx.fill(); }
+  S.alphaTex=new THREE.CanvasTexture(mk);
+  const m=new THREE.MeshLambertMaterial({map:S.photoTex, emissive:0xffffff, emissiveMap:S.photoTex, emissiveIntensity:.55, color:0x8c8c8c, side:THREE.DoubleSide, transparent:true, alphaMap:S.alphaTex, depthWrite:true});
+  G.face=new THREE.Mesh(g,m); G.face.renderOrder=1; root.add(G.face); S.faceTris=idx.length/3;
+  // 嘴部“窗口”：只写模板，牙齿只在嘴唇开口内可见
+  const lipW=LIP_INNER.map(i=>toW(L[i])); const cen=lipW.reduce((a,v)=>a.add(v),new V3()).divideScalar(lipW.length);
+  const pp=[cen.x,cen.y,cen.z]; const pi=[]; lipW.forEach((v,i)=>{ pp.push(v.x,v.y,v.z); pi.push(0,i+1,(i+1)%lipW.length+1); });
+  const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.Float32BufferAttribute(pp,3)); pg.setIndex(pi);
+  G.portal=new THREE.Mesh(pg,new THREE.MeshBasicMaterial({colorWrite:false, depthWrite:false, side:THREE.DoubleSide, stencilWrite:true, stencilRef:1, stencilFunc:THREE.AlwaysStencilFunc, stencilZPass:THREE.ReplaceStencilOp}));
+  G.portal.renderOrder=-1; root.add(G.portal);
+  // 口腔暗腔
+  const cav=new THREE.Mesh(new THREE.SphereGeometry(1,32,20), new THREE.MeshBasicMaterial({color:lin('#2a1113'), side:THREE.BackSide}));
+  cav.scale.set(S.f.mouthW*0.62, 22, 30); cav.position.set(0,-2,S.f.lipZ-20); cav.renderOrder=1; G.cavity=cav; root.add(cav);
+  // 3D 相机
+  const top=S.f.faceTop, chin=S.f.chin; const fh=top.y-chin.y;
+  S.target3=new V3(faceMidX(0), (top.y+chin.y)/2-fh*0.08, S.f.lipZ-25);
+  S.dist3=fh*2.9;
+}
+
+/* ---------- 正交相机（照片合成） ---------- */
+function setupOrtho(){
+  const b=S.f.box, k=S.k;
+  orthoCam.left=(b.x0-S.ox)*k; orthoCam.right=(b.x1-S.ox)*k; orthoCam.top=-(b.y0-S.oy)*k; orthoCam.bottom=-(b.y1-S.oy)*k;
+  orthoCam.position.set(0,0,1000); orthoCam.lookAt(0,0,0); orthoCam.updateProjectionMatrix();
+  rPhoto.setSize(b.w,b.h,false);
+}
+
+/* ================= 牙齿几何 ================= */
+function crownGeo(W,L,T,kind,mirror,lower){
+  const NV=22, NU=36, extra=4.5, Lt=L+extra;
+  const pos=[], col=[], idx=[];
+  const ne = kind==='inc'?4.2:kind==='can'?3.0:2.6;
+  const ci=[0.87,0.9,0.95], cb=[1,1,1], cc=[1,0.9,0.77];
+  for(let j=0;j<=NV;j++){
+    const y0=j/NV*Lt, yc=y0/L, rootT=Math.min(1,Math.max(0,(yc-1)*L/extra));
+    let a;
+    if(kind==='inc') a=yc<.3? .95+.05*(yc/.3) : yc<1? 1-.26*((yc-.3)/.7) : .74-.1*rootT;
+    else if(kind==='can') a=yc<.35? .72+.28*(yc/.35) : yc<1? 1-.3*((yc-.35)/.65) : .7-.1*rootT;
+    else a=yc<.3? .86+.14*(yc/.3) : yc<1? 1-.22*((yc-.3)/.7) : .78-.1*rootT;
+    a*=W/2;
+    const dm=T/2;
+    let d = kind==='inc' ? .55+(dm-.55)*Math.min(1,Math.pow(yc/.75,.8)) : kind==='can' ? 1+(dm-1)*Math.min(1,Math.pow(yc/.6,.8)) : dm*(.85+.15*Math.min(1,yc/.5));
+    d*=1-.15*rootT;
+    const zs=(kind==='inc'?-.9:-.5)*Math.pow(Math.max(0,1-yc),2);
+    const w=Math.max(0,1-yc/.28);
+    let cr;
+    if(yc<.18){ const t=yc/.18; cr=ci.map((v,i)=>lerp(v,cb[i],t)); } else if(yc<.7) cr=cb; else { const t=Math.min(1,(yc-.7)/.3); cr=cb.map((v,i)=>lerp(v,cc[i],t)); }
+    for(let i=0;i<NU;i++){
+      const th=i/NU*Math.PI*2, c=Math.cos(th), s=Math.sin(th);
+      let x=a*Math.sign(c)*Math.pow(Math.abs(c),2/ne);
+      const z=(s>0?d:d*.75)*Math.sign(s)*Math.pow(Math.abs(s),2/ne)+zs + (s>0? .06*Math.cos(3*Math.PI*x/(W/2))*Math.min(1,yc)*(1-rootT) : 0);
+      const u=x/(W/2); let y=y0;
+      if(j<NV){
+        let lift=0;
+        if(kind==='inc'){ const big=W>7.4; lift=(big?.35:.8)*Math.pow(Math.max(0,(-u-.55)/.45),2)+(big?1.1:1.7)*Math.pow(Math.max(0,(u-.45)/.55),2); }
+        else if(kind==='can') lift=2.3*Math.pow(Math.abs(u+.08),1.25);
+        else if(kind==='pm') lift=1.6*Math.pow(Math.abs(u),1.35);
+        else lift=1.0*Math.abs(Math.cos(Math.PI*u))+.2;
+        y+=lift*w;
+      }
+      if(mirror) x=-x;
+      pos.push(x, lower?-y:y, z); col.push(...cr);
+    }
+  }
+  const bc=pos.length/3; pos.push(0, lower?-.3:.3, -.9*(kind==='inc'?1:.55)); col.push(...ci);
+  const tc=pos.length/3; pos.push(0, lower?-Lt:Lt, 0); col.push(...cc);
+  for(let j=0;j<NV;j++) for(let i=0;i<NU;i++){ const a=j*NU+i, b=j*NU+(i+1)%NU, c=(j+1)*NU+i, d=(j+1)*NU+(i+1)%NU; idx.push(a,c,b, b,c,d); }
+  for(let i=0;i<NU;i++){ idx.push(bc, i, (i+1)%NU); const a=NV*NU+i, b=NV*NU+(i+1)%NU; idx.push(tc, b, a); }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
+  g.setIndex(idx); g.computeVertexNormals();
+  const probe=(Math.floor(NV/2))*NU+Math.floor(NU/4);
+  if(g.attributes.normal.getZ(probe)<0){ for(let i=0;i<idx.length;i+=3){ const t=idx[i+1]; idx[i+1]=idx[i+2]; idx[i+2]=t; } g.setIndex(idx); g.computeVertexNormals(); }
+  return g;
+}
+
+/* ---------- 牙弓曲线 ---------- */
+function makeArch(sx,sz){
+  const A=0.02215, B=3.11e-5, N=1000, xs=[0], zs=[0], ss=[0];
+  for(let i=1;i<=N;i++){ const x=i*0.05, X=sx*x, Z=-sz*(A*x*x+B*x**4); ss.push(ss[i-1]+Math.hypot(X-xs[i-1],Z-zs[i-1])); xs.push(X); zs.push(Z); }
+  return s=>{
+    const sg=s<0?-1:1, a=Math.abs(s); let lo=0, hi=N;
+    while(hi-lo>1){ const m=(lo+hi)>>1; if(ss[m]<a) lo=m; else hi=m; }
+    const f=(a-ss[lo])/((ss[hi]-ss[lo])||1);
+    let tx=xs[hi]-xs[lo], tz=zs[hi]-zs[lo]; const l=Math.hypot(tx,tz)||1; tx/=l; tz/=l;
+    return {x:sg*(xs[lo]+(xs[hi]-xs[lo])*f), z:zs[lo]+(zs[hi]-zs[lo])*f, nx:-sg*tz, nz:tx};
+  };
+}
+
+/* ---------- 牙列布局 ---------- */
+const TORQUE={inc:-.22, can:-.12, pm:-.05, mol:0}, TIP={1:.07,2:.13,3:.1,4:.05,5:.04,6:0};
+const IRREG={11:{ry:-.06,dz:.2},21:{ry:.08,dy:-.3},12:{ry:.17,dz:-.8},22:{ry:-.13,dz:.4},13:{ry:.05,dz:.4,dy:.6},23:{ry:-.07}};
+function layout(o){
+  const at=makeArch(o.sx,o.sz), teeth=[];
+  for(const sd of [-1,1]){
+    let s=-.12;
+    for(let n=1;n<=(o.upper?6:5);n++){
+      const fdi=o.upper ? (sd<0?10:20)+n : (sd<0?40:30)+n;
+      const d=o.dims(n,fdi); const sc=s+d.W/2; s+=d.W-.15;
+      const p=at(sd*sc); const off=d.T*.42;
+      const t={fdi,n,sd,...d, s:sd*sc, x:o.midX+p.x-p.nx*off, z:o.z0+p.z-p.nz*off, ax:o.midX+p.x, az:o.z0+p.z, ry:Math.atan2(p.nx,p.nz)};
+      t.rx=o.upper?TORQUE[d.kind]:-TORQUE[d.kind]*.8; t.rz=-sd*(TIP[n]||0)*(o.upper?1:-.5);
+      t.y=o.height(n,t.ax,fdi,d);
+      const ir=o.irreg&&o.irreg[fdi]; if(ir){ t.ry+=ir.ry||0; t.z+=(ir.dz||0)*p.nz; t.x+=(ir.dz||0)*p.nx; t.y+=ir.dy||0; }
+      teeth.push(t);
+    }
+  }
+  return {teeth, at, midX:o.midX, z0:o.z0, upper:o.upper};
+}
+
+/* 从照片中检测现状切缘高度 */
+function detectIncisal(xw){
+  const f=S.f; const yT=polyY(f.upper,xw), yB=polyY(f.lower,xw);
+  if(xw<f.cornerL.x+2 || xw>f.cornerR.x-2) return null;
+  const px=xw/S.k+S.ox, pyT=-yT/S.k+S.oy, pyB=-yB/S.k+S.oy; if(pyB-pyT<4) return null;
+  const thr=S.toothLuma*.62, ends=[];
+  for(let dx=-3;dx<=3;dx++){
+    const col=Math.round(px+dx); if(col<0||col>=S.W) continue;
+    let start=-1, end=-1, low=0;
+    for(let y=Math.ceil(pyT)+1;y<Math.floor(pyB);y++){
+      const l=S.luma[y*S.W+col];
+      if(start<0){ if(l>thr) start=y; }
+      else { if(l<thr){ low++; if(low>=2){ end=y-2; break; } } else low=0; }
+    }
+    if(start>=0){ if(end<0) end=Math.floor(pyB)-1; ends.push(end); }
+  }
+  if(ends.length<4) return null;
+  ends.sort((a,b)=>a-b); return -(ends[ends.length>>1]-S.oy)*S.k;
+}
+
+/* ================= 设计（现状 / 方案） ================= */
+function designParams(){
+  const f=S.f, p=S.p;
+  let kW=clamp(f.mouthW/50, .88, 1.12), sx=kW, sz=kW, midCur=0, z0=f.lipZ-2.6, fit=null;
+  if(S.method==='A' && S.align){ fit=S.align.fit; kW=fit.kW; sx=fit.kW; sz=fit.sz; midCur=fit.midX; z0=fit.z0; }
+  const kL=1+(kW-1)*.5;
+  return {kW,kL,sx,sz,midCur,z0,fit};
+}
+function rebuildDesign(){
+  const f=S.f, p=S.p, D=designParams();
+  const L1=UP[1].L*D.kL, W1=UP[1].W*D.kW;
+  const sel=fdi=>p.veneer.has(fdi);
+  const lenSel=fdi=>sel(fdi)?p.len:0;
+  const widthScale=(p.ratio/100*(L1+p.gum+(p.veneer.size?p.len:0)))/W1;
+  const dimsBase=(n)=>({W:UP[n].W*D.kW, L:UP[n].L*D.kL, T:UP[n].T, kind:UP[n].kind});
+  const dimsAfter=(n,fdi)=>{ const d=dimsBase(n); if(sel(fdi)){ d.W*=widthScale; d.L+=p.len; } d.L+=p.gum; return d; };
+  const followLower=x=>polyY(f.lower,x) - f.lipTilt*(x-faceMidX(0)) + f.ipdTilt*(x-faceMidX(0));
+  const idealH=(n,x,fdi,d)=>{ const base=Math.max(followLower(x)+1.0+IDEAL_OFF[n], polyY(f.upper,x)-2-(d.L-p.gum-lenSel(fdi))); return base-lenSel(fdi); };
+  const flatY=polyY(f.lower,0)+1.6;
+  const curH=(n,x)=>{ const det=detectIncisal(x); const fb=flatY+f.lipTilt*x+IDEAL_OFF[n]*.4; if(det==null) return fb; return clamp(det, polyY(f.lower,x)-.5, polyY(f.upper,x)-3); };
+  const midIdeal=D.midCur+p.mid;
+  const common={upper:true, sx:D.sx, sz:D.sz, z0:D.z0};
+  const cur=layout({...common, midX:D.midCur, dims:(n,fdi)=>dimsAfter(n,fdi), height:(n,x)=>curH(n,x), irreg:S.method==='B'?IRREG:null});
+  const ide=layout({...common, midX:midIdeal, dims:(n,fdi)=>dimsAfter(n,fdi), height:idealH});
+  const before=layout({...common, midX:D.midCur, dims:(n)=>dimsBase(n), height:(n,x)=>curH(n,x), irreg:S.method==='B'?IRREG:null});
+  // 混合
+  const t = S.method==='A' ? 1 : p.t;
+  const after={teeth:ide.teeth.map((b,i)=>{ const a=cur.teeth[i]; const o={...b}; for(const k of ['x','y','z','ry','rx','rz']) o[k]=lerp(a[k],b[k],t); o.ax=lerp(a.ax,b.ax,t); o.az=lerp(a.az,b.az,t); return o; }), at:ide.at, midX:lerp(D.midCur,midIdeal,t), z0:D.z0, upper:true};
+  S.design={after, before, D, naturalRatio:W1/L1*100, midIdeal};
+  const shadeHex = p.shade<0 ? S.baseColor : VVITA[p.shade][1];
+  disposeGroup(G.after); disposeGroup(G.before);
+  buildArchGroup(G.after, after, shadeHex, fdi=>sel(fdi)?p.vType:null, p.gum);
+  if(S.method==='B') buildArchGroup(G.before, before, S.baseColor, ()=>null, 0);
+  S.photoDirty=true; updateMetrics();
+}
+
+function toothMat(hex, resto, lowerShade){
+  const c=lin(hex); if(lowerShade) c.multiplyScalar(.82);
+  return new THREE.MeshPhysicalMaterial({color:c, vertexColors:true, roughness:resto==='veneer'?.2:resto==='crown'?.26:.34, clearcoat:resto?.75:.4, clearcoatRoughness:.18, transparent:true, opacity:1});
+}
+function buildArchGroup(group, arch, hex, restoOf, gum){
+  for(const t of arch.teeth){
+    const resto=restoOf(t.fdi);
+    const m=new THREE.Mesh(crownGeo(t.W,t.L,t.T,t.kind,t.sd<0,false), toothMat(resto==='crown'? mixHex(hex,'#f4f1ea',.15):hex, resto));
+    m.renderOrder=2; const g=new THREE.Group(); g.position.set(t.x,t.y,t.z); g.rotation.order='YXZ'; g.rotation.set(t.rx,t.ry,t.rz); g.add(m); g.userData.tooth=t; group.add(g);
+  }
+  group.add(buildGum(arch, true));
+  // 下前牙（不参与治疗，跟随上颌中线与切缘）
+  const c1=arch.teeth.filter(t=>t.n===1); const yU=(c1[0].y+c1[1].y)/2;
+  const D=S.design?S.design.D:designParams();
+  const low=layout({upper:false, sx:D.sx*.86, sz:D.sz*.92, z0:arch.z0-3.0, midX:arch.midX, dims:n=>({W:LO[n].W*D.kW, L:LO[n].L*D.kL, T:LO[n].T, kind:LO[n].kind}), height:()=>yU+2.3});
+  for(const t of low.teeth){
+    const m=new THREE.Mesh(crownGeo(t.W,t.L,t.T,t.kind,t.sd<0,true), toothMat(hex,null,true)); m.renderOrder=2;
+    const g=new THREE.Group(); g.position.set(t.x,t.y,t.z); g.rotation.order='YXZ'; g.rotation.set(t.rx,t.ry,t.rz); g.add(m); group.add(g);
+  }
+  group.add(buildGum(low, false));
+}
+function mixHex(a,b,t){ const A=hexRgb(a), B=hexRgb(b); return rgbHex(A.map((v,i)=>lerp(v,B[i],t))); }
+
+function buildGum(arch, upper){
+  const T=[...arch.teeth].sort((a,b)=>a.s-b.s); const dir=upper?1:-1;
+  const zen=T.map(t=>({s:t.s, y:t.y+dir*t.L, h:t.W/2}));
+  const s0=T[0].s-T[0].W/2-1, s1=T[T.length-1].s+T[T.length-1].W/2+1;
+  const NS=220, H=[0,.6,1.5,3,5,8], OFF=[.9,1.4,1.8,1.9,1.8,1.5];
+  const pos=[], col=[], idx=[];
+  const cEdge=[.95,.63,.64], cTop=[.78,.38,.45];
+  for(let i=0;i<=NS;i++){
+    const s=lerp(s0,s1,i/NS);
+    let k=0; while(k<zen.length-2 && s>zen[k+1].s) k++;
+    const a=zen[k], b=zen[k+1]; const tt=clamp((s-a.s)/((b.s-a.s)||1),0,1); const zy=lerp(a.y,b.y,tt);
+    let near=zen[0]; for(const z of zen) if(Math.abs(s-z.s)<Math.abs(s-near.s)) near=z;
+    const u=clamp((s-near.s)/near.h,-1.2,1.2); const pap=(Math.abs(near.s)<20?3.2:2.4)*u*u;
+    const edge=zy-dir*pap;
+    const p=arch.at(s);
+    for(let r=0;r<H.length;r++){
+      pos.push(arch.midX+p.x+p.nx*OFF[r], edge+dir*H[r], arch.z0+p.z+p.nz*OFF[r]);
+      const t=r/(H.length-1); col.push(...cEdge.map((v,j)=>lerp(v,cTop[j],Math.pow(t,.7))));
+    }
+  }
+  const R=H.length;
+  for(let i=0;i<NS;i++) for(let r=0;r<R-1;r++){ const a=i*R+r, b=a+1, c=a+R, d=c+1; idx.push(a,c,b, b,c,d); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); g.setIndex(idx); g.computeVertexNormals();
+  const m=new THREE.MeshPhysicalMaterial({vertexColors:true, roughness:.4, clearcoat:.35, side:THREE.DoubleSide, transparent:true, opacity:1});
+  const mesh=new THREE.Mesh(g,m); mesh.userData.gum=true; mesh.renderOrder=2; return mesh;
+}
+
+/* ================= 指标 ================= */
+function setPill(id, cls, txt){ const e=$(id); e.className='pill '+cls; e.textContent=txt; }
+function updateMetrics(){
+  if(!S.design) return;
+  const f=S.f, p=S.p, A=S.design.after.teeth;
+  const c1=A.filter(t=>t.n===1), c3=A.filter(t=>t.n===3);
+  // 微笑弧线
+  const d1=c1.reduce((s,t)=>s+(t.y-polyY(f.lower,t.ax)),0)/2, d3=c3.reduce((s,t)=>s+(t.y-polyY(f.lower,t.ax)),0)/2;
+  const arcD=d3-d1; const arcOk=arcD>=-.2 && arcD<=1.8;
+  setPill('pArc', arcOk?'ok':'warn', arcOk?'协调':(arcD<-.2?'反向':'平直'));
+  // 冠长、宽长比
+  const L1=c1[0].L, W1=c1[0].W;
+  setPill('pLen', L1>=10&&L1<=11.5?'ok':'warn', L1.toFixed(1)+' mm');
+  const ratio=W1/L1*100; setPill('pRatio', ratio>=75&&ratio<=80?'ok':'warn', ratio.toFixed(1)+'%');
+  // 中线
+  const mid=S.design.after.midX, dev=mid-faceMidX(0);
+  setPill('pMid', Math.abs(dev)<=1?'ok':Math.abs(dev)<=2?'warn':'bad', (dev>0?'偏左侧 ':dev<0?'偏右侧 ':'')+Math.abs(dev).toFixed(1)+' mm');
+  // 露龈
+  const gumShow=Math.max(0, polyY(f.upper,c1[0].ax)-(c1[0].y+c1[0].L));
+  setPill('pGum', gumShow<=2?'ok':gumShow<=3?'warn':'bad', gumShow.toFixed(1)+' mm');
+  // 牙色
+  if(p.shade<0){ setPill('pArc', $('pArc').className.includes('ok')?'ok':'warn', $('pArc').textContent); $('mShadeTxt').textContent='当前为照片原色（接近 '+S.baseShade+'）'; }
+  else { const nm=VVITA[p.shade][0]; $('mShadeTxt').innerHTML=''; const sp=document.createElement('span'); sp.className='pill '+(SHADE_OK.has(nm)?'ok':'warn'); sp.textContent=SHADE_OK.has(nm)?'自然亮白，推荐范围':(p.shade<2?'偏白，可能显得不自然':'偏暗，美白效果有限'); $('mShadeTxt').appendChild(document.createTextNode('从 '+S.baseShade+' 到 '+nm+' ')); $('mShadeTxt').appendChild(sp); }
+  $('mAlignTxt').textContent = S.method==='A' ? '方式 A：口扫现状 → 设计方案（交叉过渡）' : '估算现状 → 理想弓形（含微笑弧线、中线、倾斜纠正）';
+}
+
+/* ================= 照片合成 ================= */
+let layerAfter=null, layerScan=null;
+function renderLayer(which){
+  const show=w=>{ G.after.visible=w==='after'; G.scan.visible=w==='scan'; G.before.visible=false; if(G.face) G.face.visible=false; if(G.cavity) G.cavity.visible=false; };
+  show(which); setOpacity(G.after,1); setOpacity(G.scan,1); setStencil(false); if(G.portal) G.portal.visible=false;
+  rPhoto.render(scene, orthoCam);
+  const b=S.f.box; let cv=which==='after'?layerAfter:layerScan;
+  if(!cv || cv.width!==b.w*2 || cv.height!==b.h*2){ cv=document.createElement('canvas'); cv.width=b.w*2; cv.height=b.h*2; if(which==='after') layerAfter=cv; else layerScan=cv; }
+  const x=cv.getContext('2d'); x.clearRect(0,0,cv.width,cv.height); x.drawImage(rPhoto.domElement,0,0,cv.width,cv.height);
+  return cv;
+}
+function composite(){
+  const f=S.f, b=f.box, x=S.sim.getContext('2d');
+  const la=renderLayer('after'); const ls=(S.method==='A'&&S.align&&S.p.t<1)?renderLayer('scan'):null;
+  x.clearRect(0,0,S.W,S.H);
+  x.save(); pathPoly(x,f.innerPoly); x.clip();
+  // 口腔暗部
+  const mc=toPx(0,0), mw=f.mouthW/S.k;
+  const g=x.createRadialGradient(mc.x,mc.y,mw*.05,mc.x,mc.y,mw*.6); g.addColorStop(0,'#1c0a0c'); g.addColorStop(1,'#3e1a1e');
+  x.fillStyle=g; x.fillRect(b.x0,b.y0,b.w,b.h);
+  if(ls){ x.globalAlpha=1-S.p.t; x.drawImage(ls,b.x0,b.y0,b.w,b.h); x.globalAlpha=S.p.t; }
+  x.drawImage(la,b.x0,b.y0,b.w,b.h); x.globalAlpha=1;
+  // 上唇投影 + 口角暗区
+  const up=UP_INNER.map(i=>[S.L[i].x,S.L[i].y]);
+  x.save(); x.shadowColor='rgba(25,6,8,.62)'; x.shadowBlur=mw*.07; x.shadowOffsetY=mw*.022; x.fillStyle='#000';
+  x.beginPath(); up.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.lineTo(up[up.length-1][0]+mw, up[up.length-1][1]-mw); x.lineTo(up[0][0]-mw, up[0][1]-mw); x.closePath();
+  x.translate(0,-mw*4); x.shadowOffsetY+=mw*4; x.fill(); x.restore();
+  for(const c of [S.L[78],S.L[308]]){ const rg=x.createRadialGradient(c.x,c.y,0,c.x,c.y,mw*.17); rg.addColorStop(0,'rgba(22,6,8,.5)'); rg.addColorStop(1,'rgba(22,6,8,0)'); x.fillStyle=rg; x.fillRect(c.x-mw*.3,c.y-mw*.3,mw*.6,mw*.6); }
+  x.restore();
+  x.drawImage(S.photoHole,0,0);
+  S.photoDirty=false;
+}
+
+/* ================= 显示（照片视图） ================= */
+const pcv=$('photoCv'), pctx=pcv.getContext('2d');
+function stageSize(cv){ const r=cv.getBoundingClientRect(); return {w:Math.max(1,r.width), h:Math.max(1,r.height)}; }
+function viewXform(w,h){ const fit=Math.min(w/S.W,h/S.H); const s=fit*S.zoom.s; return {s, tx:w/2-S.zoom.cx*s, ty:h/2-S.zoom.cy*s}; }
+function zoomPreset(kind){
+  if(!S.f) return;
+  let {w,h}=stageSize(pcv); if(S.compare && S.cmpMode==='side' && !S.aligning) w/=2; const fit=Math.min(w/S.W,h/S.H);
+  if(kind==='face'){ const ov=bbox(FACE_OVAL.map(i=>[S.L[i].x,S.L[i].y])); const fw=(ov.x1-ov.x0)*1.5, fh=(ov.y1-ov.y0)*1.35; S.zoom={s:clamp(Math.min(w/fw,h/fh)/fit,1,8), cx:(ov.x0+ov.x1)/2, cy:(ov.y0+ov.y1)/2}; }
+  else { const b=S.f.box; S.zoom={s:clamp(Math.min(w/(b.w*1.25),h/(b.h*1.25))/fit,1,14), cx:b.x0+b.w/2, cy:b.y0+b.h/2}; }
+  drawPhoto();
+}
+function drawPhoto(){
+  if(S.view!=='photo' && !S.aligning) return;
+  const dpr=Math.min(devicePixelRatio||1,2); const {w,h}=stageSize(pcv);
+  if(pcv.width!==Math.round(w*dpr)||pcv.height!==Math.round(h*dpr)){ pcv.width=Math.round(w*dpr); pcv.height=Math.round(h*dpr); }
+  const x=pctx; x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h); x.fillStyle='#dbe3e2'; x.fillRect(0,0,w,h);
+  if(!S.ready) return;
+  if(S.photoDirty && !S.aligning) composite();
+  const showSim=!S.aligning;
+  if(S.compare && S.cmpMode==='side' && !S.aligning){
+    for(const [i,img,label] of [[0,S.photo,'治疗前'],[1,S.sim,'模拟效果']]){
+      const hw=w/2; x.save(); x.beginPath(); x.rect(i*hw,0,hw,h); x.clip();
+      const v=viewXform(hw,h); x.translate(i*hw+v.tx, v.ty); x.scale(v.s,v.s); x.drawImage(img,0,0);
+      if(i===1 && S.overlays && !S.patient) drawOverlays(x, v.s);
+      x.restore(); tag(x, i*hw+12, 12, label);
+    }
+    x.fillStyle='#fff'; x.fillRect(w/2-1,0,2,h);
+    return;
+  }
+  const v=viewXform(w,h);
+  x.save(); x.translate(v.tx,v.ty); x.scale(v.s,v.s);
+  x.drawImage(showSim?S.sim:S.photo,0,0);
+  if(S.compare && !S.aligning){ const sx=S.split*w; x.save(); x.setTransform(dpr,0,0,dpr,0,0); x.beginPath(); x.rect(0,0,sx,h); x.clip(); x.translate(v.tx,v.ty); x.scale(v.s,v.s); x.drawImage(S.photo,0,0); x.restore(); }
+  if(S.overlays && !S.patient && !S.aligning) drawOverlays(x, v.s);
+  if(S.aligning) drawAlignMarks(x, v.s);
+  x.restore();
+  if(S.compare && !S.aligning){
+    const sx=S.split*w; x.fillStyle='#fff'; x.fillRect(sx-1,0,2,h);
+    x.beginPath(); x.arc(sx,h/2,16,0,7); x.fillStyle='#fff'; x.fill(); x.strokeStyle='rgba(22,40,44,.25)'; x.stroke();
+    x.fillStyle='#16282c'; x.font='600 13px system-ui'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('⇆',sx,h/2+1);
+    tag(x,12,12,'治疗前'); tag(x,w-12,12,'模拟效果',true);
+  }
+}
+function tag(x,px,py,txt,right){ x.save(); x.font='600 13px '+getComputedStyle(document.body).fontFamily; const tw=x.measureText(txt).width+20; const X=right?px-tw:px; x.fillStyle='rgba(255,255,255,.94)'; roundRect(x,X,py,tw,28,14); x.fill(); x.fillStyle='#16282c'; x.textBaseline='middle'; x.textAlign='left'; x.fillText(txt,X+10,py+14); x.restore(); }
+function roundRect(x,X,Y,W,H,R){ x.beginPath(); x.moveTo(X+R,Y); x.arcTo(X+W,Y,X+W,Y+H,R); x.arcTo(X+W,Y+H,X,Y+H,R); x.arcTo(X,Y+H,X,Y,R); x.arcTo(X,Y,X+W,Y,R); x.closePath(); }
+
+function drawOverlays(x, s){
+  const f=S.f, lw=1.6/s; const P=(X,Y)=>toPx(X,Y);
+  x.save(); x.lineWidth=lw; x.font=(12/s)+'px system-ui';
+  // 面中线
+  const yT=f.faceTop.y+10, yB=f.chin.y-6; const a=P(faceMidX(yT),yT), b=P(faceMidX(yB),yB);
+  x.setLineDash([6/s,5/s]); x.strokeStyle='rgba(29,122,114,.95)'; line(x,a,b);
+  // 瞳孔连线
+  const i0=f.iris[0], i1=f.iris[1], dx=i1.x-i0.x, dy=i1.y-i0.y; const e0=P(i0.x-dx*.25,i0.y-dy*.25), e1=P(i1.x+dx*.25,i1.y+dy*.25); line(x,e0,e1);
+  x.setLineDash([]);
+  for(const i of f.iris){ const q=P(i.x,i.y); x.beginPath(); x.arc(q.x,q.y,3.5/s,0,7); x.stroke(); }
+  // 微笑弧线（沿下唇内缘）
+  x.strokeStyle='rgba(214,150,30,.95)'; x.lineWidth=2/s; x.beginPath();
+  f.lower.forEach((p,i)=>{ const q=P(p.x,p.y+1); i?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y); }); x.stroke();
+  // 设计切缘线
+  const up=S.design.after.teeth.filter(t=>t.n<=4).sort((a,b)=>a.ax-b.ax);
+  x.setLineDash([2/s,4/s]); x.strokeStyle='rgba(255,255,255,.95)'; x.lineWidth=1.6/s; x.beginPath();
+  up.forEach((t,i)=>{ const q=P(t.ax,t.y); i?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y); }); x.stroke(); x.setLineDash([]);
+  // 牙列中线
+  const mid=S.design.after.midX, dev=mid-faceMidX(0); const ok=Math.abs(dev)<=1;
+  const m0=P(mid,polyY(f.upper,mid)+3), m1=P(mid,polyY(f.lower,mid)-1);
+  x.strokeStyle=ok?'rgba(37,134,79,.95)':'rgba(180,60,53,.95)'; x.lineWidth=2.2/s; line(x,m0,m1);
+  // 标注
+  label(x, P(faceMidX(yT),yT), '面中线', s, 'rgba(29,122,114,.95)');
+  label(x, e1, '瞳孔连线', s, 'rgba(29,122,114,.95)');
+  const lc=P(f.cornerR.x, polyY(f.lower,f.cornerR.x)); label(x, {x:lc.x+8/s,y:lc.y+14/s}, '微笑弧线', s, 'rgba(176,118,14,.95)');
+  label(x, {x:m1.x+6/s,y:m1.y+16/s}, '牙列中线 '+(Math.abs(dev)<.05?'居中':(dev>0?'偏患者左侧 ':'偏患者右侧 ')+Math.abs(dev).toFixed(1)+' mm'), s, ok?'rgba(37,134,79,.95)':'rgba(180,60,53,.95)');
+  x.restore();
+}
+function line(x,a,b){ x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke(); }
+function label(x,p,txt,s,color){ x.save(); x.font='600 '+(12/s)+'px system-ui'; const w=x.measureText(txt).width+12/s; x.fillStyle='rgba(255,255,255,.9)'; roundRect(x,p.x,p.y-9/s,w,18/s,9/s); x.fill(); x.fillStyle=color; x.textBaseline='middle'; x.fillText(txt,p.x+6/s,p.y); x.restore(); }
+
+/* 照片交互：缩放、平移、分割线、点选 */
+let drag=null;
+pcv.addEventListener('pointerdown', e=>{
+  if(!S.ready) return; pcv.setPointerCapture(e.pointerId);
+  const r=pcv.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+  const nearSplit = S.compare && S.cmpMode==='split' && !S.aligning && Math.abs(px-S.split*r.width)<24;
+  drag={mode:nearSplit?'split':'pan', x0:px, y0:py, cx:S.zoom.cx, cy:S.zoom.cy, moved:false};
+});
+pcv.addEventListener('pointermove', e=>{
+  if(!drag) return; const r=pcv.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+  if(Math.hypot(px-drag.x0,py-drag.y0)>4) drag.moved=true;
+  if(drag.mode==='split'){ S.split=clamp(px/r.width,.02,.98); drawPhoto(); }
+  else if(drag.moved){ const v=viewXform(r.width,r.height); S.zoom.cx=drag.cx-(px-drag.x0)/v.s; S.zoom.cy=drag.cy-(py-drag.y0)/v.s; drawPhoto(); }
+});
+pcv.addEventListener('pointerup', e=>{
+  if(!drag) return; const d=drag; drag=null; if(d.moved||d.mode==='split') return;
+  const r=pcv.getBoundingClientRect(); const v=viewXform(r.width,r.height);
+  const ix=(e.clientX-r.left-v.tx)/v.s, iy=(e.clientY-r.top-v.ty)/v.s;
+  if(ix<0||iy<0||ix>=S.W||iy>=S.H) return;
+  if(S.pick==='eyedrop') eyedrop(ix,iy);
+  else if(S.aligning) addPhotoPt(ix,iy);
+});
+pcv.addEventListener('wheel', e=>{
+  if(!S.ready) return; e.preventDefault();
+  const r=pcv.getBoundingClientRect(); const v=viewXform(r.width,r.height);
+  const ix=(e.clientX-r.left-v.tx)/v.s, iy=(e.clientY-r.top-v.ty)/v.s;
+  const ns=clamp(S.zoom.s*Math.exp(-e.deltaY*.0015),1,14); const k=S.zoom.s/ns;
+  S.zoom.cx=ix-(ix-S.zoom.cx)*k; S.zoom.cy=iy-(iy-S.zoom.cy)*k; S.zoom.s=ns; drawPhoto();
+},{passive:false});
+$('zFace').onclick=()=>zoomPreset('face');
+$('zMouth').onclick=()=>zoomPreset('mouth');
+$('zIn').onclick=()=>{ S.zoom.s=clamp(S.zoom.s*1.25,1,14); drawPhoto(); };
+$('zOut').onclick=()=>{ S.zoom.s=clamp(S.zoom.s/1.25,1,14); drawPhoto(); };
+$('ovToggle').onchange=e=>{ S.overlays=e.target.checked; drawPhoto(); };
+
+/* 吸管取色 */
+$('bDrop').onclick=()=>{ const on=S.pick!=='eyedrop'; S.pick=on?'eyedrop':null; $('bDrop').setAttribute('aria-pressed',String(on)); pcv.style.cursor=on?'crosshair':''; if(on){ setView('photo'); hint('在照片中的牙齿上点一下取色',0); } else hint(''); };
+function eyedrop(ix,iy){
+  const d=S.photo.getContext('2d').getImageData(Math.max(0,ix-3|0),Math.max(0,iy-3|0),7,7).data; const c=[0,0,0]; let n=0;
+  for(let i=0;i<d.length;i+=4){ c[0]+=d[i]; c[1]+=d[i+1]; c[2]+=d[i+2]; n++; }
+  S.baseColor=rgbHex(c.map(v=>Math.min(255,v/n/0.92)));
+  S.pick=null; $('bDrop').setAttribute('aria-pressed','false'); pcv.style.cursor=''; hint('已取色：接近 '+nearestShade(S.baseColor));
+  updateBaseShade(); rebuildDesign(); redraw();
+}
+function nearestShade(hex){ const a=hexRgb(hex); let best=null,bd=1e9; for(const [n,h] of VVITA){ const b=hexRgb(h); const d=(a[0]-b[0])**2*.3+(a[1]-b[1])**2*.59+(a[2]-b[2])**2*.11; if(d<bd){bd=d;best=n;} } return best; }
+function updateBaseShade(){ S.baseShade=nearestShade(S.baseColor); $('baseSwatch').style.background=S.baseColor; $('baseShadeName').textContent='接近 '+S.baseShade; const o=$('shades').querySelector('[data-i="-1"] i'); if(o) o.style.background=S.baseColor; updateMetrics(); }
+
+/* ================= 3D 视图 ================= */
+let anim3=null;
+function setView(v){
+  if(S.aligning && v==='3d') return;
+  S.view=v; $('vPhoto').setAttribute('aria-pressed',String(v==='photo')); $('v3d').setAttribute('aria-pressed',String(v==='3d'));
+  pcv.hidden=v!=='photo'; threeCv.hidden=v!=='3d'; if(v!=='3d') $('split3d').hidden=true;
+  $('zoomGroup').hidden=v!=='photo';
+  if(v==='3d') enter3D(); else drawPhoto();
+}
+$('vPhoto').onclick=()=>setView('photo');
+$('v3d').onclick=()=>{ if(S.ready) setView('3d'); };
+$('go3d').onclick=()=>setView('3d');
+function enter3D(){
+  ctl.target.copy(S.target3); cam3.position.copy(S.target3).add(new V3(0,0,S.dist3));
+  ctl.minAzimuthAngle=-40*Math.PI/180; ctl.maxAzimuthAngle=40*Math.PI/180;
+  ctl.minPolarAngle=(90-22)*Math.PI/180; ctl.maxPolarAngle=(90+22)*Math.PI/180;
+  ctl.minDistance=S.dist3*.35; ctl.maxDistance=S.dist3*1.4; ctl.enableRotate=true; ctl.update();
+}
+ctl.addEventListener('end', ()=>{
+  if(S.aligning) return;
+  const az=ctl.getAzimuthalAngle(), po=ctl.getPolarAngle();
+  const lim=30*Math.PI/180, plim=15*Math.PI/180;
+  const az2=clamp(az,-lim,lim), po2=clamp(po,Math.PI/2-plim,Math.PI/2+plim);
+  if(az2===az && po2===po) return;
+  const r=cam3.position.distanceTo(ctl.target), t0=performance.now(), a0=az, p0=po;
+  anim3=now=>{ const k=reduced?1:clamp((now-t0)/450,0,1), e=ease(k); const a=lerp(a0,az2,e), p=lerp(p0,po2,e);
+    cam3.position.set(ctl.target.x+r*Math.sin(p)*Math.sin(a), ctl.target.y+r*Math.cos(p), ctl.target.z+r*Math.sin(p)*Math.cos(a)); cam3.lookAt(ctl.target); if(k>=1) anim3=null; };
+});
+function setStencil(on){ for(const g of [G.after,G.before,G.scan,G.cavity]) g && g.traverse(m=>{ const mt=m.material; if(!mt||Array.isArray(mt)) return; mt.stencilWrite=on; mt.stencilRef=1; mt.stencilFunc=THREE.EqualStencilFunc; mt.stencilFail=mt.stencilZFail=mt.stencilZPass=THREE.KeepStencilOp; }); }
+function setOpacity(g,o){ g.traverse(m=>{ if(m.material && !Array.isArray(m.material)){ m.material.opacity=o; m.material.depthWrite=o>.99; } }); }
+function render3D(){
+  const {w,h}=stageSize(threeCv); const dpr=r3D.getPixelRatio();
+  if(threeCv.width!==Math.round(w*dpr)||threeCv.height!==Math.round(h*dpr)){ r3D.setSize(w,h,false); }
+  cam3.aspect=w/h; cam3.updateProjectionMatrix();
+  if(S.aligning){ setStencil(false); G.portal.visible=false; G.face.visible=false; G.cavity.visible=false; G.after.visible=false; G.before.visible=false; G.scan.visible=true; setOpacity(G.scan,1); r3D.setScissorTest(false); r3D.render(scene,cam3); return; }
+  G.face.visible=true; G.cavity.visible=true; G.portal.visible=true; setStencil(true);
+  const showAfter=()=>{ G.before.visible=false; if(S.method==='A'&&S.align){ G.scan.visible=S.p.t<1; setOpacity(G.scan,1-S.p.t); G.after.visible=S.p.t>0; setOpacity(G.after,S.p.t); } else { G.scan.visible=false; G.after.visible=true; setOpacity(G.after,1); } };
+  const showBefore=()=>{ G.after.visible=false; if(S.method==='A'&&S.align){ G.scan.visible=true; setOpacity(G.scan,1); G.before.visible=false; } else { G.scan.visible=false; G.before.visible=true; } };
+  const sp=$('split3d'); sp.hidden=!S.compare; if(S.compare) sp.style.left=(S.split*100)+'%';
+  if(S.compare){
+    const sx=Math.round(S.split*w);
+    r3D.setScissorTest(true);
+    showBefore(); r3D.setScissor(0,0,sx,h); r3D.setViewport(0,0,w,h); r3D.render(scene,cam3);
+    showAfter(); r3D.setScissor(sx,0,w-sx,h); r3D.render(scene,cam3);
+    r3D.setScissorTest(false);
+  } else { showAfter(); r3D.render(scene,cam3); }
+}
+
+/* ================= 口扫（方式 A） ================= */
+function setMethodUI(){
+  $('mA').setAttribute('aria-pressed',String(S.method==='A')); $('mB').setAttribute('aria-pressed',String(S.method==='B'));
+  $('mAbox').hidden=S.method!=='A'; $('mBbox').hidden=S.method!=='B';
+}
+$('mB').onclick=()=>{ if(S.aligning) endAlign(false); S.method='B'; setMethodUI(); rebuildDesign(); redraw(); };
+$('mA').onclick=()=>{ S.method='A'; setMethodUI(); if(S.align){ rebuildDesign(); redraw(); } };
+$('stlIn').addEventListener('click', e=>{ if(!guardConsent()) e.preventDefault(); });
+$('stlIn').addEventListener('change', async e=>{
+  const file=e.target.files[0]; e.target.value=''; if(!file) return;
+  busy(true,'正在读取口扫…');
+  try{
+    const buf=await file.arrayBuffer();
+    const geo=new THREE.STLLoader().parse(buf);
+    const tris=geo.attributes.position.count/3;
+    orientScan(geo);
+    if(!geo.attributes.normal) geo.computeVertexNormals();
+    const col=new Float32Array(geo.attributes.position.count*3).fill(.93); geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+    disposeGroup(G.scan);
+    const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true, roughness:.45, metalness:0, transparent:true, opacity:1, color:lin('#f1e9dc')}));
+    const holder=new THREE.Group(); holder.add(mesh); G.scan.add(holder);
+    S.scan={geo, mesh, holder, tris, name:file.name};
+    $('scanInfo').hidden=false; $('scanInfo').textContent=file.name+' · '+tris.toLocaleString()+' 个三角面'+(tris>800000?'（模型较大，交互可能较慢）':'');
+    S.align=null; busy(false); startAlign();
+  }catch(err){ console.error(err); busy(false); hint('无法读取这个 STL 文件，请确认是上颌口扫导出的 STL。',5000); }
+});
+function orientScan(geo){
+  const p=geo.attributes.position, n=p.count, step=Math.max(1,Math.floor(n/30000));
+  const m=new V3(); let c=0; for(let i=0;i<n;i+=step){ m.x+=p.getX(i); m.y+=p.getY(i); m.z+=p.getZ(i); c++; } m.divideScalar(c);
+  const C=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let i=0;i<n;i+=step){ const v=[p.getX(i)-m.x,p.getY(i)-m.y,p.getZ(i)-m.z]; for(let a=0;a<3;a++) for(let b=0;b<3;b++) C[a][b]+=v[a]*v[b]; }
+  const {vecs,vals}=jacobi(C); const ord=[0,1,2].sort((a,b)=>vals[b]-vals[a]);
+  let ex=new V3(...vecs[ord[0]]), ez=new V3(...vecs[ord[1]]); let ey=new V3().crossVectors(ez,ex).normalize(); ez=new V3().crossVectors(ex,ey).normalize();
+  const M=new THREE.Matrix4().makeBasis(ex,ey,ez).transpose(); const T=new THREE.Matrix4().makeTranslation(-m.x,-m.y,-m.z);
+  geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(M,T));
+  // 前方判断：牙弓前端窄、后端宽
+  geo.computeBoundingBox(); const bb=geo.boundingBox; const zr=bb.max.z-bb.min.z;
+  let fx0=1e9,fx1=-1e9,bx0=1e9,bx1=-1e9;
+  for(let i=0;i<n;i+=step){ const x=p.getX(i), z=p.getZ(i); if(z>bb.max.z-zr*.15){ fx0=Math.min(fx0,x); fx1=Math.max(fx1,x); } if(z<bb.min.z+zr*.15){ bx0=Math.min(bx0,x); bx1=Math.max(bx1,x); } }
+  if(fx1-fx0 > bx1-bx0) geo.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI));
+  // 咬合面朝下（上颌）：开放扫描面的法向和指向咬合方向
+  const nm=geo.attributes.normal; if(nm){ let sy=0; for(let i=0;i<n;i+=step) sy+=nm.getY(i); if(sy>0) geo.applyMatrix4(new THREE.Matrix4().makeRotationZ(Math.PI)); }
+  geo.computeBoundingBox(); geo.computeBoundingSphere();
+}
+function jacobi(A){
+  const a=A.map(r=>r.slice()), v=[[1,0,0],[0,1,0],[0,0,1]];
+  for(let it=0;it<50;it++){
+    let p=0,q=1; if(Math.abs(a[0][2])>Math.abs(a[p][q])){p=0;q=2;} if(Math.abs(a[1][2])>Math.abs(a[p][q])){p=1;q=2;}
+    if(Math.abs(a[p][q])<1e-9) break;
+    const th=(a[q][q]-a[p][p])/(2*a[p][q]); const t=Math.sign(th||1)/(Math.abs(th)+Math.sqrt(th*th+1)); const c=1/Math.sqrt(t*t+1), s=t*c;
+    for(let k=0;k<3;k++){ const akp=a[k][p], akq=a[k][q]; a[k][p]=c*akp-s*akq; a[k][q]=s*akp+c*akq; }
+    for(let k=0;k<3;k++){ const apk=a[p][k], aqk=a[q][k]; a[p][k]=c*apk-s*aqk; a[q][k]=s*apk+c*aqk; }
+    for(let k=0;k<3;k++){ const vkp=v[k][p], vkq=v[k][q]; v[k][p]=c*vkp-s*vkq; v[k][q]=s*vkp+c*vkq; }
+  }
+  return {vals:[a[0][0],a[1][1],a[2][2]], vecs:[0,1,2].map(j=>[v[0][j],v[1][j],v[2][j]])};
+}
+
+const ALIGN_PTS=[['右上中切牙 11 切缘中点','照片中偏左'],['左上中切牙 21 切缘中点','照片中偏右'],['右上尖牙 13 牙尖','照片左侧'],['左上尖牙 23 牙尖','照片右侧']];
+const scanMarks=new THREE.Group(); scene.add(scanMarks);
+function startAlign(){
+  S.aligning=true; S.alignPts={photo:[null,null,null,null], scan:[null,null,null,null]};
+  $('alignBox').hidden=false; $('alignResult').hidden=true;
+  $('stage').classList.add('aligning'); pcv.hidden=false; threeCv.hidden=false; $('tagPhoto').hidden=false; $('tagScan').hidden=false; $('stageTools').hidden=true;
+  G.scan.position.set(0,0,0); G.scan.rotation.set(0,0,0); G.scan.scale.set(1,1,1); S.scan.holder.matrix.identity(); S.scan.holder.matrixAutoUpdate=true; S.scan.holder.position.set(0,0,0); S.scan.holder.rotation.set(0,0,0); S.scan.holder.scale.set(1,1,1);
+  const r=S.scan.geo.boundingSphere.radius;
+  ctl.minAzimuthAngle=-Infinity; ctl.maxAzimuthAngle=Infinity; ctl.minPolarAngle=0; ctl.maxPolarAngle=Math.PI; ctl.minDistance=r*.5; ctl.maxDistance=r*8;
+  const pr=threeCv.getBoundingClientRect(), asp=Math.max(.3,pr.width/Math.max(1,pr.height)); const dist=Math.max(r*1.25/(Math.tan(13*Math.PI/180)*asp), r*3);
+  ctl.target.set(0,-r*.1,0); cam3.position.set(0,-dist*.24,dist); ctl.maxDistance=dist*2.5; ctl.update();
+  zoomPreset('mouth'); renderAlignList(); hint('先在左侧照片上点 1 号点，再在右侧口扫上点 1 号点，依次完成 4 组',6000);
+}
+function endAlign(ok){
+  S.aligning=false; $('stage').classList.remove('aligning'); $('tagPhoto').hidden=true; $('tagScan').hidden=true; $('alignBox').hidden=true; $('stageTools').hidden=false;
+  disposeGroup(scanMarks);
+  if(!ok && !S.align){ disposeGroup(G.scan); S.scan=null; S.method='B'; setMethodUI(); }
+  setView('photo');
+}
+function renderAlignList(){
+  const ol=$('alignList'); ol.innerHTML=''; const ap=S.alignPts;
+  const cur=ap.photo.findIndex((p,i)=>!p||!ap.scan[i]);
+  ALIGN_PTS.forEach(([a,b],i)=>{ const li=document.createElement('li'); if(i===cur) li.className='cur'; li.innerHTML='<b>'+(i+1)+'</b><span>'+a+'<br><span class="note">'+b+'</span></span><span class="st">'+(ap.photo[i]?'照片✓':'照片 ·')+' '+(ap.scan[i]?'口扫✓':'口扫 ·')+'</span>'; ol.appendChild(li); });
+  $('doAlign').disabled=!(ap.photo.every(Boolean)&&ap.scan.every(Boolean));
+}
+function addPhotoPt(ix,iy){ const i=S.alignPts.photo.findIndex(p=>!p); if(i<0) return; S.alignPts.photo[i]={x:ix,y:iy}; renderAlignList(); drawPhoto(); }
+function drawAlignMarks(x,s){ S.alignPts.photo.forEach((p,i)=>{ if(!p) return; x.beginPath(); x.arc(p.x,p.y,9/s,0,7); x.fillStyle='rgba(182,90,107,.95)'; x.fill(); x.fillStyle='#fff'; x.font='700 '+(11/s)+'px system-ui'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(String(i+1),p.x,p.y+.5/s); }); }
+let scanDown=null;
+threeCv.addEventListener('pointerdown', e=>{ scanDown={x:e.clientX,y:e.clientY}; });
+threeCv.addEventListener('pointerup', e=>{
+  if(!S.aligning || !scanDown || Math.hypot(e.clientX-scanDown.x,e.clientY-scanDown.y)>5) return;
+  const r=threeCv.getBoundingClientRect(); const ndc=new THREE.Vector2((e.clientX-r.left)/r.width*2-1, -(e.clientY-r.top)/r.height*2+1);
+  const rc=new THREE.Raycaster(); rc.setFromCamera(ndc,cam3); const hit=rc.intersectObject(S.scan.mesh,false)[0]; if(!hit) return;
+  const i=S.alignPts.scan.findIndex(p=>!p); if(i<0) return;
+  S.alignPts.scan[i]=hit.point.clone();
+  const mk=new THREE.Mesh(new THREE.SphereGeometry(S.scan.geo.boundingSphere.radius*.025,16,12), new THREE.MeshBasicMaterial({color:lin('#b65a6b')})); mk.position.copy(hit.point); scanMarks.add(mk);
+  renderAlignList();
+});
+$('flipV').onclick=()=>{ S.scan.geo.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI)); S.scan.geo.computeBoundingSphere(); clearPts(); };
+$('flipF').onclick=()=>{ S.scan.geo.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI)); S.scan.geo.computeBoundingSphere(); clearPts(); };
+$('clrPts').onclick=clearPts;
+function clearPts(){ S.alignPts={photo:[null,null,null,null], scan:[null,null,null,null]}; disposeGroup(scanMarks); renderAlignList(); drawPhoto(); }
+$('cancelAlign').onclick=()=>endAlign(false);
+$('doAlign').onclick=()=>finishAlign();
+
+function finishAlign(){
+  const ap=S.alignPts; const P=ap.scan.map(v=>({x:v.x,y:v.y,z:v.z})); const Q=ap.photo.map(p=>{ const w=toW({x:p.x,y:p.y,z:S.oz}); return {x:w.x,y:w.y}; });
+  // 二维相似变换（正交投影）
+  const mp={x:0,y:0}, mq={x:0,y:0}; P.forEach(p=>{mp.x+=p.x/4; mp.y+=p.y/4;}); Q.forEach(q=>{mq.x+=q.x/4; mq.y+=q.y/4;});
+  let a=0,b=0,pp=0; for(let i=0;i<4;i++){ const px=P[i].x-mp.x, py=P[i].y-mp.y, qx=Q[i].x-mq.x, qy=Q[i].y-mq.y; a+=px*qx+py*qy; b+=px*qy-py*qx; pp+=px*px+py*py; }
+  const th=Math.atan2(b,a), sc=Math.hypot(a,b)/(pp||1), c=Math.cos(th), s=Math.sin(th);
+  const tx=mq.x-sc*(c*mp.x-s*mp.y), ty=mq.y-sc*(s*mp.x+c*mp.y);
+  let err=0; const W=P.map(p=>{ const X=sc*(c*p.x-s*p.y)+tx, Y=sc*(s*p.x+c*p.y)+ty; return {x:X,y:Y,z:sc*p.z}; });
+  W.forEach((w,i)=>{ err+=(w.x-Q[i].x)**2+(w.y-Q[i].y)**2; }); err=Math.sqrt(err/4);
+  const tz=S.f.lipZ-2.4-(W[0].z+W[1].z)/2;
+  W.forEach(w=>w.z+=tz);
+  const h=S.scan.holder; h.position.set(tx,ty,tz); h.rotation.set(0,0,th); h.scale.setScalar(sc); h.updateMatrixWorld(true);
+  // 口扫着色：牙冠 / 牙龈
+  const geo=S.scan.geo, pos=geo.attributes.position, col=geo.attributes.color, v=new V3();
+  const incY=(W[0].y+W[1].y)/2, midX=(W[0].x+W[1].x)/2;
+  for(let i=0;i<pos.count;i++){ v.fromBufferAttribute(pos,i).applyMatrix4(h.matrixWorld); const thr=incY+10.2-0.08*Math.abs(v.x-midX); const t=clamp((v.y-thr)/1.2+.5,0,1);
+    col.setXYZ(i, lerp(.97,.86,t), lerp(.95,.47,t), lerp(.9,.52,t)); }
+  col.needsUpdate=true;
+  // 设计牙列贴合口扫
+  const w=Math.abs(W[3].x-W[2].x)/2, d=(W[0].z+W[1].z)/2-(W[2].z+W[3].z)/2;
+  const xc1=(UP[1].W+UP[2].W+UP[3].W*.5+.18); const at1=makeArch(1,1)(xc1);
+  const kW=clamp(w/Math.abs(at1.x),.8,1.25), sz=clamp(d/Math.max(.5,Math.abs(at1.z)),.5,1.8);
+  S.align={th,sc,tx,ty,tz,err, fit:{kW, sz, midX, z0:(W[0].z+W[1].z)/2+.4}};
+  S.method='A'; S.p.t=0; endAlign(true); setMethodUI();
+  $('alignResult').hidden=false;
+  $('alignResult').innerHTML='对齐完成：平均误差 <b>'+err.toFixed(1)+' mm</b>'+(err>2.5?'（误差较大，请检查点位顺序或翻转方向）':'')+'。口扫与照片比例 '+(sc*100).toFixed(0)+'%。';
+  rebuildDesign(); syncControls(); redraw();
+  hint('排齐滑块现在从“口扫现状”过渡到“设计方案”',5000);
+}
+
+/* ================= 控件 ================= */
+(function buildShades(){
+  const box=$('shades');
+  const mk=(i,name,hex)=>{ const b=document.createElement('button'); b.className='shade'; b.dataset.i=i; b.setAttribute('aria-pressed','false'); b.innerHTML='<i style="background:'+hex+'"></i><span>'+name+'</span>'; b.onclick=()=>{ S.p.shade=i; syncControls(); rebuildDesign(); redraw(); }; box.appendChild(b); };
+  mk(-1,'原色','#e2d4bc'); VVITA.forEach(([n,h],i)=>mk(i,n,h));
+  const tp=$('teethPick'); for(const fdi of VENEER_TEETH){ const b=document.createElement('button'); b.className='tooth'; b.textContent=fdi; b.dataset.fdi=fdi; b.setAttribute('aria-pressed','false'); b.setAttribute('aria-label','牙位 '+fdi); b.disabled=true;
+    b.onclick=()=>{ const s=S.p.veneer; s.has(fdi)?s.delete(fdi):s.add(fdi); syncControls(); rebuildDesign(); redraw(); }; tp.appendChild(b); }
+})();
+function syncControls(){
+  const p=S.p;
+  $('sAlign').value=Math.round(p.t*100); $('vAlign').textContent=Math.round(p.t*100)+'%';
+  $('shades').querySelectorAll('.shade').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.i===p.shade)));
+  $('vShade').textContent=p.shade<0?'原色':VVITA[p.shade][0];
+  $('teethPick').querySelectorAll('.tooth').forEach(b=>{ b.disabled=!S.ready; b.setAttribute('aria-pressed',String(p.veneer.has(+b.dataset.fdi))); });
+  const any=p.veneer.size>0; $('sLen').disabled=!any; $('sRatio').disabled=!any;
+  $('sLen').value=p.len; $('vLen').textContent=(p.len>0?'+':'')+p.len.toFixed(1)+' mm';
+  $('sRatio').value=p.ratio; $('vRatio').textContent=any?p.ratio.toFixed(1)+'%':'选择牙位后可调';
+  $('sMid').value=p.mid; $('vMid').textContent=(p.mid>0?'+':'')+p.mid.toFixed(1)+' mm';
+  $('sGum').value=p.gum; $('vGum').textContent=(p.gum>0?'+':'')+p.gum.toFixed(1)+' mm';
+  $('tVeneer').setAttribute('aria-pressed',String(p.vType==='veneer')); $('tCrown').setAttribute('aria-pressed',String(p.vType==='crown'));
+}
+let rafPending=false;
+function onInput(fn){ return e=>{ fn(+e.target.value); syncControls(); if(!rafPending){ rafPending=true; requestAnimationFrame(()=>{ rafPending=false; rebuildDesign(); redraw(); }); } }; }
+$('sAlign').addEventListener('input', onInput(v=>S.p.t=v/100));
+$('sLen').addEventListener('input', onInput(v=>S.p.len=v));
+$('sRatio').addEventListener('input', onInput(v=>S.p.ratio=v));
+$('sMid').addEventListener('input', onInput(v=>S.p.mid=v));
+$('sGum').addEventListener('input', onInput(v=>S.p.gum=v));
+$('bAutoMid').onclick=()=>{ const D=designParams(); S.p.mid=Math.round((faceMidX(0)-D.midCur)*10)/10; S.p.mid=clamp(S.p.mid,-4,4); syncControls(); rebuildDesign(); redraw(); };
+$('tVeneer').onclick=()=>{ S.p.vType='veneer'; syncControls(); rebuildDesign(); redraw(); };
+$('tCrown').onclick=()=>{ S.p.vType='crown'; syncControls(); rebuildDesign(); redraw(); };
+
+function setCompare(on){ S.compare=on; for(const id of ['bCompare','bCompare2']) $(id).setAttribute('aria-pressed',String(on)); $('cmpGroup').hidden=!on; redraw(); }
+$('bCompare').onclick=()=>setCompare(!S.compare);
+$('bCompare2').onclick=()=>setCompare(!S.compare);
+$('cSplit').onclick=()=>{ S.cmpMode='split'; $('cSplit').setAttribute('aria-pressed','true'); $('cSide').setAttribute('aria-pressed','false'); redraw(); };
+$('cSide').onclick=()=>{ S.cmpMode='side'; $('cSide').setAttribute('aria-pressed','true'); $('cSplit').setAttribute('aria-pressed','false'); redraw(); };
+
+function summary(){
+  const p=S.p, out=[];
+  if(S.method==='A') out.push('排齐：口扫现状 → 设计方案 '+Math.round(p.t*100)+'%');
+  else if(p.t>0) out.push('排齐到理想弓形 '+Math.round(p.t*100)+'%');
+  if(p.shade>=0) out.push('美白：'+S.baseShade+' → '+VVITA[p.shade][0]);
+  if(p.veneer.size){ const t=[...p.veneer].sort((a,b)=>VENEER_TEETH.indexOf(a)-VENEER_TEETH.indexOf(b)).join('、'); out.push((p.vType==='veneer'?'贴面':'全瓷冠')+'：'+t+(p.len?'，长度 '+(p.len>0?'+':'')+p.len.toFixed(1)+' mm':'')+'，中切牙宽长比 '+p.ratio.toFixed(1)+'%'); }
+  if(p.mid) out.push('牙列中线移动 '+(p.mid>0?'+':'')+p.mid.toFixed(1)+' mm');
+  if(p.gum) out.push('牙龈线'+(p.gum>0?'上移 ':'下移 ')+Math.abs(p.gum).toFixed(1)+' mm');
+  return out.length?out:['当前为默认设计'];
+}
+function setPatient(on){
+  S.patient=on; hint(''); $('app').classList.toggle('patient',on); for(const id of ['bPatient','bPatient2']) $(id).setAttribute('aria-pressed',String(on));
+  $('patientCard').hidden=!on;
+  if(on){ if(!S.compare) setCompare(true); setView('photo'); zoomPreset('face'); $('pNote').textContent=$('docNote').value.trim()||'医生会根据您的牙齿情况，和您一起确定最终方案。'; const ul=$('pSummary'); ul.innerHTML=''; summary().forEach(t=>{ const li=document.createElement('li'); li.textContent=t; ul.appendChild(li); }); }
+  requestAnimationFrame(()=>{ drawPhoto(); if(S.view==='photo') zoomPreset('face'); });
+}
+$('bPatient').onclick=()=>setPatient(!S.patient);
+$('bPatient2').onclick=()=>setPatient(!S.patient);
+$('exitPatient').onclick=()=>setPatient(false);
+$('bReset').onclick=()=>location.reload();
+
+/* ================= 导出 ================= */
+function exportPNG(){
+  if(!S.ready) return; if(S.photoDirty) composite();
+  const ov=bbox(FACE_OVAL.map(i=>[S.L[i].x,S.L[i].y])); const fw=ov.x1-ov.x0, fh=ov.y1-ov.y0;
+  const x0=clamp(ov.x0-fw*.18,0,S.W), y0=clamp(ov.y0-fh*.2,0,S.H), x1=clamp(ov.x1+fw*.18,0,S.W), y1=clamp(ov.y1+fh*.15,0,S.H);
+  const cw=x1-x0, ch=y1-y0, H=900, sc=H/ch, PW=Math.round(cw*sc), pad=24, foot=44;
+  const font=getComputedStyle(document.body).fontFamily;
+  const c=document.createElement('canvas'); c.width=PW*2+pad*3; const x=c.getContext('2d');
+  x.font='15px '+font; const lines=[]; let cur='';
+  for(const item of [new Date().toLocaleDateString('zh-CN')].concat(summary())){ const t=cur?cur+'；'+item:item; if(x.measureText(t).width>c.width-pad*2 && cur){ lines.push(cur); cur=item; } else cur=t; }
+  if(cur) lines.push(cur);
+  const head=58+lines.length*22+10;
+  c.height=head+H+foot+pad;
+  x.fillStyle='#f4f7f7'; x.fillRect(0,0,c.width,c.height);
+  x.fillStyle='#16282c'; x.font='700 26px '+font; x.textBaseline='middle'; x.fillText('微笑设计模拟', pad, 34);
+  x.fillStyle='#5c7075'; x.font='15px '+font; lines.forEach((l,i)=>x.fillText(l, pad, 66+i*22));
+  [[S.photo,'治疗前'],[S.sim,'模拟效果']].forEach(([img,lb],i)=>{ const X=pad+i*(PW+pad); x.drawImage(img,x0,y0,cw,ch,X,head,PW,H); x.fillStyle='rgba(255,255,255,.92)'; roundRect(x,X+14,head+14,90,34,17); x.fill(); x.fillStyle='#16282c'; x.font='600 17px '+font; x.fillText(lb,X+30,head+32); });
+  // 水印
+  const wm='模拟效果，仅供沟通参考'; x.font='600 20px '+font; const ww=x.measureText(wm).width;
+  x.fillStyle='rgba(255,255,255,.88)'; roundRect(x,c.width-pad-ww-34,head+H-54,ww+24,38,10); x.fill(); x.fillStyle='#b43c35'; x.fillText(wm,c.width-pad-ww-22,head+H-34);
+  x.fillStyle='#5c7075'; x.font='14px '+font; x.textAlign='center'; x.fillText('模拟效果仅供医患沟通参考，不代表实际治疗结果，不得用于宣传', c.width/2, head+H+pad+foot/2-6);
+  c.toBlob(b=>{ const url=URL.createObjectURL(b); const a=document.createElement('a'); a.href=url; a.download='smile-design-'+new Date().toISOString().slice(0,10)+'.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); hint('已导出 PNG'); },'image/png');
+}
+$('bExport').onclick=exportPNG; $('bExport2').onclick=exportPNG;
+
+/* ================= 循环 ================= */
+function redraw(){ S.photoDirty=true; if(S.view==='photo'||S.aligning) drawPhoto(); }
+window.addEventListener('resize', ()=>{ if(S.ready) drawPhoto(); });
+function loop(now){
+  requestAnimationFrame(loop);
+  if(!S.ready) return;
+  if(S.view==='3d' || S.aligning){ if(anim3) anim3(now); else ctl.update(); render3D(); }
+}
+requestAnimationFrame(loop);
+drawPhotoInit();
+function drawPhotoInit(){ const {w,h}=stageSize(pcv); pcv.width=w; pcv.height=h; }
+Object.assign(window.SmileDesign, { finishAlign, startAlign, rebuildDesign, redraw, setView, setCompare, setPatient, exportPNG, zoomPreset, toW, toPx });
+</script>
+</body>
+</html>
