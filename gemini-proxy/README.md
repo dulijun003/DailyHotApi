@@ -4,6 +4,10 @@
 
 > ⚠️ 这是对 Gemini 网页版的逆向调用，不是官方 API，违反 Google 服务条款，存在封号风险。建议用不重要的账号，请求频率保持在正常人工使用水平。
 
+## 一键脚本（macOS / Linux）
+
+装好并打开 Docker、取好 Cookie（第 2 步）后，运行 `bash setup.sh`，按提示粘贴 Cookie 即可自动完成第 3～5 步（自动检测代理、生成 API Key、启动并测试）。
+
 ## 1. 准备
 
 - 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/)（Windows / macOS）或 Docker Engine（Linux）
