@@ -1,0 +1,25 @@
+# Gemini-FastAPI：把 Gemini 网页版（Pro 订阅）转成 OpenAI 兼容接口
+# 上游项目：https://github.com/Nativu5/Gemini-FastAPI
+services:
+  gemini-fastapi:
+    image: ghcr.io/nativu5/gemini-fastapi:latest
+    container_name: gemini-fastapi
+    restart: unless-stopped
+    # 只绑定本机，局域网/公网访问不到；如需给其他设备用，改成 "8000:8000" 并务必设置 API_KEY
+    ports:
+      - "127.0.0.1:${PORT:-8000}:8000"
+    volumes:
+      - ./data:/app/data   # 会话记录、生成的图片
+      - ./cache:/app/cache # 自动刷新后的 Cookie 缓存
+    environment:
+      CONFIG_SERVER__API_KEY: ${API_KEY}
+      CONFIG_GEMINI__CLIENTS__0__ID: account-1
+      CONFIG_GEMINI__CLIENTS__0__SECURE_1PSID: ${ACCOUNT1_SECURE_1PSID}
+      CONFIG_GEMINI__CLIENTS__0__SECURE_1PSIDTS: ${ACCOUNT1_SECURE_1PSIDTS}
+      CONFIG_GEMINI__CLIENTS__0__PROXY: ${ACCOUNT1_PROXY:-}
+      # temporary：不写入网页版聊天记录
+      CONFIG_GEMINI__CHAT_MODE: ${CHAT_MODE:-temporary}
+      CONFIG_GEMINI__AUTO_REFRESH: "true"
+      CONFIG_LOGGING__LEVEL: ${LOG_LEVEL:-INFO}
+      GEMINI_COOKIE_PATH: /app/cache
+      TZ: Asia/Shanghai
