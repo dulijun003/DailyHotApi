@@ -1,0 +1,1552 @@
+{
+  "name": "深度文章写作系统 v2（研究 + 成稿 + 自审 + 配图）",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "深度文章写作系统",
+        "formDescription": "输入主题和要求，系统会：（可选）拆解选题 → 一轮澄清 → 生成研究任务书 → 联网深度研究 → 成稿 → 自审修订 → 配图方案。全自动模式通常需要 10–40 分钟，请保持本页面打开；也可以稍后到 n8n 的 Executions 里查看结果。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "研究主题或领域",
+              "fieldType": "textarea",
+              "requiredField": true,
+              "placeholder": "例如：AI Agent 会取代 n8n 这类工作流工具吗？ / 或只填领域：AI Agent"
+            },
+            {
+              "fieldLabel": "补充说明",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "可选：已有观点、必须包含的案例/材料、参考文风、排除的内容……"
+            },
+            {
+              "fieldLabel": "选题模式",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "主题已明确"
+                  },
+                  {
+                    "option": "只有领域，帮我拆选题"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "当前水平",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "小白（完全陌生）"
+                  },
+                  {
+                    "option": "入门（理论储备）"
+                  },
+                  {
+                    "option": "初级实操者（有限经验）"
+                  },
+                  {
+                    "option": "资深应用者（丰富经验）"
+                  },
+                  {
+                    "option": "领域权威（专家级）"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "目标读者",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "行业从业者"
+                  },
+                  {
+                    "option": "聪明的外行"
+                  },
+                  {
+                    "option": "管理决策者"
+                  },
+                  {
+                    "option": "学生与新手"
+                  },
+                  {
+                    "option": "投资人"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "写作风格",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "商业分析（数据驱动、结论先行）"
+                  },
+                  {
+                    "option": "科普通俗（类比、故事化）"
+                  },
+                  {
+                    "option": "学术严谨（定义准确、论证完整）"
+                  },
+                  {
+                    "option": "教程实操（步骤清晰、可照做）"
+                  },
+                  {
+                    "option": "犀利评论（观点鲜明）"
+                  },
+                  {
+                    "option": "故事叙事（特稿风格）"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "文章篇幅",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "3000 字"
+                  },
+                  {
+                    "option": "5000 字"
+                  },
+                  {
+                    "option": "8000 字"
+                  },
+                  {
+                    "option": "12000 字"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "文章语言",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "简体中文"
+                  },
+                  {
+                    "option": "繁体中文"
+                  },
+                  {
+                    "option": "English"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "需求澄清",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "一轮澄清（推荐）"
+                  },
+                  {
+                    "option": "跳过澄清"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "研究模式",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "全自动（研究 + 成稿）"
+                  },
+                  {
+                    "option": "只生成研究提示词"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "大模型",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "gemini-3.8-flash"
+                  },
+                  {
+                    "option": "gemini-3.5-flash-lite"
+                  },
+                  {
+                    "option": "gemini-3.1-pro-preview"
+                  },
+                  {
+                    "option": "gemini-2.5-pro"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "开始",
+          "path": "deep-article"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -2200,
+        400
+      ],
+      "name": "启动",
+      "webhookId": "4371da37-6d8e-4878-98c9-ff9a8598b2f0",
+      "id": "4dbc44c4-db64-4b65-9229-81280ffd5aab"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dc526ac6-d84e-4e93-855d-f703b3ac2f6a",
+              "name": "深度研究模型",
+              "value": "o4-mini-deep-research",
+              "type": "string"
+            },
+            {
+              "id": "2311bfdb-e014-476e-9a53-6643385c6eec",
+              "name": "最大轮询次数",
+              "value": "45",
+              "type": "number"
+            },
+            {
+              "id": "3fe85802-cac3-4cf4-ab97-770c4d1cf352",
+              "name": "轮询间隔分钟",
+              "value": "1",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1980,
+        400
+      ],
+      "name": "配置",
+      "id": "b977204a-e298-4e7b-bfee-41c4474a750d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "36c73729-61c2-4f45-84e8-008e0152ce6c",
+              "leftValue": "={{ $('启动').first().json['选题模式'] }}",
+              "rightValue": "只有领域，帮我拆选题",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1760,
+        400
+      ],
+      "name": "需要拆选题?",
+      "id": "9315999b-63a7-4852-b4d5-a638b80110e0"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=领域：{{ $('启动').first().json['研究主题或领域'] }}\n当前水平：{{ $('启动').first().json['当前水平'] }}\n目标读者：{{ $('启动').first().json['目标读者'] }}\n补充说明：{{ $('启动').first().json['补充说明'] || '无' }}\n今天日期：{{ $now.toFormat('yyyy-MM-dd') }}",
+        "options": {
+          "systemMessage": "=你是认知科学家兼资深内容主编。任务：为用户给出的领域生成「四层认知框架 40 问」，并从中推荐最值得写成深度文章的选题。\n\n四层（每层 10 题，编号 1–40）：\n1. 基础层（是什么？解构与定义）：根本问题、核心概念及易混淆点、边界、第一性原理。\n2. 连接层（有什么？结构与分类）：流派/路线及分歧根源、产业链与玩家、历史转折、分类方式。\n3. 应用层（如何做？方法与实践）：方法论、关键取舍、常见错误、工具与路径。\n4. 前沿层（怎么用？实战与内化）：成败案例、未解争论、1–3 年趋势、个人判断框架。\n\n要求：\n- 按用户水平定起点（小白多问定义与类比；专家问被误解的定义和争议）。\n- 每个问题必须具体、可研究，禁止「X 是什么？」式百科问题。\n- 偏向有争议、有信息差、有时效、有故事的问题。\n- 最后输出「最值得写成深度文章的 5 个选题」：每个写成可直接当文章主题的一句话，并附一行推荐理由（读者价值 / 信息差 / 时效性 / 可研究性）。\n\n输出格式：只输出 HTML 片段，仅允许 <p> <strong> <ul> <ol> <li> <br> 标签，不要任何解释、不要代码块标记。所有可见文字用简体中文。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -1520,
+        180
+      ],
+      "name": "选题生成",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "086f70a9-db73-47b3-8bee-40fd2d38ef5e"
+    },
+    {
+      "parameters": {
+        "modelName": "=models/{{ $('启动').first().json['大模型'] }}",
+        "options": {
+          "maxOutputTokens": 8192,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        400
+      ],
+      "name": "模型-选题生成",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1IvEWERDkwNt9Fom",
+          "name": "Google Gemini-TK"
+        }
+      },
+      "id": "fc32d403-5646-431a-b620-d1bb9dad2f75"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "html",
+              "html": "=<div style=\"padding:16px 20px;background:#f5f7ff;border:1px solid #dfe3f8;border-radius:8px;line-height:1.7;font-size:15px;color:#1a1a1a;\">{{ ($json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}</div>"
+            },
+            {
+              "fieldLabel": "确定的研究主题",
+              "fieldType": "textarea",
+              "placeholder": "可以复制上面推荐的选题、合并几个，或自己重写一句",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "formTitle": " ",
+          "buttonLabel": "确定选题"
+        }
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        180
+      ],
+      "name": "选择选题",
+      "webhookId": "fea84f8d-f788-423e-adef-7732b73ffd4f",
+      "id": "31e14f3e-da48-4978-b022-f1cfb7ebca1a"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eaf3bbcc-c4f7-4c58-a94d-b9127f58d6f0",
+              "name": "研究主题",
+              "value": "={{ $json['确定的研究主题'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1060,
+        180
+      ],
+      "name": "主题-来自选题",
+      "id": "a175b5bf-6b21-4553-83f5-9743ddd4d732"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8a3f4701-67da-4517-bc91-c26bbefdb699",
+              "name": "研究主题",
+              "value": "={{ $('启动').first().json['研究主题或领域'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1060,
+        520
+      ],
+      "name": "主题-直接使用",
+      "id": "ba3c8663-b34c-4942-b62c-00c856cf10e0"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8c3f0f72-1c19-4dca-b73c-39f0789cbfad",
+              "name": "研究主题",
+              "value": "={{ $json['研究主题'] }}",
+              "type": "string"
+            },
+            {
+              "id": "4cc09d23-73db-47df-8473-8f08a1ef9c1c",
+              "name": "补充说明",
+              "value": "={{ $('启动').first().json['补充说明'] || '无' }}",
+              "type": "string"
+            },
+            {
+              "id": "bad20445-6866-4192-94fc-23f411ada323",
+              "name": "当前水平",
+              "value": "={{ $('启动').first().json['当前水平'] }}",
+              "type": "string"
+            },
+            {
+              "id": "30b9dd00-aa6b-42d1-8750-d3b9b605ba3b",
+              "name": "目标读者",
+              "value": "={{ $('启动').first().json['目标读者'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5004adbe-9bc2-4871-9845-cef7bd7ae876",
+              "name": "写作风格",
+              "value": "={{ $('启动').first().json['写作风格'] }}",
+              "type": "string"
+            },
+            {
+              "id": "cac89a25-54fa-4466-94e7-fac172cc5b29",
+              "name": "文章篇幅",
+              "value": "={{ $('启动').first().json['文章篇幅'] }}",
+              "type": "string"
+            },
+            {
+              "id": "61d5ca2f-d177-4d93-be58-b78d7ad68eff",
+              "name": "文章语言",
+              "value": "={{ $('启动').first().json['文章语言'] }}",
+              "type": "string"
+            },
+            {
+              "id": "4d9b1994-e323-4dce-91bc-109cb6e16a80",
+              "name": "今天日期",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -840,
+        400
+      ],
+      "name": "研究上下文",
+      "id": "63526cc2-f55d-4415-af65-c7259b74b8f6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3bdc548-3275-498e-9601-05f7ea26b660",
+              "leftValue": "={{ $('启动').first().json['需求澄清'] }}",
+              "rightValue": "一轮澄清（推荐）",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -620,
+        400
+      ],
+      "name": "需要澄清?",
+      "id": "e47ba8c5-f3de-4a86-a2c1-2b0e5fa84b55"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=研究主题：{{ $('研究上下文').first().json['研究主题'] }}\n补充说明：{{ $('研究上下文').first().json['补充说明'] }}\n作者当前水平：{{ $('研究上下文').first().json['当前水平'] }}\n目标读者：{{ $('研究上下文').first().json['目标读者'] }}\n写作风格：{{ $('研究上下文').first().json['写作风格'] }}\n文章篇幅：{{ $('研究上下文').first().json['文章篇幅'] }}\n文章语言：{{ $('研究上下文').first().json['文章语言'] }}\n今天日期：{{ $('研究上下文').first().json['今天日期'] }}",
+        "options": {
+          "systemMessage": "=你是首席研究策略师。用户要写一篇深度文章，已知信息见输入。你要用「一轮」多选题，把写好这篇文章还缺的关键信息问清楚。\n\n需要覆盖的维度（已知的不要再问）：\n① 写作目的：读者读完后应该知道/相信/去做什么\n② 核心问题：文章必须回答的问题（根据主题列出 4–5 个具体候选问题让用户多选）\n③ 立场与角度：中立综述 / 明确观点 / 反常识 / 对比评测 / 预测\n④ 范围边界：时间范围、地域、要排除的相邻话题（列出具体候选）\n⑤ 必须包含的模块：数据与市场 / 典型案例 / 原理机制 / 实操步骤 / 争议与反方 / 未来预测\n⑥ 挑战式问题（必须有 1 题）：指出「大多数文章都在讲 A，但真正有信息差的是 B」，或指出用户可能的预设与证据之间的张力，问是否以此为主线。\n\n规则：\n- 共 4–6 题，按 1、2、3 编号；每题 3–5 个选项，用 a) b) c) 标注，选项必须贴合本主题、具体，不能是万能模板。\n- 标明每题是单选还是多选，推荐项后标注（推荐）。\n- 最后一行提示：请按「1: a  2: b,c  3: d …」格式回答，也可以在后面补充任何说明。\n\n输出格式：只输出 HTML 片段，仅允许 <p> <strong> <ul> <li> <br> 标签，不要任何解释或代码块标记。语言用简体中文。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -380,
+        180
+      ],
+      "name": "澄清问题生成",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "9825ca13-b43a-4228-89a0-8cf976b521a4"
+    },
+    {
+      "parameters": {
+        "modelName": "=models/{{ $('启动').first().json['大模型'] }}",
+        "options": {
+          "maxOutputTokens": 4096,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        400
+      ],
+      "name": "模型-澄清问题生成",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1IvEWERDkwNt9Fom",
+          "name": "Google Gemini-TK"
+        }
+      },
+      "id": "7f7124e7-b432-4135-b0e3-d1079089d9bb"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "html",
+              "html": "=<div style=\"padding:16px 20px;background:#f5f7ff;border:1px solid #dfe3f8;border-radius:8px;line-height:1.7;font-size:15px;color:#1a1a1a;\">{{ ($json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}</div>"
+            },
+            {
+              "fieldLabel": "你的回答",
+              "fieldType": "textarea",
+              "placeholder": "例如：1: a  2: b,c  3: d  4: a；另外我希望……",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "formTitle": " ",
+          "buttonLabel": "提交回答"
+        }
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        180
+      ],
+      "name": "回答澄清问题",
+      "webhookId": "226ae2d5-2489-4f21-aa0e-5b5e17da4028",
+      "id": "b2f4af4c-7508-48a7-ada0-f46a79dea691"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d343e7ea-8512-4571-a476-e6f70b8765ac",
+              "name": "澄清记录",
+              "value": "=【澄清问题】\n{{ ($('澄清问题生成').first().json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim().replace(/<[^>]+>/g, '\\n').replace(/\\n{2,}/g, '\\n').trim() }}\n\n【用户回答】\n{{ $json['你的回答'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        180
+      ],
+      "name": "澄清-已完成",
+      "id": "266c317f-8c57-4e01-bd01-9a09374e61ed"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "becefb88-dcef-4ce7-9c9e-b39554a12d5d",
+              "name": "澄清记录",
+              "value": "用户跳过了澄清环节。请根据已知信息做出合理假设（写作目的、核心问题、范围），并在任务书中明确写出这些假设。",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        520
+      ],
+      "name": "澄清-已跳过",
+      "id": "b9364ce4-97d4-4ac9-9763-69413e56245e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=研究主题：{{ $('研究上下文').first().json['研究主题'] }}\n补充说明：{{ $('研究上下文').first().json['补充说明'] }}\n作者当前水平：{{ $('研究上下文').first().json['当前水平'] }}\n目标读者：{{ $('研究上下文').first().json['目标读者'] }}\n写作风格：{{ $('研究上下文').first().json['写作风格'] }}\n文章篇幅：{{ $('研究上下文').first().json['文章篇幅'] }}\n文章语言：{{ $('研究上下文').first().json['文章语言'] }}\n今天日期：{{ $('研究上下文').first().json['今天日期'] }}\n\n需求澄清记录：\n{{ $json['澄清记录'] }}",
+        "options": {
+          "systemMessage": "=你是元提示架构师。把用户的写作需求转化为一份交给「联网深度研究模型」（如 o4-mini-deep-research）执行的研究任务书。研究模型会据此搜索网络并产出一份带来源的研究报告，之后再由写作者改写成文章。\n\n任务书必须包含以下小节（用中文小标题，纯文本）：\n1. 研究主题与一句话命题：这次研究最终要回答的那个问题。\n2. 背景与目的：为什么研究、成果给谁用、读者读完应获得什么。\n3. 目标读者：是谁、已有认知水平。\n4. 核心研究问题：3–7 个，按优先级排列，每个都具体可检验。\n5. 研究视角：至少 5 个（例如历史演进、机制原理、市场商业、用户与社会影响、政策监管、国际比较、未来趋势），其中必须包含「反方观点、批评与失败案例」。\n6. 必须覆盖的内容 与 明确排除的内容。\n7. 范围：时间范围（默认以今天日期为基准，优先近 2 年资料）、地域范围。\n8. 来源与核查要求：优先一手来源（官方统计、法规、论文、财报、官方文档）；中英文资料都要检索；关键数字至少两个独立来源交叉验证；所有数据注明发布时间和统计口径；来源冲突时列出分歧；查不到就明说，严禁编造数据、引语和链接。\n9. 报告输出要求：用「{{ $('研究上下文').first().json['文章语言'] }}」撰写；结构为 执行摘要 → 按核心问题分节的详细发现 → 反方与不确定性 → 关键洞见（至少 5 条读者在别处不易看到的发现）→ 来源列表；正文中每个具体事实后用 [编号] 标注来源，来源列表包含标题、机构、日期、URL。报告详尽程度应足以支撑一篇 {{ $('研究上下文').first().json['文章篇幅'] }} 的深度文章。\n\n规则：\n- 吸收澄清记录里用户的每一个选择；用户跳过澄清时，写出你的合理假设。\n- 任务书总长度 800–1500 字。\n- 只输出任务书正文本身：不要 HTML、不要 Markdown 代码块、不要任何前言或解释。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        400
+      ],
+      "name": "研究任务书生成",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "5b7765bc-e8d9-40a2-a0ff-9348a6161423"
+    },
+    {
+      "parameters": {
+        "modelName": "=models/{{ $('启动').first().json['大模型'] }}",
+        "options": {
+          "maxOutputTokens": 4096,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        620
+      ],
+      "name": "模型-研究任务书生成",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1IvEWERDkwNt9Fom",
+          "name": "Google Gemini-TK"
+        }
+      },
+      "id": "63f34874-1f86-41d6-abf3-2d18ea97e5be"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a435558-5b26-46b9-8cce-4aed238429a1",
+              "name": "研究提示词",
+              "value": "={{ ($json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        400
+      ],
+      "name": "任务书",
+      "id": "6be722a1-b8b5-4ac7-8906-065ee483186d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "43636813-333d-4200-be8b-a55764788609",
+              "leftValue": "={{ $('启动').first().json['研究模式'] }}",
+              "rightValue": "只生成研究提示词",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        780,
+        400
+      ],
+      "name": "只要提示词?",
+      "id": "01f5f6ab-43cd-4159-be80-c553bd32910b"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "=<p><strong>研究任务书已生成</strong>，可复制到 ChatGPT / Gemini / Claude 的深度研究功能中使用：</p><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($json['研究提示词'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre>"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        180
+      ],
+      "name": "返回研究提示词",
+      "webhookId": "1d3a21d7-fc4f-4142-b74d-bb337d4d8a89",
+      "id": "a5aedc13-0413-4434-86a2-715b4296ebd8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.302.ai/v1/responses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "async",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $('配置').first().json['深度研究模型'], input: [{ role: 'user', content: $json['研究提示词'] }], tools: [{ type: 'web_search_preview' }] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        520
+      ],
+      "name": "提交深度研究",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "2dd063ec-2389-41ec-a792-9926221c195d"
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('配置').first().json['轮询间隔分钟'] }}",
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        520
+      ],
+      "name": "等待",
+      "webhookId": "b4f90536-ac36-421e-9173-c01113f688a5",
+      "id": "8e261326-9507-4359-bc8c-e20f44771390"
+    },
+    {
+      "parameters": {
+        "url": "https://api.302.ai/v1/async_result",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "task_id",
+              "value": "={{ $('提交深度研究').first().json.task_id ?? $('提交深度研究').first().json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        520
+      ],
+      "name": "查询研究结果",
+      "onError": "continueRegularOutput",
+      "id": "248cddf3-8ac0-4450-96f9-68c8352cc58e"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析 302.ai 异步结果，兼容多种返回结构。\n// 输出：状态 = done / pending / failed / timeout\nconst MAX = Number($('配置').first().json['最大轮询次数']) || 45;\nconst attempt = $runIndex + 1;\n\nconst res = $input.first().json ?? {};\nconst data = (res.data && typeof res.data === 'object') ? res.data : res;\nconst status = String(data.status ?? res.status ?? '').toLowerCase();\nconst outputs = Array.isArray(data.output) ? data.output : [];\n\n// 取最后一条 assistant 消息的正文，并收集引用链接\nconst messages = outputs.filter(o => o && o.type === 'message' && (o.role ?? 'assistant') === 'assistant');\nconst last = messages[messages.length - 1];\nlet report = '';\nconst citations = new Map();\nfor (const c of (last?.content ?? [])) {\n  if (typeof c === 'string') { report += c; continue; }\n  if (typeof c?.text === 'string') report += c.text;\n  for (const a of (c?.annotations ?? [])) {\n    if (a?.url && !citations.has(a.url)) citations.set(a.url, a.title || a.url);\n  }\n}\nreport = report.trim();\nconst searches = outputs.filter(o => o?.type === 'web_search_call').length;\n\nconst FAILED = ['failed', 'error', 'cancelled', 'canceled', 'expired'];\nlet state;\nif (report.length > 200 && !['queued', 'in_progress', 'pending', 'running'].includes(status)) state = 'done';\nelse if (FAILED.includes(status)) state = 'failed';\nelse if (['completed', 'succeeded', 'success'].includes(status)) state = report ? 'done' : 'failed';\nelse if (attempt >= MAX) state = 'timeout';\nelse state = 'pending';\n\nconst sources = [...citations].map(([url, title], i) => `[${i + 1}] ${title} - ${url}`).join('\\n');\n\nreturn [{\n  json: {\n    状态: state,\n    原始状态: status || '(无 status 字段)',\n    轮询次数: attempt,\n    搜索次数: searches,\n    研究报告: report,\n    引用来源: sources,\n    错误信息: state === 'failed' || state === 'timeout'\n      ? (res.error?.message ?? JSON.stringify(data.error ?? data.incomplete_details ?? res, null, 2)).slice(0, 3000)\n      : '',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        520
+      ],
+      "name": "解析研究结果",
+      "id": "c5e8f1e9-b1cc-4f0a-950f-2d7b792d6bcb"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "432ea403-0ce5-48e6-89b0-4456274f1d24",
+              "leftValue": "={{ $json['状态'] }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1900,
+        520
+      ],
+      "name": "研究完成?",
+      "id": "cdbdf393-0f18-493c-8077-cf5750019805"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "94c0aa0c-82df-466c-902f-b54a76d232d2",
+              "leftValue": "={{ $json['状态'] }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2120,
+        740
+      ],
+      "name": "继续等待?",
+      "id": "e19d2073-2898-4738-b5b8-5f6e1a14fa36"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "=<p><strong>深度研究没有成功完成</strong>（状态：{{ $json['状态'] }}，原始状态：{{ $json['原始状态'] }}，已轮询 {{ $json['轮询次数'] }} 次）。</p><p>常见原因：302.ai 余额不足 / API Key 无效 / 模型名不可用 / 任务超时。超时可以调大「配置」节点里的「最大轮询次数」。</p><p>研究任务书如下，可以先手动拿去其他深度研究工具使用：</p><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($('任务书').first().json['研究提示词'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre><p>接口返回：</p><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($json['错误信息'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre>"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        820
+      ],
+      "name": "研究失败",
+      "webhookId": "3897bbbf-40c5-47aa-9955-80ba2cb082ef",
+      "id": "4584eef7-8f90-465f-be65-84a5f75d61f2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5356835f-7108-4d88-aeca-a8fc49ff1e03",
+              "name": "研究任务书",
+              "value": "={{ $('任务书').first().json['研究提示词'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {},
+        "includeOtherFields": true
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2120,
+        300
+      ],
+      "name": "研究结果",
+      "id": "573ddfe9-ce1b-4c96-b5fe-2ac137a71fe1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=研究主题：{{ $('研究上下文').first().json['研究主题'] }}\n补充说明：{{ $('研究上下文').first().json['补充说明'] }}\n作者当前水平：{{ $('研究上下文').first().json['当前水平'] }}\n目标读者：{{ $('研究上下文').first().json['目标读者'] }}\n写作风格：{{ $('研究上下文').first().json['写作风格'] }}\n文章篇幅：{{ $('研究上下文').first().json['文章篇幅'] }}\n文章语言：{{ $('研究上下文').first().json['文章语言'] }}\n今天日期：{{ $('研究上下文').first().json['今天日期'] }}\n\n研究任务书（含用户需求）：\n{{ $('研究结果').first().json['研究任务书'] }}\n\n========== 深度研究报告 ==========\n{{ $json['研究报告'] }}\n\n========== 研究引用链接 ==========\n{{ $json['引用来源'] || '（见报告正文中的来源列表）' }}",
+        "options": {
+          "systemMessage": "=你是一位顶尖的深度内容作者。请把输入中的「深度研究报告」改写为一篇可直接发布的深度文章。\n\n【事实纪律】\n- 只能使用研究报告中出现的事实、数据、案例和引语，严禁新增报告里没有的具体数字、日期、人名或引语。\n- 每个具体事实后用脚注 [^n] 标注来源，文末「## 参考资料」按 [^n]: 标题. 机构, 日期. URL 列出。\n- 报告中标注为不确定、单一来源、存在分歧的信息，正文要保留这种限定（如「据报道」「各方估计在 A–B 之间」）。\n\n【结构】\n- 第一行是 # 标题（≤30 字，信息量或观点鲜明，不做标题党），第二行用 > 引用块写一句话摘要。\n- 先在心里确定一句话核心判断，全文围绕它展开；节与节之间要有逻辑递进（如 现象→原因→机制→反方与边界→判断与建议），不能是平行罗列。\n- 开头 100 字必须有钩子（反常识事实 / 具体场景 / 尖锐问题 / 关键数据），禁止以背景介绍或下定义开头。\n- 用 ## 小标题分节（每 600–1200 字一节），小标题本身要传递信息。\n- 必须有一节或一段专门回应反方观点、讨论边界条件。\n- 结尾要有落点：明确的判断 + 2–3 条可操作建议，或一个值得思考的开放问题。\n- 在合适位置插入 3 个配图标记：<!-- 图1：画面说明 --> <!-- 图2：…… --> <!-- 图3：…… -->。\n\n【风格】\n- 按用户选择的写作风格与目标读者调整术语密度和语气。\n- 具体胜过抽象，判断胜过罗列：每组信息之后都要回答「所以呢」。分析与观点占全文 40% 以上。\n- 一段一意，手机阅读一段 2–5 行；短句为主。\n- 禁用表达（出现即视为不合格）：在当今……时代、随着……的发展、在……浪潮下、总而言之、综上所述、总的来说、让我们一起、未来已来、未来可期、值得注意的是、需要指出的是、不可否认、毋庸置疑、显而易见、赋能、抓手、闭环、底层逻辑、顶层设计、革命性的、颠覆性的、前所未有、至关重要、不可或缺、举足轻重、深入探讨、全面解析、一文读懂；以及每段都用「不仅……更……」排比、每节结尾复述总结、过度加粗、emoji 装饰、结尾空洞升华。\n- 中文排版：中英文之间、中文与数字之间加空格，全角标点，专有名词保持官方大小写。\n\n【规格】\n- 正文篇幅为用户要求的字数（±10%，不含参考资料），语言为用户要求的语言。\n- 只输出 Markdown 文章本身，不要任何前言、说明或代码块标记。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        2340,
+        300
+      ],
+      "name": "成稿",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "301fdc16-e8c1-42c1-ac25-ba69f666cb0c"
+    },
+    {
+      "parameters": {
+        "modelName": "=models/{{ $('启动').first().json['大模型'] }}",
+        "options": {
+          "maxOutputTokens": 32768,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2340,
+        520
+      ],
+      "name": "模型-成稿",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1IvEWERDkwNt9Fom",
+          "name": "Google Gemini-TK"
+        }
+      },
+      "id": "d391f69a-f255-4b77-b905-947b0bfa4d94"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=研究主题：{{ $('研究上下文').first().json['研究主题'] }}\n补充说明：{{ $('研究上下文').first().json['补充说明'] }}\n作者当前水平：{{ $('研究上下文').first().json['当前水平'] }}\n目标读者：{{ $('研究上下文').first().json['目标读者'] }}\n写作风格：{{ $('研究上下文').first().json['写作风格'] }}\n文章篇幅：{{ $('研究上下文').first().json['文章篇幅'] }}\n文章语言：{{ $('研究上下文').first().json['文章语言'] }}\n今天日期：{{ $('研究上下文').first().json['今天日期'] }}\n\n========== 研究报告（用于事实核对） ==========\n{{ $('研究结果').first().json['研究报告'] }}\n\n========== 待审文章 ==========\n{{ ($json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}",
+        "options": {
+          "systemMessage": "=你是一位挑剔的主编，假设这篇文章明天会被该领域最懂行、最不客气的读者逐字挑错。请对照研究报告审校并直接修订文章。\n\n检查清单：\nA 事实：每个数字、日期、名称都能在研究报告中找到；不能找到的删除或改为定性表述；脚注编号与参考资料对应；预测和估计没有被写成事实。\nB 逻辑：核心判断在开头或第一节就清楚；论据真正支撑论点；没有以偏概全；有反方回应；结论不超出证据。\nC 价值：至少 3 处读者在别处不易看到的洞见；不是资料堆砌。\nD 表达：禁用表达（出现即视为不合格）：在当今……时代、随着……的发展、在……浪潮下、总而言之、综上所述、总的来说、让我们一起、未来已来、未来可期、值得注意的是、需要指出的是、不可否认、毋庸置疑、显而易见、赋能、抓手、闭环、底层逻辑、顶层设计、革命性的、颠覆性的、前所未有、至关重要、不可或缺、举足轻重、深入探讨、全面解析、一文读懂；以及每段都用「不仅……更……」排比、每节结尾复述总结、过度加粗、emoji 装饰、结尾空洞升华。 删除重复论述；开头有钩子；结尾有落点；中文排版规范。\nE 规格：篇幅符合要求（±10%）；语言、风格符合要求；3 个配图标记保留。\n\n输出：只输出修订后的完整 Markdown 文章（不要只给修改意见、不要代码块标记），在文章最末尾附一个 HTML 注释 <!-- 修订说明：用 3–8 条列出你改了什么 -->。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        2560,
+        300
+      ],
+      "name": "自审修订",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "e9fd8bf5-f7db-454c-950a-597ec771852c"
+    },
+    {
+      "parameters": {
+        "modelName": "=models/{{ $('启动').first().json['大模型'] }}",
+        "options": {
+          "maxOutputTokens": 32768,
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        520
+      ],
+      "name": "模型-自审修订",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1IvEWERDkwNt9Fom",
+          "name": "Google Gemini-TK"
+        }
+      },
+      "id": "b1db115d-b43a-4303-b355-6408087b35ee"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=文章：\n{{ ($json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}",
+        "options": {
+          "systemMessage": "=你是资深视觉编辑。根据文章内容和其中的配图标记（<!-- 图N：…… -->），产出配图方案（Markdown）。\n\n内容：\n1. 统一的风格前缀（中文 + 英文各一行），根据文章调性选择风格（科技分析：等距 3D/线框/深色霓虹点缀；商业财经：极简扁平编辑插画；人文社会：纸张质感/水彩/版画；科普教育：明亮扁平信息图风）。\n2. 封面图（2.35:1）+ 图1–图3：每张写「位置、画面描述、视觉隐喻、中文提示词、英文提示词」。提示词 = 风格前缀 + 主体 + 场景/隐喻 + 构图 + 光线色调 + 排除项（no text, no watermark, no logo）。用视觉隐喻表达抽象概念，画面中不放文字，不出现真实人物肖像和品牌标志。\n3. 如文章中有适合可视化的数据：给出 1–2 个数据图建议（图表类型、数据表、结论式标题、数据来源）。\n\n只输出 Markdown，不要代码块包裹，不要前言。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        2780,
+        300
+      ],
+      "name": "配图方案",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "id": "01677db3-4b22-4121-9afc-43f6165072eb"
+    },
+    {
+      "parameters": {
+        "modelName": "=models/{{ $('启动').first().json['大模型'] }}",
+        "options": {
+          "maxOutputTokens": 4096,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2780,
+        520
+      ],
+      "name": "模型-配图方案",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1IvEWERDkwNt9Fom",
+          "name": "Google Gemini-TK"
+        }
+      },
+      "id": "d46b66f3-ed25-497e-9575-feca2e862113"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e5b918ae-752a-4afc-8da7-e3def3a1fa6d",
+              "name": "最终文章",
+              "value": "={{ ($('自审修订').first().json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "58a32791-5436-427d-af71-6bbc53b78829",
+              "name": "配图方案",
+              "value": "={{ ($json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "4b9558cd-3833-442c-92c9-7c4fcce8b63e",
+              "name": "研究报告",
+              "value": "={{ $('研究结果').first().json['研究报告'] }}",
+              "type": "string"
+            },
+            {
+              "id": "9f2e4955-a234-4dd9-adb3-3af84899b8bb",
+              "name": "研究任务书",
+              "value": "={{ $('任务书').first().json['研究提示词'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d18a91ef-6400-4063-aa70-eed4909e7a7e",
+              "name": "统计",
+              "value": "=轮询 {{ $('研究结果').first().json['轮询次数'] }} 次 ｜ 搜索 {{ $('研究结果').first().json['搜索次数'] }} 次 ｜ 正文约 {{ ($('自审修订').first().json.output ?? '').replace(/^\\s*```[a-zA-Z]*\\s*\\n?([\\s\\S]*?)\\n?\\s*```\\s*$/, '$1').trim().replace(/\\s/g, '').length }} 字符",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3000,
+        300
+      ],
+      "name": "汇总结果",
+      "id": "9796cc49-b6c9-4ef4-a60c-d800d85d0561"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "=<p><strong>✅ 文章已完成</strong>　{{ $json['统计'] }}</p><p>下面依次是：最终文章（Markdown）→ 配图方案 → 原始研究报告 → 研究任务书。全选复制即可；也可以到 n8n 的 Executions →「汇总结果」节点里复制。</p><h3>一、最终文章</h3><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($json['最终文章'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre><h3>二、配图方案</h3><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($json['配图方案'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre><h3>三、原始研究报告</h3><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($json['研究报告'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre><h3>四、研究任务书</h3><pre style=\"white-space:pre-wrap;word-break:break-word;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;font-size:15px;line-height:1.8;text-align:left;\">{{ ($json['研究任务书'] ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</pre>"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        300
+      ],
+      "name": "返回文章",
+      "webhookId": "449a3013-1bc9-4fd6-99eb-349a31687abd",
+      "id": "27540fd8-b7a4-4107-9138-f701d15bc2b4"
+    },
+    {
+      "parameters": {
+        "content": "## 深度文章写作系统 v2 · 使用前必看\n\n1. **Gemini 凭证**：所有「模型-xxx」节点使用 Google Gemini 凭证。\n2. **302.ai 凭证**：「提交深度研究」「查询研究结果」两个节点 → Authentication 选 Header Auth，新建凭证：\n   - Name：`Authorization`\n   - Value：`Bearer sk-你的新key`\n3. **配置节点**：可改深度研究模型、最大轮询次数、轮询间隔。\n4. 点「Test workflow」打开表单测试；正式使用需激活工作流，表单地址为 `/form/deep-article`。\n\n⚠️ 旧工作流里的 302 Key 已经明文泄露，请作废后再新建。",
+        "height": 380,
+        "width": 520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2260,
+        -60
+      ],
+      "name": "使用说明",
+      "id": "92115e39-27f4-44dc-bb76-5d4fa6f0d591"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "启动": {
+      "main": [
+        [
+          {
+            "node": "配置",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "配置": {
+      "main": [
+        [
+          {
+            "node": "需要拆选题?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模型-选题生成": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "选题生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "需要拆选题?": {
+      "main": [
+        [
+          {
+            "node": "选题生成",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "主题-直接使用",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "选题生成": {
+      "main": [
+        [
+          {
+            "node": "选择选题",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "选择选题": {
+      "main": [
+        [
+          {
+            "node": "主题-来自选题",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "主题-来自选题": {
+      "main": [
+        [
+          {
+            "node": "研究上下文",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "主题-直接使用": {
+      "main": [
+        [
+          {
+            "node": "研究上下文",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "研究上下文": {
+      "main": [
+        [
+          {
+            "node": "需要澄清?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模型-澄清问题生成": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "澄清问题生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "需要澄清?": {
+      "main": [
+        [
+          {
+            "node": "澄清问题生成",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "澄清-已跳过",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "澄清问题生成": {
+      "main": [
+        [
+          {
+            "node": "回答澄清问题",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "回答澄清问题": {
+      "main": [
+        [
+          {
+            "node": "澄清-已完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模型-研究任务书生成": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "研究任务书生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "澄清-已完成": {
+      "main": [
+        [
+          {
+            "node": "研究任务书生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "澄清-已跳过": {
+      "main": [
+        [
+          {
+            "node": "研究任务书生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "研究任务书生成": {
+      "main": [
+        [
+          {
+            "node": "任务书",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "任务书": {
+      "main": [
+        [
+          {
+            "node": "只要提示词?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "只要提示词?": {
+      "main": [
+        [
+          {
+            "node": "返回研究提示词",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "提交深度研究",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提交深度研究": {
+      "main": [
+        [
+          {
+            "node": "等待",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待": {
+      "main": [
+        [
+          {
+            "node": "查询研究结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询研究结果": {
+      "main": [
+        [
+          {
+            "node": "解析研究结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析研究结果": {
+      "main": [
+        [
+          {
+            "node": "研究完成?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "研究完成?": {
+      "main": [
+        [
+          {
+            "node": "研究结果",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "继续等待?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "继续等待?": {
+      "main": [
+        [
+          {
+            "node": "等待",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "研究失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模型-成稿": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "成稿",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "研究结果": {
+      "main": [
+        [
+          {
+            "node": "成稿",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模型-自审修订": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "自审修订",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "成稿": {
+      "main": [
+        [
+          {
+            "node": "自审修订",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模型-配图方案": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "配图方案",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "自审修订": {
+      "main": [
+        [
+          {
+            "node": "配图方案",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "配图方案": {
+      "main": [
+        [
+          {
+            "node": "汇总结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "汇总结果": {
+      "main": [
+        [
+          {
+            "node": "返回文章",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
