@@ -3,7 +3,7 @@
 Everything is generated from code, so there are no licensing issues and the
 output is identical on every machine. Files are cached under reelkit/assets/.
 
-    python -m reelkit.audio music 52 out.wav     # 52 s music bed
+    python -m reelkit.audio music 52 out.wav [cues.json]   # 52 s music bed
     python -m reelkit.audio sfx                  # (re)build all sound effects
 """
 
@@ -217,109 +217,220 @@ def sfx_path(name):
 
 
 # ---- Background music ------------------------------------------------------
+#
+# "Curious explainer" bed: pizzicato strings + glockenspiel + soft pad, light
+# shaker and finger snaps, no heavy drums. Chords follow the "royal road"
+# progression (IVmaj7 - V6 - iii7 - vi7 in C), bright but thoughtful.
+#
+# The arrangement follows the video: scenes drop cues (ReelScene.music*),
+# saved to media/cues/<Scene>.json:
+#   section intro   - pad + bells only
+#   section main    - everything
+#   section tension - pad + muted pizz + heartbeat pulse (bass/percussion out)
+#   section outro   - everything, bells brighter
+#   hit             - reverse swell into a soft boom + bell chord, on the cue
+#   final           - loops stop, a C major chord rings to the end
 
-# Calm, curious lo-fi loop in A minor: Am9 - Fmaj7 - C(add9) - G6, 84 BPM.
-PROGRESSION = [
-    (57, [0, 3, 7, 10, 14]),   # Am9
-    (53, [0, 4, 7, 11, 14]),   # Fmaj9
-    (48, [0, 4, 7, 14, 16]),   # Cadd9
-    (55, [0, 4, 7, 9, 14]),    # G6/9
+BPM = 100
+PROGRESSION = [            # (bass root, chord tones as MIDI in the middle register)
+    (41, [53, 57, 60, 64]),    # Fmaj7
+    (43, [55, 59, 62, 64]),    # G6
+    (40, [52, 55, 59, 62]),    # Em7
+    (45, [57, 60, 64, 67]),    # Am7
 ]
-BPM = 84
+FINAL_CHORD = (36, [48, 55, 60, 64, 67, 74])     # Cadd9, wide voicing
+
+SECTION_GAINS = {          # layer -> gain per section
+    "intro":   dict(pad=1.0, pizz=0.0, bass=0.0, bell=0.9, shaker=0.0, snap=0.0, pulse=0.0),
+    "main":    dict(pad=0.7, pizz=1.0, bass=1.0, bell=0.5, shaker=0.8, snap=0.7, pulse=0.0),
+    "tension": dict(pad=1.0, pizz=0.55, bass=0.0, bell=0.0, shaker=0.0, snap=0.0, pulse=1.0),
+    "outro":   dict(pad=0.8, pizz=1.0, bass=1.0, bell=1.0, shaker=0.9, snap=0.8, pulse=0.0),
+}
+LAYER_LEVEL_DB = dict(pad=-25, pizz=-19, bass=-21, bell=-27, shaker=-33, snap=-31, pulse=-24)
 
 
-def _pad(root, intervals, dur):
+def pluck(midi, dur, brightness=0.5, decay=0.996):
+    """Karplus-Strong plucked string (vectorised with lfilter)."""
+    f = note_hz(midi)
+    n_delay = max(2, int(round(SR / f)))
+    n = int(dur * SR)
+    x = np.zeros(n)
+    burst = RNG.uniform(-1, 1, n_delay)
+    burst = lfilter([brightness], [1, brightness - 1], burst)   # soften the attack
+    x[:n_delay] = burst
+    a = np.zeros(n_delay + 2)
+    a[0] = 1.0
+    a[n_delay] = a[n_delay + 1] = -0.5 * decay
+    y = lfilter([1.0], a, x)
+    return y * np.clip((dur - t_axis(dur)) / 0.03, 0, 1)
+
+
+def glock(midi, dur=1.6):
+    f = note_hz(midi)
+    t = t_axis(dur)
+    x = (np.sin(2 * np.pi * f * t) * np.exp(-t / 0.7)
+         + 0.35 * np.sin(2 * np.pi * f * 2.76 * t) * np.exp(-t / 0.18)
+         + 0.12 * np.sin(2 * np.pi * f * 5.4 * t) * np.exp(-t / 0.07))
+    return x * np.clip(t / 0.002, 0, 1)
+
+
+def soft_pad(tones, dur, cutoff=1300):
     t = t_axis(dur)
     x = np.zeros_like(t)
-    for iv in intervals[:4]:
-        f = note_hz(root + 12 + iv)
-        for det in (-0.12, 0.12):                       # detuned pair = warmth
-            x += sine(f * 2 ** (det / 12), dur, phase=RNG.uniform(0, 6.28))
-    att = np.clip(t / 0.8, 0, 1)
-    rel = np.clip((dur - t) / 0.6, 0, 1)
-    return lowpass(x * att * rel, 900) * 0.07
+    for m in tones:
+        f = note_hz(m)
+        for det in (-0.08, 0.08):
+            ph = RNG.uniform(0, 6.28)
+            x += np.sin(2 * np.pi * f * 2 ** (det / 12) * t + ph)
+            x += 0.25 * np.sin(2 * np.pi * 2 * f * 2 ** (det / 12) * t + ph)
+    env = np.clip(t / 0.6, 0, 1) * np.clip((dur - t) / 0.5, 0, 1)
+    return lowpass(x * env, cutoff)
 
 
-def _pluck(midi, dur=0.6):
-    f = note_hz(midi)
-    x = sine(f, dur) + 0.35 * sine(2 * f, dur) + 0.1 * sine(3 * f, dur)
-    return lowpass(x * env_exp(dur, 0.22), 2600) * 0.09
+def shaker(dur=0.09):
+    return highpass(noise(dur), 5000) * env_exp(dur, 0.025, 0.006)
 
 
-def _bass(midi, dur):
+def snap():
+    d = 0.12
+    x = lowpass(highpass(noise(d), 1800), 6000) * env_exp(d, 0.018, 0.001)
+    return x + 0.3 * sine(1300, d) * env_exp(d, 0.01)
+
+
+def pulse(midi):
+    """Soft heartbeat-like low tone for the tension section."""
+    d = 0.5
+    return sine(note_hz(midi), d) * env_exp(d, 0.12, 0.01)
+
+
+def boom():
+    d = 2.5
+    return (sine(lambda t: 45 + 30 * np.exp(-t / 0.05), d) * env_exp(d, 0.6, 0.005)
+            + 0.3 * lowpass(noise(d), 200) * env_exp(d, 0.3))
+
+
+def reverse_swell(dur):
+    """Reverse-cymbal style swell that ends exactly at its last sample."""
     t = t_axis(dur)
-    x = sine(note_hz(midi - 12), dur) + 0.25 * sine(note_hz(midi), dur)
-    return x * np.clip(t / 0.02, 0, 1) * np.exp(-t / 0.9) * 0.16
+    x = highpass(noise(dur), 3000) * (t / dur) ** 3
+    return lowpass(x, 9000)
 
 
-def _kick():
-    d = 0.35
-    return sine(lambda t: 48 + 110 * np.exp(-t / 0.03), d) * env_exp(d, 0.11) * 0.28
+def _rms_db(x):
+    r = np.sqrt(np.mean(x ** 2)) if len(x) else 0
+    return 20 * np.log10(r) if r > 0 else -120
 
 
-def _hat(open_=False):
-    d = 0.12 if open_ else 0.04
-    return highpass(noise(d), 6000) * env_exp(d, 0.04 if open_ else 0.012) * 0.05
+def _level(x, target_db):
+    cur = _rms_db(x[np.abs(x) > 1e-6]) if np.any(np.abs(x) > 1e-6) else -120
+    return x * 10 ** ((target_db - cur) / 20) if cur > -100 else x
 
 
-def _snare():
-    d = 0.2
-    x = lowpass(highpass(noise(d), 1200), 5000) * env_exp(d, 0.05) * 0.09
-    return x + sine(190, d) * env_exp(d, 0.04) * 0.05
+def music(duration, out_path, cues=()):
+    """Render a music bed of exactly `duration` seconds that follows `cues`.
 
-
-def music(duration, out_path, intro_bars=1):
-    """Render a music bed of exactly `duration` seconds to `out_path`."""
+    cues: iterable of (time, kind, value) with kind in {"section", "hit", "final"}.
+    """
     beat = 60 / BPM
     bar = 4 * beat
-    n = int((duration + 2) * SR)
-    pads = np.zeros(n)
-    keys = np.zeros(n)
-    low = np.zeros(n)
-    drums = np.zeros(n)
+    n = int(duration * SR) + SR
+    cues = sorted(cues, key=lambda c: c[0])
+    sections = [(0.0, "main")] + [(t, v) for t, k, v in cues if k == "section"]
+    hits = [t for t, k, _ in cues if k == "hit"]
+    finals = [t for t, k, _ in cues if k == "final"]
+    t_final = finals[0] if finals else max(0.0, duration - 3.0)
 
-    # Arpeggio pattern (eighth notes) through each chord's tones.
-    arp = [0, 2, 4, 3, 1, 3, 4, 2]
-    kick_c, hat_c, hat_o, snare_c = _kick(), _hat(), _hat(True), _snare()
+    def section_at(t):
+        cur = sections[0][1]
+        for ts, name in sections:
+            # Changes take effect on the nearest bar line.
+            if round(ts / bar) * bar <= t + 1e-6:
+                cur = name
+        return cur
 
-    bars = int(np.ceil(duration / bar)) + 1
+    layers = {k: np.zeros(n) for k in LAYER_LEVEL_DB}
+    bars = int(np.ceil(t_final / bar)) + 1
+    pizz_pattern = [0, 2, 1, 3, 2, 1, 3, 2]          # chord-tone index per 8th note
     for b in range(bars):
-        root, ivs = PROGRESSION[b % len(PROGRESSION)]
         t0 = b * bar
-        place(pads, _pad(root, ivs, bar + 0.6), t0)
-        place(low, _bass(root, bar), t0)
-        place(low, _bass(root + 7, beat * 1.5), t0 + beat * 2.5)
-        for k, step in enumerate(arp):
-            jitter = RNG.normal(0, 0.006)
-            midi = root + 24 + ivs[step]
-            place(keys, _pluck(midi) * RNG.uniform(0.7, 1.0), t0 + k * beat / 2 + jitter)
-        if b >= intro_bars:                       # drums enter after the intro
-            for k in range(4):                    # kick on 1 & 3, snare on 2 & 4
-                place(drums, kick_c if k % 2 == 0 else snare_c, t0 + k * beat)
-            place(drums, kick_c * 0.6, t0 + 2.5 * beat)
-            for k in range(8):
-                swing = 0.03 if k % 2 else 0.0
-                clip = hat_o if k == 7 else hat_c
-                place(drums, clip * (1.0 if k % 2 == 0 else 0.7), t0 + k * beat / 2 + swing)
+        root, tones = PROGRESSION[b % len(PROGRESSION)]
+        place(layers["pad"], soft_pad(tones, bar + 0.5), t0)
+        for k, idx in enumerate(pizz_pattern):
+            m = tones[idx] + (12 if k in (3, 7) else 0)
+            vel = 1.0 if k % 2 == 0 else 0.7
+            place(layers["pizz"], pluck(m, 0.45, 0.45) * vel, t0 + k * beat / 2)
+        place(layers["bass"], pluck(root, 1.1, 0.3, 0.998), t0)
+        place(layers["bass"], pluck(root + 7, 0.9, 0.3, 0.998) * 0.8, t0 + 2.5 * beat)
+        place(layers["bell"], glock(tones[3] + 12), t0)
+        place(layers["bell"], glock(tones[1] + 24) * 0.6, t0 + 2.5 * beat)
+        for k in range(16):
+            vel = (1.0, 0.45, 0.7, 0.45)[k % 4]
+            place(layers["shaker"], shaker() * vel, t0 + k * beat / 4 + (0.012 if k % 2 else 0))
+        for k in (1, 3):
+            place(layers["snap"], snap(), t0 + k * beat)
+        for k in range(4):
+            place(layers["pulse"], pulse(root + 12) * (1.0 if k % 2 == 0 else 0.6), t0 + k * beat)
 
-    keys = reverb(keys, 0.35)[:n]
-    pads = reverb(pads, 0.3)[:n]
-    mix = pads + keys + low + drums
+    # Bring every layer to its reference loudness, then apply section gains.
+    for k in layers:
+        layers[k] = _level(layers[k], LAYER_LEVEL_DB[k])
+    ramp = int(0.08 * SR)
+    for k in layers:
+        g = np.zeros(n)
+        for b in range(bars):
+            i0, i1 = int(b * bar * SR), min(n, int((b + 1) * bar * SR))
+            g[i0:i1] = SECTION_GAINS[section_at(b * bar)][k]
+        g = np.convolve(g, np.ones(ramp) / ramp, mode="same")      # click-free changes
+        layers[k] *= g
 
-    # Lo-fi colour: gentle low-pass and a little vinyl noise.
-    mix = lowpass(mix, 6000) + lowpass(noise(len(mix) / SR), 3000) * 0.004
+    mix = (reverb(layers["pizz"] + layers["bell"], 0.28)[:n] + reverb(layers["pad"], 0.35)[:n]
+           + layers["bass"] + layers["shaker"] + layers["snap"] + layers["pulse"])
+
+    # Stop the loop at the final cue; the closing chord rings on.
+    i_final = int(t_final * SR)
+    cut = np.ones(n)
+    fade = int(0.12 * SR)
+    cut[i_final:i_final + fade] = np.linspace(1, 0, len(cut[i_final:i_final + fade]))
+    cut[i_final + fade:] = 0
+    mix *= cut
+    end = np.zeros(n)
+    froot, ftones = FINAL_CHORD
+    tail = duration - t_final + 0.5
+    place(end, _level(soft_pad(ftones[:4], tail, 1600), LAYER_LEVEL_DB["pad"] + 3), t_final)
+    for i, m in enumerate(ftones):
+        place(end, _level(pluck(m, 2.5, 0.5, 0.998), LAYER_LEVEL_DB["pizz"]) * 0.8,
+              t_final + i * 0.035)
+    place(end, _level(glock(ftones[-1] + 12, 3.0), LAYER_LEVEL_DB["bell"] + 4), t_final)
+    place(end, _level(pluck(froot, 3.0, 0.3, 0.999), LAYER_LEVEL_DB["bass"]), t_final)
+    mix += reverb(end, 0.35)[:n]
+
+    # Hits: reverse swell into a soft boom and a bell chord.
+    fx = np.zeros(n)
+    for th in hits + finals:
+        sw = reverse_swell(bar / 2)
+        place(fx, _level(sw, -30), th - len(sw) / SR)
+        place(fx, _level(boom(), -24), th)
+        root, tones = PROGRESSION[int(th // bar) % len(PROGRESSION)]
+        for m in tones:
+            place(fx, _level(glock(m + 12, 2.0), -33), th)
+    mix += reverb(fx, 0.3)[:n]
 
     mix = mix[: int(duration * SR)]
     t = t_axis(duration)
-    fade = np.clip(t / 1.5, 0, 1) * np.clip((duration - t) / 2.5, 0, 1)
-    mix = normalize(mix * fade, 0.8)
-    return write_wav(out_path, mix, stereo_width=0.35)
+    mix *= np.clip(t / 0.4, 0, 1) * np.clip((duration - t) / 0.4, 0, 1)
+    mix = normalize(mix, 0.85)
+    return write_wav(out_path, mix, stereo_width=0.3)
 
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "sfx"
     if cmd == "music":
-        print(music(float(sys.argv[2]), sys.argv[3]))
+        # python -m reelkit.audio music <duration> <out.wav> [cues.json]
+        cues = ()
+        if len(sys.argv) > 4:
+            import json
+            cues = [tuple(c) for c in json.loads(Path(sys.argv[4]).read_text())["cues"]]
+        print(music(float(sys.argv[2]), sys.argv[3], cues))
     else:
         for name in SFX:
             p = SFX_DIR / f"{name}.wav"

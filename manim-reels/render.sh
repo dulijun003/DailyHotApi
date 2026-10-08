@@ -5,7 +5,8 @@
 #   ./render.sh topics/monty_hall.py MontyHall preview    # fast 432x540 draft
 #   MUSIC=my_track.mp3 ./render.sh ...                     # use your own track instead
 #   MUSIC=none ./render.sh ...                             # no music (sfx only)
-#   MUSIC_VOL=0.4 ./render.sh ...                          # music level (default 0.35)
+#   MUSIC_VOL=0.4 ./render.sh ...                          # music level (default 0.45)
+#   PROGRESS=0 ./render.sh ...                             # no progress bar
 #
 # Voice-over (scenes with NARRATION) needs network access for edge-tts.
 #
@@ -22,7 +23,7 @@ MANIM=${MANIM:-manim}
 PY=${PY:-$(dirname "$(command -v "$MANIM")")/python}
 [[ -x $PY ]] || PY=python3
 MUSIC=${MUSIC:-auto}
-MUSIC_VOL=${MUSIC_VOL:-0.35}
+MUSIC_VOL=${MUSIC_VOL:-0.45}
 
 rm -f "media/subtitles/$SCENE.ass" "media/subtitles/$SCENE.srt"   # drop stale captions
 if [[ $MODE == preview ]]; then
@@ -40,19 +41,29 @@ DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$SRC")
 
 # Narrated scenes write styled subtitles; burn them in (and keep the .srt for upload).
 SUBS="media/subtitles/$SCENE.ass"
+# Burn in subtitles (if any) and a thin progress bar along the top edge.
+VDUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$SRC")
+VF="[0:v]null[v0]"
 if [[ -f $SUBS ]]; then
-  ffmpeg -y -v error -i "$SRC" -vf "ass=$SUBS" -c:v libx264 -crf 18 -preset medium \
-    -pix_fmt yuv420p -c:a copy "media/${SCENE}_subbed.mp4"
-  SRC="media/${SCENE}_subbed.mp4"
+  VF="[0:v]ass=$SUBS[v0]"
   cp "media/subtitles/$SCENE.srt" "out/$SCENE.srt"
 fi
+if [[ ${PROGRESS:-1} == 1 ]]; then
+  VF+=";color=c=0x1F6F78:s=1080x10:r=30[bar];[v0][bar]overlay=x='-W+W*t/$VDUR':y=0:shortest=1[v]"
+else
+  VF+=";[v0]null[v]"
+fi
+ffmpeg -y -v error -i "$SRC" -filter_complex "$VF" -map "[v]" -map 0:a? -c:v libx264 -crf 18 \
+  -preset medium -pix_fmt yuv420p -c:a copy "media/${SCENE}_final_v.mp4"
+SRC="media/${SCENE}_final_v.mp4"
 
 if [[ $MUSIC == none ]]; then
   cp "$SRC" "$DST"; echo "✓ $DST"; exit 0
 fi
 if [[ $MUSIC == auto ]]; then
   MUSIC="media/music_${SCENE}.wav"
-  "$PY" -m reelkit.audio music "$DUR" "$MUSIC" >/dev/null
+  # Music follows the scene's cues (sections, hits, final chord) when present.
+  "$PY" -m reelkit.audio music "$DUR" "$MUSIC" "media/cues/$SCENE.json" >/dev/null
 fi
 
 FADE_AT=$("$PY" -c "print(max(0, $DUR - 2))")
@@ -60,7 +71,7 @@ MUSIC_CHAIN="[1:a]volume=${MUSIC_VOL},afade=t=out:st=${FADE_AT}:d=2"
 if ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$SRC" | grep -q .; then
   # Scene has its own audio (voice / sfx): duck the music under it, then mix.
   FILTER="[0:a]asplit=2[key][fg];${MUSIC_CHAIN}[mraw];"
-  FILTER+="[mraw][key]sidechaincompress=threshold=0.02:ratio=6:attack=20:release=450[m];"
+  FILTER+="[mraw][key]sidechaincompress=threshold=0.03:ratio=2.5:attack=40:release=900[m];"
   FILTER+="[fg][m]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]"
 else
   FILTER="${MUSIC_CHAIN},loudnorm=I=-14:TP=-1.5:LRA=11[a]"

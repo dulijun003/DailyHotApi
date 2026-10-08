@@ -1,9 +1,21 @@
 """ReelScene: base class every topic video inherits from.
 
-A video is a list of "beats" (short methods, ~3-6 s each). `construct()` runs
-them in order, so reordering, cutting or adding a beat is a one-line change.
+A video is a list of "beats" (short methods). `construct()` runs them in
+order, so reordering, cutting or adding a beat is a one-line change.
+
+Narrated videos are voice-driven:
+
+    with self.voice("host.1") as v:      # starts speaking NARRATION["host.1"]
+        self.set_header(...)             # plays while the line is spoken
+        v.until("山羊")                   # wait until the word "山羊" is said
+        self.play(door.open())           # ...so the door opens on that word
+
+The block lasts exactly as long as the line (plus a short breath), so the
+voice never stops for dead air. Without NARRATION the same code runs silent
+and `self.wait()` keeps its normal pacing.
 """
 
+import json
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -16,31 +28,52 @@ from . import components as C
 from . import style as S
 
 
+class _Cue:
+    """Handle yielded by ReelScene.voice() to sync animations to words."""
+
+    def __init__(self, scene, narration=None, start=0.0):
+        self.scene, self.n, self.start, self.pos = scene, narration, start, 0
+
+    def until(self, phrase, lead=0.0):
+        """Wait until `phrase` starts being spoken (minus `lead` seconds)."""
+        if self.n is None:
+            return
+        t, self.pos = self.n.time_of(phrase, self.pos)
+        remaining = self.start + t - lead - self.scene.renderer.time
+        if remaining > 1 / config.frame_rate:
+            Scene.wait(self.scene, remaining)
+
+    def time_left(self):
+        if self.n is None:
+            return 0.0
+        return self.start + self.n.duration - self.scene.renderer.time
+
+
 class ReelScene(Scene):
     BEATS: list[str] = []      # method names, run in order
     PACE = 1.0                 # <1 = snappier: scales every fade/pause (not races)
 
-    # Narration (optional). NARRATION maps a key to the text spoken there;
-    # beats wrap animations in `with self.voice("key"):`. No entry = silent.
+    # Narration (optional): NARRATION maps a key to the text spoken there.
     NARRATION: dict[str, str] = {}
     VOICE = "zh-CN-YunxiNeural"
-    VOICE_RATE = "+15%"
+    VOICE_RATE = "+20%"
     VOICE_GAIN = 2.0           # dB
-    VOICE_GAP = 0.22           # pause between sentences (s)
-    SUBTITLES = True           # write .srt/.ass next to the video; render.sh burns the .ass in
+    VOICE_BREATH = 0.22        # pause between narration blocks (s)
+    SUBTITLES = True           # write .srt/.ass; render.sh burns the .ass in
 
     def setup(self):
         self.camera.background_color = S.BG
         self.header_mob = None
         self._subs = []        # (t_start, t_end, text)
+        self._cues = []        # music cues: (time, kind, value)
+        self._in_voice = 0
 
     def construct(self):
         for name in self.BEATS:
             start = self.renderer.time
             getattr(self, name)()
             print(f"[beat] {name:<14} {start:6.1f}s -> {self.renderer.time:6.1f}s")
-        if self._subs and self.SUBTITLES:
-            self._write_subtitles()
+        self._write_sidecars()
 
     # ---- Tempo ----------------------------------------------------------------
     def play(self, *anims, run_time=None, paced=True, **kw):
@@ -53,7 +86,15 @@ class ReelScene(Scene):
         super().play(*anims, **kw)
 
     def wait(self, duration=1.0, **kw):
+        # Inside a narration block the voice sets the pace: pauses are skipped
+        # and the block waits for the line to finish instead.
+        if self._in_voice:
+            return
         super().wait(duration * self.PACE, **kw)
+
+    def hold(self, duration):
+        """A real pause, even inside a narration block (unlike wait())."""
+        Scene.wait(self, duration)
 
     # ---- Sound ----------------------------------------------------------------
     SFX_GAIN = -4.0            # dB applied to every effect, so music + sfx sit together
@@ -62,47 +103,67 @@ class ReelScene(Scene):
         """Play a sound effect `delay` seconds from now (see reelkit/audio.py)."""
         self.add_sound(audio.sfx_path(name), time_offset=delay, gain=self.SFX_GAIN + gain)
 
+    def music(self, section):
+        """Switch the music to `section` (intro/main/tension/outro) from here on."""
+        self._cues.append((self.renderer.time, "section", section))
+
+    def music_hit(self, delay=0.0):
+        """A musical accent (swell + hit) landing `delay` seconds from now."""
+        self._cues.append((self.renderer.time + delay, "hit", None))
+
+    def music_end(self):
+        """Land the music's final chord now; it rings until the video ends."""
+        self._cues.append((self.renderer.time, "final", None))
+
+    def wait_for_downbeat(self, min_wait=0.6):
+        """Wait until the music's next bar line (so an ending lands on the beat)."""
+        bar = 4 * 60 / audio.BPM
+        t = self.renderer.time + min_wait
+        target = -(-t // bar) * bar
+        Scene.wait(self, target - self.renderer.time)
+
     # ---- Narration ------------------------------------------------------------
     @contextmanager
     def voice(self, key):
-        """Speak NARRATION[key] starting now; the block lasts at least as long.
-
-        Animations inside the block play while the line is spoken. If they
-        finish early, the scene waits for the voice; if they run longer, the
-        next line simply starts later.
-        """
         text = self.NARRATION.get(key)
         if not text:
-            yield
+            yield _Cue(self)
             return
         from . import voice as V
 
+        n = V.tts(text, self.VOICE, self.VOICE_RATE)
         start = self.renderer.time
-        offset = 0.0
-        for sentence in V.split_sentences(text):
-            path, dur = V.tts(sentence, self.VOICE, self.VOICE_RATE)
-            self.add_sound(path, time_offset=offset, gain=self.VOICE_GAIN)
-            clauses = V.split_clauses(sentence)
-            weights = [max(len(c), 1) for c in clauses]
-            t = start + offset
-            for c, w in zip(clauses, weights):
-                d = dur * w / sum(weights)
-                self._subs.append((t, t + d, c))
-                t += d
-            offset += dur + self.VOICE_GAP
-        yield
-        remaining = start + offset - self.renderer.time
-        if remaining > 0.02:
-            Scene.wait(self, remaining)
+        self.add_sound(n.path, gain=self.VOICE_GAIN)
+        for a, b, clause in n.clauses():
+            self._subs.append((start + a, start + b, clause))
+        cue = _Cue(self, n, start)
+        self._in_voice += 1
+        try:
+            yield cue
+        finally:
+            self._in_voice -= 1
+        left = cue.time_left()
+        if left > 0:
+            Scene.wait(self, left + self.VOICE_BREATH)
+        else:
+            if left < -0.25:
+                print(f"[voice] '{key}': animations overran the line by {-left:.2f}s")
+            Scene.wait(self, max(0.05, self.VOICE_BREATH + left))
 
-    def _write_subtitles(self):
-        """Write <media>/subtitles/<Scene>.srt and .ass (styled to match the reel)."""
-        from . import subtitles
-        out = Path(config.media_dir) / "subtitles"
-        out.mkdir(parents=True, exist_ok=True)
+    def _write_sidecars(self):
+        """Subtitles (.srt/.ass) and music cues (.json) for render.sh."""
         name = type(self).__name__
-        subtitles.write_srt(self._subs, out / f"{name}.srt")
-        subtitles.write_ass(self._subs, out / f"{name}.ass")
+        media = Path(config.media_dir)
+        if self._subs and self.SUBTITLES:
+            from . import subtitles
+            out = media / "subtitles"
+            out.mkdir(parents=True, exist_ok=True)
+            subtitles.write_srt(self._subs, out / f"{name}.srt")
+            subtitles.write_ass(self._subs, out / f"{name}.ass")
+        cues = media / "cues"
+        cues.mkdir(parents=True, exist_ok=True)
+        (cues / f"{name}.json").write_text(json.dumps(
+            {"duration": self.renderer.time, "cues": self._cues}, indent=1))
 
     # ---- Header -------------------------------------------------------------
     def set_header(self, title, sub=None, run_time=0.6, **kw):

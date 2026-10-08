@@ -6,6 +6,7 @@ Finished videos:
 - `topics/monty_hall.py`: the Monty Hall problem
   - `MontyHall`: English, background music + sound effects
   - `MontyHallZH`: **Chinese text + Chinese voiceover + subtitles** + background music + sound effects
+  - Structure: hook (10,000 angry letters → "they were wrong") → main content → summary → end card (follow + next-episode teaser)
 
 ## Style
 - Paper-white background, Inter font, LaTeX formulas, a muted palette (black / dark red / teal / gold beads)
@@ -37,19 +38,24 @@ The output goes to `out/<Scene>.mp4`.
 ## Audio (all synthesized in code, royalty-free)
 - **Sound effects** `reelkit/audio.py`: pop, click, tick, whoosh, door (opening), goat (fail sound), chime (win), ding, rise (rising sweep)
   In a scene, call `self.sfx("door")` to play one at the current moment; `self.sfx("pop", delay=0.3, gain=-6)` adds a delay and volume change
-- **Background music**: lo-fi, A minor, 84 BPM (Am9–Fmaj9–Cadd9–G6/9). `render.sh` generates it at exactly the video's length, with fade-in/out
+- **Background music**: bright, curious explainer style, 100 BPM, royal road progression (Fmaj7–G6–Em7–Am7), Karplus-Strong plucked strings + glockenspiel + pad + light percussion
+- **The music follows the video structure**: scenes call `self.music("intro" | "main" | "tension" | "outro")` to switch sections (switches land on bar lines),
+  `self.music_hit()` to add a swell + accent at a key moment, and `self.music_end()` to land the final C major chord (use with `wait_for_downbeat()` so it falls on the beat)
 - **Mix**: music sits under the effects, and the whole mix is loudness-normalized to -14 LUFS (the level Instagram/TikTok play at)
 - To use your own music: `MUSIC=your_song.mp3 ./render.sh ...`; for no music: `MUSIC=none`
 - To add new sounds: write a function in `audio.py` and register it in the `SFX` dictionary
 
 ## Chinese voiceover + subtitles
 - Voice: edge-tts (Microsoft neural voices), default `zh-CN-YunxiNeural` (lively male voice). Female: `zh-CN-XiaoxiaoNeural`; news-anchor style: `zh-CN-YunyangNeural`
-- Writing narration: put a `NARRATION = {"key": "text..."}` dictionary in the scene and wrap animations in `with self.voice("key"):`.
-  **The voiceover drives the timing**: animations play while the line is spoken, and if the animation finishes early the scene waits for the voice
+- Writing narration: put a `NARRATION = {"key": "text..."}` dictionary in the scene and use `with self.voice("key") as v:` to wrap the animations.
+  Each block is **synthesized in one go** (natural intonation, no sentence-by-sentence breaks); the block lasts exactly as long as the voice, with only a short breath between blocks
+- **Syncing visuals to specific words**: `v.until("山羊")` waits until the word "山羊" is spoken, then plays the next animation (edge-tts provides word-level timestamps)
+- Inside a voice block, `self.wait()` is skipped automatically (the voice sets the pace); use `self.hold(s)` when you need a real pause
 - Numbers are written in Chinese characters ("三分之二", "七十三号门") so they're read aloud correctly
 - Each sentence is synthesized separately, with leading/trailing silence trimmed automatically, and cached in `reelkit/assets/tts/`; re-rendering only synthesizes lines that changed
 - Subtitles are split by clause, matched to the voice timing, and output to `out/<Scene>.srt` (for uploading to platforms) and burned into the video
-- Music automatically ducks under the voice/effects (sidechain compression)
+- Music gently ducks under the voice (sidechain compression, slow release, no pumping)
+- A thin progress bar is drawn along the top edge (`PROGRESS=0` turns it off)
 - Speech synthesis needs network access. If you hit certificate errors, set `SSL_CERT_FILE` to your CA bundle
 - Note: whether edge-tts can be used commercially is a gray area. For a monetized account, consider switching to a commercially licensed TTS (e.g. Volcano Engine, iFlytek, Azure paid tier); only `reelkit/voice.py` needs to change
 
