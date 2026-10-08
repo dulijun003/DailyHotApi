@@ -1,12 +1,14 @@
 # manim-reels
 
 A template for making Instagram/TikTok reels that explain maths and physics with animation (in the style of @nitesh_n.a_frontend).
-The first video recreates **Brachistochrone (the fastest-descent curve)**: `topics/brachistochrone.py`.
+Finished videos:
+- `topics/brachistochrone.py`: the brachistochrone (recreation of the original)
+- `topics/monty_hall.py`: the Monty Hall problem, with background music and sound effects
 
 ## Style
 - Paper-white background, Inter font, LaTeX formulas, a muted palette (black / dark red / teal / gold beads)
 - 4:5 portrait, 1080×1350, about 50 s
-- No voice-over and no face on camera: the on-screen text tells the story, with background music added afterwards
+- No voice-over and no face on camera: the on-screen text tells the story, with background music and sound effects
 - All numbers come from real physics (`reelkit/physics.py`): straight line 3.19 s, circular arc 2.63 s, cycloid 2.55 s, matching the original
 
 ## Setup
@@ -29,15 +31,28 @@ MUSIC=bgm.mp3 ./render.sh topics/brachistochrone.py Brachistochrone  # add music
 ```
 The output goes to `out/<Scene>.mp4`.
 
+## Audio (all synthesized in code, royalty-free)
+- **Sound effects** `reelkit/audio.py`: pop, click, tick, whoosh, door (opening), goat (fail sound), chime (win), ding, rise (rising sweep)
+  In a scene, call `self.sfx("door")` to play one at the current moment; `self.sfx("pop", delay=0.3, gain=-6)` adds a delay and volume change
+- **Background music**: lo-fi, A minor, 84 BPM (Am9–Fmaj9–Cadd9–G6/9). `render.sh` generates it at exactly the video's length, with fade-in/out
+- **Mix**: music sits under the effects, and the whole mix is loudness-normalized to -14 LUFS (the level Instagram/TikTok play at)
+- To use your own music: `MUSIC=your_song.mp3 ./render.sh ...`; for no music: `MUSIC=none`
+- To add new sounds: write a function in `audio.py` and register it in the `SFX` dictionary
+
+## Captions
+`captions/<topic>.txt` holds the text for the post (story + source + hashtags), following the original's format.
+
 ## Layout
 ```
 reelkit/
   style.py       palette, fonts, sizes (change these to restyle every video)
   components.py  title/subtitle, formula box, pill tag, bead, timer, legend, glow
   physics.py     beads sliding under gravity: exact time along any curve, cycloid fitting
-  scene.py       ReelScene base class: BEATS run in order, PACE controls tempo, race() animates a race
+  scene.py       ReelScene base class: BEATS run in order, PACE controls tempo, race() animates a race, sfx() plays a sound effect
+  audio.py       procedural sound effects + background music (numpy synthesis)
 topics/
   brachistochrone.py   the recreated video (12 beats)
+  monty_hall.py        the Monty Hall problem (10 beats: doors / probability transfer / case table / 1000-game simulation / 100 doors)
   _template.py         blank template for a new topic
 ```
 
@@ -49,5 +64,5 @@ topics/
    (the `[beat]` lines in the render log show where each beat starts and ends)
 
 ## Topic ideas
-Tautochrone (equal-time descent) · Monty Hall · Fourier series drawing a picture · Galton board → normal distribution ·
+Tautochrone (equal-time descent) · Fourier series drawing a picture · Galton board → normal distribution ·
 Basel problem π²/6 · Buffon's needle for π · sorting algorithm races · random walks · the Bernoulli brothers' rivalry

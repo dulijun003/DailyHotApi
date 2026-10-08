@@ -8,6 +8,7 @@ from manim import (
     DOWN, UP, AnimationGroup, FadeIn, FadeOut, Scene, ValueTracker, linear,
 )
 
+from . import audio
 from . import components as C
 from . import style as S
 
@@ -38,6 +39,13 @@ class ReelScene(Scene):
 
     def wait(self, duration=1.0, **kw):
         super().wait(duration * self.PACE, **kw)
+
+    # ---- Sound ----------------------------------------------------------------
+    SFX_GAIN = -4.0            # dB applied to every effect, so music + sfx sit together
+
+    def sfx(self, name, delay=0.0, gain=0.0):
+        """Play a sound effect `delay` seconds from now (see reelkit/audio.py)."""
+        self.add_sound(audio.sfx_path(name), time_offset=delay, gain=self.SFX_GAIN + gain)
 
     # ---- Header -------------------------------------------------------------
     def set_header(self, title, sub=None, run_time=0.6, **kw):

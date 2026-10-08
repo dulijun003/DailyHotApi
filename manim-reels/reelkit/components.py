@@ -36,7 +36,10 @@ def header(title_str, sub_str=None, title_color=S.INK, sub_color=S.MUTED, boxed=
     t.move_to(UP * S.TITLE_Y)
     group = VGroup(t)
     if sub_str:
-        sub = subtitle(sub_str, sub_color).next_to(t, DOWN, buff=S.SUBTITLE_GAP)
+        sub = subtitle(sub_str, sub_color)
+        if sub.width > max_w:
+            sub.scale_to_fit_width(max_w)
+        sub.next_to(t, DOWN, buff=S.SUBTITLE_GAP)
         group.add(sub)
     return group
 
