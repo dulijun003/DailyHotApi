@@ -9,8 +9,11 @@ from manim import (
 from . import style as S
 
 
-def text(s, size=S.LABEL_SIZE, color=S.INK, weight="NORMAL", slant="NORMAL", font=S.FONT):
-    return Text(s, font=font, font_size=size, color=color, weight=weight, slant=slant)
+def text(s, size=S.LABEL_SIZE, color=S.INK, weight="NORMAL", slant="NORMAL", font=None):
+    # Read S.FONT at call time so a scene can switch fonts (e.g. for Chinese).
+    if not S.ITALIC_OK:
+        slant = "NORMAL"
+    return Text(s, font=font or S.FONT, font_size=size, color=color, weight=weight, slant=slant)
 
 
 def title(s, color=S.INK):

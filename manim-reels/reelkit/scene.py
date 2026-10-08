@@ -4,8 +4,11 @@ A video is a list of "beats" (short methods, ~3-6 s each). `construct()` runs
 them in order, so reordering, cutting or adding a beat is a one-line change.
 """
 
+from contextlib import contextmanager
+from pathlib import Path
+
 from manim import (
-    DOWN, UP, AnimationGroup, FadeIn, FadeOut, Scene, ValueTracker, linear,
+    DOWN, UP, AnimationGroup, FadeIn, FadeOut, Scene, ValueTracker, config, linear,
 )
 
 from . import audio
@@ -17,15 +20,27 @@ class ReelScene(Scene):
     BEATS: list[str] = []      # method names, run in order
     PACE = 1.0                 # <1 = snappier: scales every fade/pause (not races)
 
+    # Narration (optional). NARRATION maps a key to the text spoken there;
+    # beats wrap animations in `with self.voice("key"):`. No entry = silent.
+    NARRATION: dict[str, str] = {}
+    VOICE = "zh-CN-YunxiNeural"
+    VOICE_RATE = "+15%"
+    VOICE_GAIN = 2.0           # dB
+    VOICE_GAP = 0.22           # pause between sentences (s)
+    SUBTITLES = True           # write .srt/.ass next to the video; render.sh burns the .ass in
+
     def setup(self):
         self.camera.background_color = S.BG
         self.header_mob = None
+        self._subs = []        # (t_start, t_end, text)
 
     def construct(self):
         for name in self.BEATS:
             start = self.renderer.time
             getattr(self, name)()
             print(f"[beat] {name:<14} {start:6.1f}s -> {self.renderer.time:6.1f}s")
+        if self._subs and self.SUBTITLES:
+            self._write_subtitles()
 
     # ---- Tempo ----------------------------------------------------------------
     def play(self, *anims, run_time=None, paced=True, **kw):
@@ -46,6 +61,48 @@ class ReelScene(Scene):
     def sfx(self, name, delay=0.0, gain=0.0):
         """Play a sound effect `delay` seconds from now (see reelkit/audio.py)."""
         self.add_sound(audio.sfx_path(name), time_offset=delay, gain=self.SFX_GAIN + gain)
+
+    # ---- Narration ------------------------------------------------------------
+    @contextmanager
+    def voice(self, key):
+        """Speak NARRATION[key] starting now; the block lasts at least as long.
+
+        Animations inside the block play while the line is spoken. If they
+        finish early, the scene waits for the voice; if they run longer, the
+        next line simply starts later.
+        """
+        text = self.NARRATION.get(key)
+        if not text:
+            yield
+            return
+        from . import voice as V
+
+        start = self.renderer.time
+        offset = 0.0
+        for sentence in V.split_sentences(text):
+            path, dur = V.tts(sentence, self.VOICE, self.VOICE_RATE)
+            self.add_sound(path, time_offset=offset, gain=self.VOICE_GAIN)
+            clauses = V.split_clauses(sentence)
+            weights = [max(len(c), 1) for c in clauses]
+            t = start + offset
+            for c, w in zip(clauses, weights):
+                d = dur * w / sum(weights)
+                self._subs.append((t, t + d, c))
+                t += d
+            offset += dur + self.VOICE_GAP
+        yield
+        remaining = start + offset - self.renderer.time
+        if remaining > 0.02:
+            Scene.wait(self, remaining)
+
+    def _write_subtitles(self):
+        """Write <media>/subtitles/<Scene>.srt and .ass (styled to match the reel)."""
+        from . import subtitles
+        out = Path(config.media_dir) / "subtitles"
+        out.mkdir(parents=True, exist_ok=True)
+        name = type(self).__name__
+        subtitles.write_srt(self._subs, out / f"{name}.srt")
+        subtitles.write_ass(self._subs, out / f"{name}.ass")
 
     # ---- Header -------------------------------------------------------------
     def set_header(self, title, sub=None, run_time=0.6, **kw):

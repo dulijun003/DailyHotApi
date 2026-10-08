@@ -32,6 +32,8 @@ SUBTITLE_SIZE = 20
 LABEL_SIZE = 16
 SMALL_SIZE = 14
 MATH_SCALE = 0.8
+SUBTITLE_TEXT_SIZE = 22
+ITALIC_OK = True     # set False for CJK fonts (no real italics)
 
 # Vertical anchors for the header (title + subtitle).
 TITLE_Y = 3.15

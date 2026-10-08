@@ -3,7 +3,9 @@
 A template for making Instagram/TikTok reels that explain maths and physics with animation (in the style of @nitesh_n.a_frontend).
 Finished videos:
 - `topics/brachistochrone.py`: the brachistochrone (recreation of the original)
-- `topics/monty_hall.py`: the Monty Hall problem, with background music and sound effects
+- `topics/monty_hall.py`: the Monty Hall problem
+  - `MontyHall`: English, background music + sound effects
+  - `MontyHallZH`: **Chinese text + Chinese voiceover + subtitles** + background music + sound effects
 
 ## Style
 - Paper-white background, Inter font, LaTeX formulas, a muted palette (black / dark red / teal / gold beads)
@@ -25,6 +27,7 @@ On macOS, use `brew install ffmpeg pango` + MacTeX (or BasicTeX) instead of apt.
 
 ## Rendering
 ```bash
+./render.sh topics/monty_hall.py MontyHallZH                   # Chinese voiceover version
 ./render.sh topics/brachistochrone.py Brachistochrone preview   # quick low-res draft, ~30 s
 ./render.sh topics/brachistochrone.py Brachistochrone           # final 1080×1350
 MUSIC=bgm.mp3 ./render.sh topics/brachistochrone.py Brachistochrone  # add music (looped/trimmed with a fade-out)
@@ -39,6 +42,17 @@ The output goes to `out/<Scene>.mp4`.
 - To use your own music: `MUSIC=your_song.mp3 ./render.sh ...`; for no music: `MUSIC=none`
 - To add new sounds: write a function in `audio.py` and register it in the `SFX` dictionary
 
+## Chinese voiceover + subtitles
+- Voice: edge-tts (Microsoft neural voices), default `zh-CN-YunxiNeural` (lively male voice). Female: `zh-CN-XiaoxiaoNeural`; news-anchor style: `zh-CN-YunyangNeural`
+- Writing narration: put a `NARRATION = {"key": "text..."}` dictionary in the scene and wrap animations in `with self.voice("key"):`.
+  **The voiceover drives the timing**: animations play while the line is spoken, and if the animation finishes early the scene waits for the voice
+- Numbers are written in Chinese characters ("三分之二", "七十三号门") so they're read aloud correctly
+- Each sentence is synthesized separately, with leading/trailing silence trimmed automatically, and cached in `reelkit/assets/tts/`; re-rendering only synthesizes lines that changed
+- Subtitles are split by clause, matched to the voice timing, and output to `out/<Scene>.srt` (for uploading to platforms) and burned into the video
+- Music automatically ducks under the voice/effects (sidechain compression)
+- Speech synthesis needs network access. If you hit certificate errors, set `SSL_CERT_FILE` to your CA bundle
+- Note: whether edge-tts can be used commercially is a gray area. For a monetized account, consider switching to a commercially licensed TTS (e.g. Volcano Engine, iFlytek, Azure paid tier); only `reelkit/voice.py` needs to change
+
 ## Captions
 `captions/<topic>.txt` holds the text for the post (story + source + hashtags), following the original's format.
 
@@ -50,6 +64,8 @@ reelkit/
   physics.py     beads sliding under gravity: exact time along any curve, cycloid fitting
   scene.py       ReelScene base class: BEATS run in order, PACE controls tempo, race() animates a race, sfx() plays a sound effect
   audio.py       procedural sound effects + background music (numpy synthesis)
+  voice.py       voiceover (edge-tts), sentence splitting, silence trimming, caching
+  subtitles.py   generates .srt / .ass subtitles from the voice timing
 topics/
   brachistochrone.py   the recreated video (12 beats)
   monty_hall.py        the Monty Hall problem (10 beats: doors / probability transfer / case table / 1000-game simulation / 100 doors)
