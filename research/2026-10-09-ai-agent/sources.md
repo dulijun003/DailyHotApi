@@ -416,3 +416,9 @@
 | 5-S7 | G13 |
 | 5-S8 | G93 |
 | 5-S9 | G79 |
+
+## 核查阶段新增
+- [G107] Claude Opus 5 System Card｜Anthropic｜2026-07-24｜A｜https://www.anthropic.com/claude-opus-5-system-card｜核查引用
+  摘要（核查员读取）：Claude Cowork 中 129 个浏览器场景，开启 auto mode 时攻击成功率 0%；关闭全部防护时表格为 3.84%，正文为 3.70%。
+- [G108] Claude Opus 5.5 System Card｜Anthropic｜2026-09-22｜A｜https://www.anthropic.com/claude-opus-5-5-system-card｜核查引用
+  摘要（核查员读取）：110 个场景复测，无防护时 Opus 5 为 3.64%、Opus 5.5 为 0.09%；开启 auto mode 时均为 0%。
