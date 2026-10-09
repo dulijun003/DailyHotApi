@@ -32,7 +32,7 @@ description: 深度调研与图文写作。用户想深度研究一个领域、�
 |---|---|---|---|
 | 1 启动研究 | `references/01-start.md` | 领域关键词、当前层次、学习目的、研究模式 | `state.md` |
 | 2 选题地图 | `references/02-topic-map.md` | 20 题还是 40 题；看完后选研究主题 | `topic-map.md` |
-| 3 研究与发布参数 | `references/03-params.md` | 澄清轮数、平台、篇幅、配图数量和风格、语言 | `state.md` |
+| 3 研究与发布参数 | `references/03-params.md` | 澄清轮数、平台、研究深度、篇幅、配图数量和风格、语言 | `state.md` |
 | 4 澄清访谈 | `references/04-interview.md` | 每轮一道多选题；最后确认需求确认单 | `interview.md`、`requirements.md` |
 | 5 研究简报 | `references/05-brief.md` | 确认研究计划（分步骤模式） | `brief.md`、`prompts.md` |
 | 6 深度研究 | `references/06-research.md` | 无 | `notes/`、`sources.md`、`factcheck.md`、`report.md` |
@@ -75,6 +75,8 @@ description: 深度调研与图文写作。用户想深度研究一个领域、�
 - **不编造**：引文、数据、案例、链接都必须有真实出处。查不到就写"未找到可靠来源"，不要补一个看起来合理的。
 - **事实和观点分开写**：观点要标明是谁的观点，或者标明是作者的判断。
 - **图片不侵权**：不从搜索引擎里随手取图，规则见第 8 步。
+- **引用要对得上号**：写报告和文章时，信源编号按 `sources.md` 的对照表查，不凭记忆写；写完后做引用校验（6.5）。
+- **字数口径统一**：汉字按字计、英文按词计，两者相加；代码块和图表代码不计入。
 
 ## 文件存放
 
