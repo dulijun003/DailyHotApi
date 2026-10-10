@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>全案可行性拆解</title>
+<link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/500.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-serif-sc/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/400.css">
+<link rel="stylesheet" href="node_modules/@fontsource/noto-sans-sc/500.css">
+<link rel="stylesheet" href="node_modules/@fontsource/source-serif-4/500.css">
+<link rel="stylesheet" href="node_modules/@fontsource/source-serif-4/600.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/400.css">
+<style>
+:root{
+  --bg:#F5F4EE; --paper:#FAF9F5; --ink:#1F1E1D; --ink2:#3D3C38; --muted:#77756C;
+  --line:#E2DFD4; --clay:#D97757; --clay-soft:#F3DED3; --red:#B4513A; --ok:#5F7F58;
+  --serif:"Source Serif 4","Noto Serif SC",serif;
+  --sans:"Noto Sans SC",system-ui,sans-serif;
+  --mono:"JetBrains Mono","Noto Sans SC",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.scene{position:absolute;inset:0;padding:120px 150px 110px;display:flex;flex-direction:column}
+.chap{font-family:var(--sans);font-size:24px;letter-spacing:4px;color:var(--clay);font-weight:500;display:flex;align-items:center;gap:16px}
+.chap i{display:block;width:40px;height:2px;background:var(--clay)}
+h1{font-family:var(--serif);font-weight:500;font-size:84px;line-height:1.28;letter-spacing:-0.5px}
+h2{font-family:var(--serif);font-weight:500;font-size:64px;line-height:1.3;margin-top:28px}
+.clay{color:var(--clay)}
+.muted{color:var(--muted)}
+.ul{position:relative;display:inline-block}
+.ul b{position:absolute;left:0;right:0;bottom:4px;height:6px;background:var(--clay);border-radius:3px;transform-origin:left;opacity:.9}
+.foot{margin-top:auto;font-size:30px;color:var(--ink2);display:flex;align-items:center;gap:18px}
+.foot .dot{width:10px;height:10px;border-radius:50%;background:var(--clay)}
+.card{background:var(--paper);border:1.5px solid var(--line);border-radius:28px;padding:44px 48px}
+.tag{display:inline-block;font-size:24px;padding:8px 20px;border-radius:999px;font-weight:500}
+.tag.ok{background:#E3EADF;color:var(--ok)}
+.tag.bad{background:var(--clay-soft);color:var(--red)}
+code,.mono{font-family:var(--mono)}
+/* progress */
+#prog{position:absolute;left:0;bottom:0;height:5px;width:100%;background:var(--clay);transform-origin:left;opacity:.85}
+#mark{position:absolute;right:64px;top:56px;font-size:20px;color:var(--muted);letter-spacing:3px}
+
+/* s1 */
+.kicker{font-size:30px;color:var(--muted);letter-spacing:6px;margin-bottom:40px}
+.src{margin-top:56px;font-size:26px;color:var(--muted);border-left:3px solid var(--line);padding-left:24px;line-height:1.6}
+/* s2 */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:64px}
+.split h3{font-family:var(--serif);font-weight:500;font-size:40px;margin:18px 0 16px}
+.split p{font-size:28px;color:var(--ink2);line-height:1.6}
+/* rows */
+.rows{margin-top:56px;display:flex;flex-direction:column;gap:22px}
+.row{display:grid;grid-template-columns:64px 1fr;align-items:center;gap:24px;padding:26px 36px;background:var(--paper);border:1.5px solid var(--line);border-radius:22px}
+.ic{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:30px;font-weight:600}
+.ic.ok{background:#E3EADF;color:var(--ok)}
+.ic.bad{background:var(--clay-soft);color:var(--red)}
+.row .t{font-size:34px;font-weight:500}
+.row .d{font-size:26px;color:var(--muted);margin-top:6px}
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:28px;margin-top:72px;max-width:1500px}
+.chip{position:relative;font-family:var(--mono);font-size:38px;padding:26px 44px;border-radius:999px;background:var(--paper);border:1.5px dashed #CFCABB;color:var(--ink2)}
+.chip .q{position:absolute;right:-14px;top:-18px;width:46px;height:46px;border-radius:50%;background:var(--clay);color:#fff;font-family:var(--serif);font-size:30px;display:grid;place-items:center}
+/* panels */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:56px;flex:1}
+.panel h3{font-family:var(--serif);font-weight:500;font-size:40px;margin-bottom:30px}
+.box{border:1.5px solid var(--line);background:#fff;border-radius:18px;padding:22px 28px;font-size:27px;line-height:1.5}
+.box small{display:block;font-size:22px;color:var(--muted)}
+.link{height:86px;display:flex;align-items:center;justify-content:center;position:relative}
+.link .dash{width:4px;height:100%;background:repeating-linear-gradient(to bottom,var(--muted) 0 10px,transparent 10px 20px);transform-origin:top}
+.link .x{position:absolute;width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:30px;display:grid;place-items:center}
+.note{margin-top:28px;font-size:26px;color:var(--ink2);line-height:1.6}
+.codeline{font-family:var(--mono);font-size:25px;background:#2A2926;color:#EDEAE0;border-radius:14px;padding:20px 24px;line-height:1.6;white-space:nowrap}
+.cmp{display:grid;grid-template-columns:150px 1fr;gap:14px 20px;margin-top:28px;font-size:27px;align-items:center}
+.cmp .k{color:var(--muted);font-size:24px}
+/* code window */
+.bugs{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;margin-top:48px}
+.blist{display:flex;flex-direction:column;gap:20px}
+.bug{padding-left:26px;border-left:4px solid var(--clay)}
+.bug .f{font-family:var(--mono);font-size:26px;color:var(--clay)}
+.bug .m{font-size:28px;line-height:1.5;margin-top:4px}
+.win{background:#2A2926;border-radius:24px;padding:30px 34px;color:#EDEAE0;font-family:var(--mono);font-size:24px;line-height:1.85;align-self:start}
+.win .dots{display:flex;gap:10px;margin-bottom:22px}
+.win .dots span{width:14px;height:14px;border-radius:50%;background:#555249}
+.win .ln{white-space:pre;display:block}
+.win .cm{color:#9A968A}
+.win .hl{background:rgba(217,119,87,.25);border-radius:6px;margin:0 -10px;padding:0 10px}
+.win .fn{color:#E9A47F}
+/* s7 */
+.flag{margin-top:56px;display:flex;flex-direction:column;gap:18px}
+.flag .codeline{font-size:34px;display:inline-block;width:fit-content}
+.chain{display:flex;align-items:center;gap:0;margin-top:70px}
+.node{background:var(--paper);border:1.5px solid var(--line);border-radius:22px;padding:28px 40px;font-size:32px;text-align:center;min-width:330px}
+.node small{display:block;font-size:22px;color:var(--muted);margin-top:6px}
+.node.hot{border-color:var(--red);background:#FBEDE7}
+.arrow{flex:1;height:4px;background:var(--red);position:relative;transform-origin:left;margin:0 6px}
+.arrow::after{content:"";position:absolute;right:-4px;top:-9px;border-left:18px solid var(--red);border-top:11px solid transparent;border-bottom:11px solid transparent}
+/* s8 */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:60px}
+.three .card h3{font-family:var(--serif);font-weight:500;font-size:40px;margin:22px 0 18px}
+.three .card p{font-size:27px;line-height:1.65;color:var(--ink2)}
+.num{font-family:var(--serif);font-size:30px;color:var(--clay)}
+/* s9 */
+.flow{display:grid;grid-template-columns:1fr 70px 1fr 70px 1fr;align-items:stretch;margin-top:56px}
+.step .n{width:60px;height:60px;border-radius:50%;background:var(--clay);color:#fff;font-family:var(--serif);font-size:32px;display:grid;place-items:center}
+.step h3{font-family:var(--serif);font-weight:500;font-size:42px;margin:22px 0 16px}
+.step p{font-size:26px;line-height:1.65;color:var(--ink2)}
+.flow .ar{align-self:center;height:3px;background:var(--clay);transform-origin:left;position:relative;margin:0 10px}
+.flow .ar::after{content:"";position:absolute;right:-3px;top:-8px;border-left:14px solid var(--clay);border-top:9px solid transparent;border-bottom:9px solid transparent}
+.stats{display:flex;gap:60px;margin-top:56px;align-items:baseline}
+.stat b{font-family:var(--serif);font-weight:500;font-size:72px;color:var(--clay)}
+.stat span{display:block;font-size:26px;color:var(--muted);margin-top:4px}
+/* s10 */
+.center{justify-content:center;align-items:flex-start}
+</style>
+</head>
+<body>
+<div id="mark">可行性拆解</div>
+
+<!-- 1 -->
+<section class="scene center" data-s="0" data-e="6.5">
+  <div class="kicker" data-t=".3">一份冷静的可行性拆解</div>
+  <h1 data-t=".7">这篇小红书「全自动无人值守」全案，</h1>
+  <h1 data-t="1.3">真的<span class="ul">能落地吗？<b data-t="2.2" data-a="draw"></b></span></h1>
+  <div class="src" data-t="2.8">原文：《用 Meta muse 与 openmuse 搭建<br>小红书全自动无人值守运营流水线实录》</div>
+</section>
+
+<!-- 2 -->
+<section class="scene" data-s="6.5" data-e="15">
+  <div class="chap" data-t=".2"><i></i>01 · 结论</div>
+  <h1 data-t=".5" style="margin-top:36px">照原文做，<span class="clay">不能落地</span>。</h1>
+  <div class="split">
+    <div class="card" data-t="1.6">
+      <span class="tag ok">能做 · 工作量不大</span>
+      <h3>前半段</h3>
+      <p>抓选题、渲染卡片、生成文案草稿</p>
+    </div>
+    <div class="card" data-t="2.4">
+      <span class="tag bad">技术漏洞多 · 合规风险高</span>
+      <h3>后半段</h3>
+      <p>无人值守发布、绕风控、多账号矩阵</p>
+    </div>
+  </div>
+  <div class="foot" data-t="4"><span class="dot"></span>按原文执行，大概率封号或限流。</div>
+</section>
+
+<!-- 3 -->
+<section class="scene" data-s="15" data-e="25">
+  <div class="chap" data-t=".2"><i></i>02 · 能落地的部分</div>
+  <h2 data-t=".5">这四件事，是真的可以做</h2>
+  <div class="rows">
+    <div class="row" data-t="1.3"><div class="ic ok">✓</div><div><div class="t">Playwright 持久化目录保存登录态</div><div class="d">机制真实，登录态能保留一段时间</div></div></div>
+    <div class="row" data-t="2.1"><div class="ic ok">✓</div><div><div class="t">抓选题</div><div class="d">DailyHotApi 已有 github / producthunt / hellogithub / hackernews 接口</div></div></div>
+    <div class="row" data-t="2.9"><div class="ic ok">✓</div><div><div class="t">HTML 模板截图，出 1080×1440 卡片</div><div class="d">零成本，风格统一</div></div></div>
+    <div class="row" data-t="3.7"><div class="ic ok">✓</div><div><div class="t">发布前用正则拦截违禁词</div><div class="d">简单，有用</div></div></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="scene" data-s="25" data-e="33">
+  <div class="chap" data-t=".2"><i></i>03 · 前提无法核实</div>
+  <h2 data-t=".5">整套方案，建立在一串<span class="clay">我无法核实</span>的名字上</h2>
+  <div class="chips">
+    <div class="chip" data-t="1.3" data-a="pop">Meta muse<span class="q" data-t="2.0" data-a="pop">?</span></div>
+    <div class="chip" data-t="1.5" data-a="pop">Muse Secure VM<span class="q" data-t="2.2" data-a="pop">?</span></div>
+    <div class="chip" data-t="1.7" data-a="pop">Muse Spark 1.3<span class="q" data-t="2.4" data-a="pop">?</span></div>
+    <div class="chip" data-t="1.9" data-a="pop">muse-auto-allow<span class="q" data-t="2.6" data-a="pop">?</span></div>
+    <div class="chip" data-t="2.1" data-a="pop">CopilotKit/openmuse<span class="q" data-t="2.8" data-a="pop">?</span></div>
+    <div class="chip" data-t="2.3" data-a="pop">「时代周刊调查报道」<span class="q" data-t="3.0" data-a="pop">?</span></div>
+  </div>
+  <div class="foot" data-t="3.8"><span class="dot"></span>动手之前，先去官方渠道逐一确认。</div>
+</section>
+
+<!-- 5 -->
+<section class="scene" data-s="33" data-e="45">
+  <div class="chap" data-t=".2"><i></i>04 · 内部逻辑矛盾</div>
+  <div class="two">
+    <div class="panel card" data-t=".6">
+      <h3>auto-allow 点不到那个按钮</h3>
+      <div class="box" data-t="1.4">muse App / 手机端<small>审批卡片显示在这里</small></div>
+      <div class="link"><div class="dash" data-t="2.0" data-a="grow"></div><div class="x" data-t="2.6" data-a="pop">✕</div></div>
+      <div class="box" data-t="1.8">虚拟机里的 Chromium<small>插件装在这里</small></div>
+      <div class="note" data-t="3.2">两者不在同一个页面。而且专门绕过安全审批，本身就违背产品设计意图。</div>
+    </div>
+    <div class="panel card" data-t="4.2">
+      <h3>代理配置写反了</h3>
+      <div class="codeline" data-t="5.0" data-a="type">no_proxy="localhost,github.com,producthunt.com"</div>
+      <div class="cmp">
+        <div class="k" data-t="6.4">文章声称</div><div data-t="6.4">只有小红书走代理</div>
+        <div class="k" data-t="7.0">实际效果</div><div data-t="7.0" class="clay">除这几个域名外，全部走代理</div>
+      </div>
+      <div class="note" data-t="8.0">另外，Chromium 一般不读 /etc/environment，<br>要用 <code>--proxy-server</code> 参数才行。</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="scene" data-s="45" data-e="59">
+  <div class="chap" data-t=".2"><i></i>05 · 代码硬伤</div>
+  <h2 data-t=".5">跑不通，或者达不到它说的效果</h2>
+  <div class="bugs">
+    <div class="blist">
+      <div class="bug" data-t="1.4"><div class="f">card_renderer.ts</div><div class="m">本地截图被浏览器拦截，卡片是空白；说出 5 张，只返回 1 张</div></div>
+      <div class="bug" data-t="2.6"><div class="f">uploader.ts</div><div class="m">鼠标先瞬移再走曲线，.click() 又直接跳过去——贝塞尔轨迹是摆设</div></div>
+      <div class="bug" data-t="6.6"><div class="f">fallback_guard.ts</div><div class="m">说每 500ms 检测，实际只查一次；12 小时冷却没实现</div></div>
+      <div class="bug" data-t="7.8"><div class="f">心跳 cron</div><div class="m">node -e 加载 .ts 跑不起来；没有显示器，headless:false 直接失败</div></div>
+      <div class="bug" data-t="9.0"><div class="f">stealth_fingerprint.js</div><div class="m">直接改原型，很容易被识破；WebGL 指纹没处理</div></div>
+    </div>
+    <div class="win" data-t="2.8">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="ln cm" data-t="3.3" data-a="type">// uploader.ts</span>
+      <span class="ln" data-t="3.8" data-a="type">const startX = <span class="fn">Math.random</span>() * 200 + 100;</span>
+      <span class="ln cm" data-t="4.4" data-a="type">// ↑ 起点是随机的，等于先“瞬移”</span>
+      <span class="ln" data-t="4.9" data-a="type"><span class="fn">await</span> humanMouseMove(page, x, y);</span>
+      <span class="ln hl" data-t="5.4" data-a="type"><span class="fn">await</span> titleBox.click();</span>
+      <span class="ln cm" data-t="6.0" data-a="type">// ↑ 又把鼠标直接移到元素中心</span>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="scene" data-s="59" data-e="67">
+  <div class="chap" data-t=".2"><i></i>06 · 安全事故隐患</div>
+  <h2 data-t=".5">调试端口对公网敞开，<span class="clay">没有任何认证</span></h2>
+  <div class="flag">
+    <div class="codeline" data-t="1.3" data-a="type">--remote-debugging-address=0.0.0.0</div>
+    <div class="codeline" data-t="2.1" data-a="type">ports: "9222:9222"</div>
+  </div>
+  <div class="chain">
+    <div class="node" data-t="3.0">任何人<small>扫描公网端口</small></div>
+    <div class="arrow" data-t="3.6" data-a="grow-x"></div>
+    <div class="node" data-t="4.0">:9222<small>Chrome 调试协议</small></div>
+    <div class="arrow" data-t="4.6" data-a="grow-x"></div>
+    <div class="node hot" data-t="5.0">你已登录的账号<small>被直接接管</small></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="scene" data-s="67" data-e="78">
+  <div class="chap" data-t=".2"><i></i>07 · 合规与效果风险</div>
+  <h2 data-t=".5">最致命的，不是代码，而是方向</h2>
+  <div class="three">
+    <div class="card" data-t="1.4"><div class="num">i.</div><h3>平台规则</h3><p>社区规范禁止第三方工具批量操作或托管账号。代理伪装、指纹伪造、矩阵防关联，正是重点打击对象。</p></div>
+    <div class="card" data-t="2.6"><div class="num">ii.</div><h3>AI 内容标识</h3><p>《人工智能生成合成内容标识办法》2025 年 9 月起施行，要求标注 AI 生成内容。原文只字未提。</p></div>
+    <div class="card" data-t="3.8"><div class="num">iii.</div><h3>内容质量</h3><p>写死的模板正文每天只换工具名，没用过却写“实测”——虚假测评 + 重复内容，很难有流量。</p></div>
+  </div>
+  <div class="foot" data-t="5.6"><span class="dot"></span>“每月不到 200 元”？没算页面一改版就要修脚本的人力。</div>
+</section>
+
+<!-- 9 -->
+<section class="scene" data-s="78" data-e="90">
+  <div class="chap" data-t=".2"><i></i>08 · 可行版本</div>
+  <h2 data-t=".5">半自动：机器搬砖，人做判断</h2>
+  <div class="flow">
+    <div class="step card" data-t="1.4"><div class="n">1</div><h3>选题</h3><p>用 DailyHotApi 拉榜单，人工挑一个工具，真的装上试一下</p></div>
+    <div class="ar" data-t="2.3" data-a="grow-x"></div>
+    <div class="step card" data-t="2.6"><div class="n">2</div><h3>出图 + 文案</h3><p>HTML 模板渲染 5 张卡片；大模型基于实测写初稿；违禁词检查 + AI 标识</p></div>
+    <div class="ar" data-t="3.5" data-a="grow-x"></div>
+    <div class="step card" data-t="3.8"><div class="n">3</div><h3>发布</h3><p>人工审核后手动发布，或用平台自带的定时发布</p></div>
+  </div>
+  <div class="stats">
+    <div class="stat" data-t="5.2"><b>70–80%</b><span>重复劳动被省掉</span></div>
+    <div class="stat" data-t="5.8"><b>10–15 分钟</b><span>每个账号每天</span></div>
+    <div class="stat" data-t="6.4"><b>0</b><span>碰到的封号红线</span></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="scene center" data-s="90" data-e="97">
+  <h1 data-t=".5">让工具替你搬砖，</h1>
+  <h1 data-t="1.3">把<span class="ul">判断<b data-t="2.2" data-a="draw"></b></span>留给自己。</h1>
+  <div class="src" data-t="3.0" style="border:none;padding:0">个人观点分析 · 文中部分产品信息无法核实，请以官方信息为准</div>
+</section>
+
+<div id="prog"></div>
+
+<script>
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const TOTAL = 97;
+const K = {
+  rise:  [{opacity:0, transform:'translateY(28px)', filter:'blur(6px)'}, {opacity:1, transform:'none', filter:'blur(0px)'}],
+  pop:   [{opacity:0, transform:'scale(.82)'}, {opacity:1, transform:'scale(1)'}],
+  draw:  [{transform:'scaleX(0)'}, {transform:'scaleX(1)'}],
+  'grow-x': [{transform:'scaleX(0)'}, {transform:'scaleX(1)'}],
+  grow:  [{transform:'scaleY(0)'}, {transform:'scaleY(1)'}],
+  type:  [{clipPath:'inset(0 100% 0 0)'}, {clipPath:'inset(0 0% 0 0)'}],
+};
+document.querySelectorAll('.scene').forEach(sc => {
+  const s = +sc.dataset.s, e = +sc.dataset.e;
+  sc.animate([{opacity:0}, {opacity:1}], {delay:s*1000, duration:400, fill:'backwards'});
+  sc.animate([{opacity:1, transform:'none', filter:'blur(0px)'}, {opacity:0, transform:'translateY(-18px)', filter:'blur(4px)'}],
+             {delay:(e-.6)*1000, duration:600, easing:'cubic-bezier(0.7,0,0.84,0)', fill:'forwards'});
+  sc.querySelectorAll('[data-t]').forEach(el => {
+    const a = el.dataset.a || 'rise';
+    const t = (s + +el.dataset.t) * 1000;
+    let dur = 1000, easing = EASE;
+    if (a === 'type') { const n = el.textContent.length; dur = Math.min(1600, n * 32); easing = `steps(${n}, end)`; }
+    if (a === 'draw' || a === 'grow-x' || a === 'grow') dur = 800;
+    if (a === 'pop') dur = 700;
+    el.animate(K[a], {delay:t, duration:dur, easing, fill:'both'});
+  });
+});
+document.getElementById('mark').animate([{opacity:0},{opacity:1}], {delay:6500, duration:800, fill:'backwards'});
+document.getElementById('prog').animate([{transform:'scaleX(0)'},{transform:'scaleX(1)'}], {duration:TOTAL*1000, fill:'both'});
+
+window.TOTAL = TOTAL;
+window.seek = t => document.getAnimations().forEach(a => { a.pause(); a.currentTime = t * 1000; });
+if (location.search.includes('render')) document.getAnimations().forEach(a => a.pause());
+</script>
+</body>
+</html>
