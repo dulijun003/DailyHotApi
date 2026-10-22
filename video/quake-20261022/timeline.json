@@ -1,0 +1,174 @@
+{
+ "note": "One timeline for the page, the .srt and the mix. Seconds; cuts on the 120 BPM half-beat grid.",
+ "fps": 30,
+ "dur": 65.5,
+ "bpm": 120,
+ "vo": {
+  "L01": 0.4,
+  "L02": 5.2,
+  "L03a": 9.6,
+  "L03b": 12.1,
+  "L04": 16.8,
+  "L05": 22.5,
+  "L06": 29.1,
+  "L07": 36.0,
+  "L08": 42.6,
+  "L09": 47.6,
+  "L10": 54.7,
+  "L11": 58.3
+ },
+ "shots": [
+  {
+   "a": 0.0,
+   "b": 5.0,
+   "k": "hook",
+   "cr": "视频 NASA · 公有领域"
+  },
+  {
+   "a": 5.0,
+   "b": 9.5,
+   "k": "locate",
+   "cr": "卫星 NASA Terra · 2026.10.22 白天"
+  },
+  {
+   "a": 9.5,
+   "b": 16.5,
+   "k": "depth"
+  },
+  {
+   "a": 16.5,
+   "b": 22.0,
+   "k": "near",
+   "cr": "卫星 NASA Terra · 2026.10.22 白天"
+  },
+  {
+   "a": 22.0,
+   "b": 29.0,
+   "k": "dist"
+  },
+  {
+   "a": 29.0,
+   "b": 35.5,
+   "k": "high",
+   "cr": "照片 NASA · 青藏高原 资料图"
+  },
+  {
+   "a": 35.5,
+   "b": 42.5,
+   "k": "two"
+  },
+  {
+   "a": 42.5,
+   "b": 47.5,
+   "k": "after"
+  },
+  {
+   "a": 47.5,
+   "b": 54.5,
+   "k": "hurt"
+  },
+  {
+   "a": 54.5,
+   "b": 58.0,
+   "k": "resp"
+  },
+  {
+   "a": 58.0,
+   "b": 65.5,
+   "k": "end",
+   "cr": "视频 NASA · 公有领域"
+  }
+ ],
+ "music": {
+  "sil1": [
+   35.45,
+   35.95
+  ],
+  "sil2": [
+   62.3,
+   62.6
+  ],
+  "verdict": 62.6
+ },
+ "caps": [
+  {
+   "t0": 0.1,
+   "t1": 4.9,
+   "zh": "今年国内|{最大}的一次地震",
+   "en": "The biggest earthquake in China this year."
+  },
+  {
+   "t0": 5.0,
+   "t1": 9.5,
+   "zh": "西藏那曲|{巴青县}",
+   "en": "Baqing County, Nagqu, Tibet."
+  },
+  {
+   "t0": 9.5,
+   "t1": 11.72,
+   "zh": "震源深度|只有{10公里}",
+   "en": "The focus was just 10 km deep."
+  },
+  {
+   "t0": 11.72,
+   "t1": 16.65,
+   "zh": "{浅源}地震|地面震感通常更强",
+   "en": "Shallow quakes usually shake the surface harder."
+  },
+  {
+   "t0": 16.65,
+   "t1": 22.3,
+   "zh": "5公里内|{3个村庄}",
+   "en": "Three villages within 5 km, two townships within 20 km."
+  },
+  {
+   "t0": 22.3,
+   "t1": 28.9,
+   "zh": "离拉萨|{399公里}",
+   "en": "57 km to Sog County, 399 km to Lhasa."
+  },
+  {
+   "t0": 28.9,
+   "t1": 35.45,
+   "zh": "平均海拔|约{4864米}",
+   "en": "Average altitude around the epicentre: about 4,864 m."
+  },
+  {
+   "t0": 35.95,
+   "t1": 42.5,
+   "zh": "以{正式测定}|7.0级为准",
+   "en": "The official reading is M7.0, not the early 6.7."
+  },
+  {
+   "t0": 42.5,
+   "t1": 47.3,
+   "zh": "余震不断|23:13 {4.2级}",
+   "en": "Aftershocks kept coming: M4.2 at 23:13."
+  },
+  {
+   "t0": 47.3,
+   "t1": 54.6,
+   "zh": "岗切乡|{2人受伤}",
+   "en": "Two injured in Gangqie; cracked houses near the epicentre."
+  },
+  {
+   "t0": 54.6,
+   "t1": 58.1,
+   "zh": "国家地震灾害|{4级}应急响应",
+   "en": "A national Level IV earthquake response is under way."
+  },
+  {
+   "t0": 58.1,
+   "t1": 62.3,
+   "zh": "灾情还在核实|以{官方发布}为准",
+   "en": "Damage is still being assessed. Follow official updates."
+  },
+  {
+   "t0": 62.6,
+   "t1": 65.5,
+   "zh": "愿|{平安}",
+   "en": "Stay safe.",
+   "big": 1.25
+  }
+ ]
+}
