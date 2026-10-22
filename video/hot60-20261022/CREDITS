@@ -1,0 +1,25 @@
+热榜60秒 · 10.22 — credits for third-party material
+
+Data
+- Hot lists: a local DailyHotApi (MIT, github.com/imsyy/DailyHotApi; this copy dulijun003/dailyhotapi) pulling
+  今日头条, 百度贴吧, 哔哩哔哩, 36氪, IT之家, 新浪新闻, 腾讯新闻 at 2026-10-23 00:47 Beijing time.
+  The entries' titles and summaries belong to their platforms and publishers; they are quoted as news reporting. See FACTS.md.
+
+Picture
+- "Lights of Human Activity Shine in NASA's Image of Earth at Night" (Black Marble), NASA Goddard — public domain (NASA media guidelines).
+  Centre-cropped (NASA bug and burned-in text excluded). https://images.nasa.gov/details/GSFC_20170412_Lights_m12573_EarthAtNight
+- ISS photograph iss072e397138, "The Himalayas separate China from a cloudy India", NASA JSC — public domain. Cropped, graded; shown as a file photo
+  of the Tibetan Plateau, not of the epicentre. https://images.nasa.gov/details/iss072e397138
+- Lakes and rivers: Natural Earth 10m (public domain), naturalearthdata.com. No administrative boundaries are drawn.
+- NASA did not make or endorse this film.
+
+Type
+- Noto Sans SC, Inter Tight — SIL Open Font License 1.1 (fonts/OFL-*.txt).
+
+Sound
+- Voice: Microsoft Edge neural TTS (zh-CN-YunxiNeural) via edge-tts.
+- Drums: "MuldjordKit" by Lars Muldjord (drumgizmo.org), FreePats version, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+- Samples (CC0): FreePats project (freepats.zenvoid.org), VS Chamber Orchestra: Community Edition (Versilian Studios), Versilian Community Sample Library (Versilian Studios)
+- Foley and wind: synthesised in code.
+
+The channel "热榜60秒" is fictional.

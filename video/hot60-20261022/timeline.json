@@ -1,0 +1,192 @@
+{
+ "note": "One timeline for the page (captions, shots), the subtitles (.srt) and the mix (voice starts, silences, hits). Seconds; cuts on the 120 BPM half-beat grid.",
+ "fps": 30,
+ "dur": 61.0,
+ "bpm": 120,
+ "vo": {
+  "L01": 0.2,
+  "L02": 2.45,
+  "L03": 5.4,
+  "L04": 8.5,
+  "L05": 11.25,
+  "L06": 14.8,
+  "L07": 19.8,
+  "L08": 25.0,
+  "L09": 32.0,
+  "L10": 35.4,
+  "L11a": 40.8,
+  "L11b": 43.4,
+  "L12": 46.8,
+  "L13": 51.3,
+  "L14": 55.3
+ },
+ "shots": [
+  {
+   "a": 0.0,
+   "b": 3.0,
+   "k": "open"
+  },
+  {
+   "a": 3.0,
+   "b": 7.5,
+   "k": "wall"
+  },
+  {
+   "a": 7.5,
+   "b": 14.5,
+   "k": "grid"
+  },
+  {
+   "a": 14.5,
+   "b": 20.0,
+   "k": "score"
+  },
+  {
+   "a": 20.0,
+   "b": 24.5,
+   "k": "cafe"
+  },
+  {
+   "a": 24.5,
+   "b": 29.0,
+   "k": "globe",
+   "cr": "视频 NASA · 公有领域"
+  },
+  {
+   "a": 29.0,
+   "b": 35.0,
+   "k": "scroll"
+  },
+  {
+   "a": 35.0,
+   "b": 40.5,
+   "k": "map"
+  },
+  {
+   "a": 40.5,
+   "b": 46.5,
+   "k": "quake"
+  },
+  {
+   "a": 46.5,
+   "b": 51.5,
+   "k": "split"
+  },
+  {
+   "a": 51.5,
+   "b": 55.0,
+   "k": "plateau",
+   "cr": "照片 NASA · 青藏高原 资料图"
+  },
+  {
+   "a": 55.0,
+   "b": 61.0,
+   "k": "end"
+  }
+ ],
+ "music": {
+  "stop": 31.5,
+  "hit": 35.0,
+  "strings_out": 54.0,
+  "verdict": 58.0
+ },
+ "caps": [
+  {
+   "t0": 0.1,
+   "t1": 2.45,
+   "zh": "折{1万次}|会坏吗？",
+   "en": "Fold it 10,000 times. Will it break?"
+  },
+  {
+   "t0": 2.45,
+   "t1": 5.35,
+   "zh": "这是今晚|B站热榜{第一}",
+   "en": "Tonight's No.1 on Bilibili."
+  },
+  {
+   "t0": 5.35,
+   "t1": 8.42,
+   "zh": "7个平台的热榜|今晚共{378条}",
+   "en": "Seven trending lists, 378 entries tonight."
+  },
+  {
+   "t0": 8.42,
+   "t1": 11.25,
+   "zh": "上榜平台最多的|是{一部手机}",
+   "en": "The story on the most lists: a phone."
+  },
+  {
+   "t0": 11.25,
+   "t1": 14.62,
+   "zh": "4个平台|共{10条}",
+   "en": "10 entries on 4 lists, all about iPhone Duo."
+  },
+  {
+   "t0": 14.62,
+   "t1": 19.4,
+   "zh": "国乒女团|{2比3}不敌日本",
+   "en": "China's women lose 2–3 to Japan and take silver."
+  },
+  {
+   "t0": 19.95,
+   "t1": 24.4,
+   "zh": "星巴克|全国{消费入座}",
+   "en": "Starbucks: seats now for paying customers."
+  },
+  {
+   "t0": 24.6,
+   "t1": 28.9,
+   "zh": "7个榜|各有各的{第一}",
+   "en": "Seven lists, each with its own No.1."
+  },
+  {
+   "t0": 31.9,
+   "t1": 34.9,
+   "zh": "但有两个榜的|{第一}是同一件事",
+   "en": "But two of them share the same No.1."
+  },
+  {
+   "t0": 35.2,
+   "t1": 39.4,
+   "zh": "西藏那曲|发生{7.0级}地震",
+   "en": "A magnitude 7.0 earthquake in Nagqu, Tibet."
+  },
+  {
+   "t0": 40.6,
+   "t1": 43.35,
+   "zh": "中国地震台网|{正式测定}",
+   "en": "Measured by the China Earthquake Networks Center:"
+  },
+  {
+   "t0": 43.35,
+   "t1": 46.7,
+   "zh": "22时33分|震源深度{10千米}",
+   "en": "at 22:33, at a depth of 10 km."
+  },
+  {
+   "t0": 46.7,
+   "t1": 50.9,
+   "zh": "两个榜|都排在{第一}",
+   "en": "No.1 on both Toutiao and Tieba."
+  },
+  {
+   "t0": 51.1,
+   "t1": 54.0,
+   "zh": "具体情况|还在{更新}",
+   "en": "Details are still coming in."
+  },
+  {
+   "t0": 55.1,
+   "t1": 58.0,
+   "zh": "378条里|{这一条}最重",
+   "en": "Of 378 entries, this one weighs most."
+  },
+  {
+   "t0": 58.0,
+   "t1": 61.0,
+   "zh": "愿|{平安}",
+   "en": "Stay safe.",
+   "big": 1.25
+  }
+ ]
+}

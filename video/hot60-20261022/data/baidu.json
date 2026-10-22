@@ -1,0 +1,1 @@
+{"code":200,"name":"baidu","title":"百度","type":"热搜","params":{"type":{"name":"热搜类别","type":{"realtime":"热搜","novel":"小说","movie":"电影","teleplay":"电视剧","car":"汽车","game":"游戏"}}},"link":"https://top.baidu.com/board","total":1,"fromCache":true,"updateTime":"2026-10-22T16:47:14.520Z","data":[{"author":"","timestamp":0,"hot":0,"url":"https://www.baidu.com/s?wd=undefined"}]}
